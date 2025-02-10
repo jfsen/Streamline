@@ -1,0 +1,10 @@
+[Desktop Entry]
+Name=streamline
+Exec=streamline
+Icon=io.github.jfsen.Streamline
+Terminal=false
+Type=Application
+Categories=Utility;
+Keywords=GTK;
+StartupNotify=true
+DBusActivatable=true
