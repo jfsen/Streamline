@@ -32,7 +32,11 @@ class StreamlineApplication(Adw.Application):
 
     def __init__(self):
         super().__init__(application_id='io.github.jfsen.Streamline',
-                         flags=Gio.ApplicationFlags.DEFAULT_FLAGS)
+                         flags=Gio.ApplicationFlags.FLAGS_NONE)
+
+    def do_startup(self):
+        Adw.Application.do_startup(self)
+        Adw.init()
         self.create_action('quit', lambda *_: self.quit(), ['<primary>q'])
         self.create_action('about', self.on_about_action)
         self.create_action('preferences', self.on_preferences_action)

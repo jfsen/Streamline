@@ -6,10 +6,16 @@
     <property name="title" translatable="yes">Streamline</property>
     <property name="default-width">800</property>
     <property name="default-height">600</property>
-    <property name="content">
+    <child>
       <object class="AdwToolbarView">
         <child type="top">
           <object class="AdwHeaderBar">
+            <child type="end">
+              <object class="GtkButton" id="refresh_button">
+                <property name="icon-name">view-refresh-symbolic</property>
+                <property name="tooltip-text" translatable="yes">Refresh</property>
+              </object>
+            </child>
             <child type="end">
               <object class="GtkMenuButton">
                 <property name="primary">True</property>
@@ -21,15 +27,27 @@
           </object>
         </child>
         <property name="content">
-          <object class="GtkLabel" id="label">
-            <property name="label" translatable="yes">Hello, World!</property>
-            <style>
-              <class name="title-1"/>
-            </style>
+          <object class="GtkScrolledWindow">
+            <property name="hexpand">True</property>
+            <property name="vexpand">True</property>
+            <child>
+              <object class="AdwPreferencesPage" id="preferences_page">
+                <child>
+                  <object class="AdwPreferencesGroup" id="online_group">
+                    <property name="title" translatable="yes">Online</property>
+                  </object>
+                </child>
+                <child>
+                  <object class="AdwPreferencesGroup" id="offline_group">
+                    <property name="title" translatable="yes">Offline</property>
+                  </object>
+                </child>
+              </object>
+            </child>
           </object>
         </property>
       </object>
-    </property>
+    </child>
   </template>
   <menu id="primary_menu">
     <section>
