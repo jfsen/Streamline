@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<interface>
+  <requires lib="gtk" version="4.0"/>
+  <requires lib="libadwaita" version="1.0"/>
+  <template class="StreamlinePreferences" parent="AdwPreferencesWindow">
+    <property name="title" translatable="yes">Preferences</property>
+    <property name="modal">True</property>
+    <child>
+      <object class="AdwPreferencesPage">
+        <child>
+          <object class="AdwPreferencesGroup">
+            <property name="title" translatable="yes">Stream Settings</property>
+            <child>
+              <object class="AdwComboRow" id="player_row">
+                <property name="title" translatable="yes">Player</property>
+                <property name="subtitle" translatable="yes">Select preferred media player</property>
+              </object>
+            </child>
+            <child>
+              <object class="AdwEntryRow" id="custom_player_row">
+                <property name="title" translatable="yes">Custom Player Path</property>
+              </object>
+            </child>
+            <child>
+              <object class="AdwComboRow" id="quality_row">
+                <property name="title" translatable="yes">Stream Quality</property>
+                <property name="subtitle" translatable="yes">Select preferred stream quality</property>
+              </object>
+            </child>
+          </object>
+        </child>
+        <child>
+          <object class="AdwPreferencesGroup">
+            <property name="title" translatable="yes">Application Paths</property>
+            <child>
+              <object class="AdwEntryRow" id="streamlink_entry">
+                <property name="title" translatable="yes">Streamlink Path</property>
+              </object>
+            </child>
+            <child>
+              <object class="AdwEntryRow" id="mpv_entry">
+                <property name="title" translatable="yes">MPV Path</property>
+              </object>
+            </child>
+            <child>
+              <object class="AdwEntryRow" id="vlc_entry">
+                <property name="title" translatable="yes">VLC Path</property>
+              </object>
+            </child>
+          </object>
+        </child>
+      </object>
+    </child>
+  </template>
+</interface>

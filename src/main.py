@@ -35,18 +35,20 @@ class StreamlineApplication(Adw.Application):
                          flags=Gio.ApplicationFlags.FLAGS_NONE)
 
     def do_startup(self):
+        """Called when application is starting up."""
         Adw.Application.do_startup(self)
         Adw.init()
+        
+        # Add actions with accelerators
         self.create_action('quit', lambda *_: self.quit(), ['<primary>q'])
         self.create_action('about', self.on_about_action)
-        self.create_action('preferences', self.on_preferences_action)
+        self.create_action('preferences', self.on_preferences_action, ['<primary>comma'])
+        
+        # Add follow action
+        self.create_action('follow', self.on_follow_action, ['<primary>n'])
 
     def do_activate(self):
-        """Called when the application is activated.
-
-        We raise the application's main window, creating it if
-        necessary.
-        """
+        """Called when the application is activated."""
         win = self.props.active_window
         if not win:
             win = StreamlineWindow(application=self)
@@ -64,9 +66,17 @@ class StreamlineApplication(Adw.Application):
         about.set_translator_credits(_('translator-credits'))
         about.present(self.props.active_window)
 
-    def on_preferences_action(self, widget, _):
-        """Callback for the app.preferences action."""
-        print('app.preferences action activated')
+    def on_preferences_action(self, *args):
+        """Show preferences window."""
+        win = self.props.active_window
+        if win:
+            win.show_preferences()
+
+    def on_follow_action(self, *args):
+        """Show follow dialog."""
+        win = self.props.active_window
+        if win:
+            win.show_follow_dialog()
 
     def create_action(self, name, callback, shortcuts=None):
         """Add an application action.

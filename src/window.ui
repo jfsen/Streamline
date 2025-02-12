@@ -7,45 +7,72 @@
     <property name="default-width">800</property>
     <property name="default-height">600</property>
     <child>
-      <object class="AdwToolbarView">
-        <child type="top">
-          <object class="AdwHeaderBar">
-            <child type="end">
-              <object class="GtkButton" id="refresh_button">
-                <property name="icon-name">view-refresh-symbolic</property>
-                <property name="tooltip-text" translatable="yes">Refresh</property>
+      <object class="AdwToastOverlay" id="toast_overlay">
+        <child>
+          <object class="AdwToolbarView">
+            <child type="top">
+              <object class="AdwHeaderBar">
+                <child type="start">
+                  <object class="GtkBox">
+                    <property name="spacing">6</property>
+                    <child>
+                      <object class="GtkButton" id="refresh_button">
+                        <property name="icon-name">view-refresh-symbolic</property>
+                        <property name="tooltip-text" translatable="yes">Refresh</property>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkButton" id="quick_play_button">
+                        <property name="icon-name">media-playback-start-symbolic</property>
+                        <property name="tooltip-text" translatable="yes">Quick Play Stream</property>
+                      </object>
+                    </child>
+                  </object>
+                </child>
+                <child type="end">
+                  <object class="GtkBox">
+                    <property name="spacing">6</property>
+                    <child>
+                      <object class="GtkButton" id="follow_button">
+                        <property name="icon-name">list-add-symbolic</property>
+                        <property name="tooltip-text" translatable="yes">Follow Streamer</property>
+                        <property name="action-name">app.follow</property>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkMenuButton">
+                        <property name="primary">True</property>
+                        <property name="icon-name">open-menu-symbolic</property>
+                        <property name="tooltip-text" translatable="yes">Main Menu</property>
+                        <property name="menu-model">primary_menu</property>
+                      </object>
+                    </child>
+                  </object>
+                </child>
               </object>
             </child>
-            <child type="end">
-              <object class="GtkMenuButton">
-                <property name="primary">True</property>
-                <property name="icon-name">open-menu-symbolic</property>
-                <property name="tooltip-text" translatable="yes">Main Menu</property>
-                <property name="menu-model">primary_menu</property>
+            <property name="content">
+              <object class="GtkScrolledWindow">
+                <property name="hexpand">True</property>
+                <property name="vexpand">True</property>
+                <child>
+                  <object class="AdwPreferencesPage" id="preferences_page">
+                    <child>
+                      <object class="AdwPreferencesGroup" id="online_group">
+                        <property name="title" translatable="yes">Online</property>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="AdwPreferencesGroup" id="offline_group">
+                        <property name="title" translatable="yes">Offline</property>
+                      </object>
+                    </child>
+                  </object>
+                </child>
               </object>
-            </child>
+            </property>
           </object>
         </child>
-        <property name="content">
-          <object class="GtkScrolledWindow">
-            <property name="hexpand">True</property>
-            <property name="vexpand">True</property>
-            <child>
-              <object class="AdwPreferencesPage" id="preferences_page">
-                <child>
-                  <object class="AdwPreferencesGroup" id="online_group">
-                    <property name="title" translatable="yes">Online</property>
-                  </object>
-                </child>
-                <child>
-                  <object class="AdwPreferencesGroup" id="offline_group">
-                    <property name="title" translatable="yes">Offline</property>
-                  </object>
-                </child>
-              </object>
-            </child>
-          </object>
-        </property>
       </object>
     </child>
   </template>

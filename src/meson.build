@@ -30,6 +30,7 @@ streamline_sources = [
   '__init__.py',
   'main.py',
   'window.py',
+  'preferences.py',
 ]
 
 install_data(streamline_sources, install_dir: moduledir)
