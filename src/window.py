@@ -63,30 +63,40 @@ class StreamlineWindow(Adw.ApplicationWindow):
         # Load config first
         config = self.load_config()
         
-        # Initialize TwitchAPI
-        self.twitch = TwitchAPI(
-            config.get("twitch_client_id", ""),
-            config.get("twitch_client_secret", "")
-        )
+        # Get credentials from config
+        self.client_id = config.get("twitch_client_id", "")
+        self.client_secret = config.get("twitch_client_secret", "")
+        
+        # Initialize API-related attributes
+        self.twitch = None
+        self.access_token = None
+        
+        # Check credentials and initialize API
+        if not self.client_id or not self.client_secret:
+            self._show_error_dialog(
+                "Missing Credentials",
+                "Twitch API credentials not found. Please add them in preferences."
+            )
+        else:
+            try:
+                self.access_token = get_access_token(self.client_id, self.client_secret)
+                self.twitch = TwitchAPI(self.client_id, self.client_secret)
+            except requests.ConnectionError:
+                self._show_error_dialog(
+                    "Connection Error",
+                    "Could not connect to Twitch API. Please check your internet connection."
+                )
+            except Exception as e:
+                self._show_error_dialog(
+                    "API Error",
+                    "Failed to initialize Twitch API. Please check your credentials."
+                )
         
         # Initialize StreamPlayer
         self.player = StreamPlayer(self)
         
         # Dictionary to store row references
         self.streamer_rows = {}
-        
-        # Load config
-        config = self.load_config()
-        
-        # Get credentials from config
-        self.client_id = config.get("twitch_client_id", "")
-        self.client_secret = config.get("twitch_client_secret", "")
-        
-        # Get access token if credentials exist
-        if self.client_id and self.client_secret:
-            self.access_token = get_access_token(self.client_id, self.client_secret)
-        else:
-            print("Warning: Twitch credentials not found in config")
         
         self.last_refresh = datetime.now(timezone.utc)
         
@@ -154,10 +164,35 @@ class StreamlineWindow(Adw.ApplicationWindow):
         self.update_action_rows(online_streamers, offline_streamers, streamer_info)
 
     def get_streamers(self):
-        return self.twitch.get_streams(self.all_streamers)
+        """Get streamer information with error handling."""
+        if not self.twitch or not self.access_token:
+            # Don't show error dialog here - just return empty results
+            # The update_action_rows method will show a toast instead
+            return [], self.all_streamers, {}
+            
+        try:
+            return self.twitch.get_streams(self.all_streamers)
+        except requests.ConnectionError:
+            # Only show error dialog if it's a new connection error
+            self._show_error_dialog(
+                "Connection Error",
+                "Could not fetch streamer data. Please check your internet connection."
+            )
+            return [], self.all_streamers, {}
+        except Exception as e:
+            # Only show error for unexpected errors
+            self._show_error_dialog(
+                "API Error",
+                "Failed to fetch streamer data. Please try again later."
+            )
+            return [], self.all_streamers, {}
 
     def update_action_rows(self, online_streamers, offline_streamers, streamer_info):
         """Update the online and offline streamer lists."""
+        # Show warning if API is not working
+        if not self.twitch or not self.access_token:
+            self.show_toast("API not available - showing all streamers as offline", 4)
+        
         # Clear existing rows
         while True:
             row = self.online_list.get_first_child()
@@ -188,16 +223,39 @@ class StreamlineWindow(Adw.ApplicationWindow):
 
     def create_row(self, streamer, info):
         """Create an ExpanderRow with buttons and additional info."""
-        row = Adw.ExpanderRow.new()
+        if info:  # Online streamer
+            row = Adw.ExpanderRow.new()
+            # Add viewer count as subtitle
+            viewers = info.get('viewers', 'N/A')
+            row.set_subtitle(f"{viewers} viewers")
+            
+            # Add info box with remaining stream details
+            info_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
+            info_box.add_css_class("boxed-list")
+            info_box.set_margin_start(6)
+            info_box.set_margin_end(6)
+            info_box.set_margin_top(6)
+            info_box.set_margin_bottom(6)
+
+            # Add remaining info labels (excluding viewers)
+            info_labels = [
+                f"Category: {info.get('game', 'Unknown')}",
+                f"Title: {info.get('title', 'No title')}",
+                f"Uptime: {info.get('uptime', 'N/A')}"
+            ]
+
+            for info_text in info_labels:
+                label = Gtk.Label(label=info_text, xalign=0)
+                label.set_ellipsize(Pango.EllipsizeMode.END)
+                label.set_tooltip_text(info_text)
+                info_box.append(label)
+
+            row.add_row(info_box)
+        else:  # Offline streamer
+            row = Adw.ActionRow.new()
+            
         row.set_title(streamer)
         row.set_title_lines(1)  # Prevent line wrapping for title
-
-        # Create action buttons with tooltips and handlers
-        buttons = [
-            ("web-browser-symbolic", "Open in browser"),
-            ("edit-delete-symbolic", "Unfollow"),
-            ("video-display-symbolic", "Show VODs")
-        ]
 
         # Create play button separately to add as prefix
         play_button = Gtk.Button(icon_name="media-playback-start-symbolic")
@@ -207,46 +265,44 @@ class StreamlineWindow(Adw.ApplicationWindow):
         play_button.connect("clicked", lambda btn, s=streamer: self.play_stream(s))
         row.add_prefix(play_button)
 
-        # Add remaining buttons as suffixes
-        for icon_name, tooltip in buttons:
-            button = Gtk.Button(icon_name=icon_name)
-            button.add_css_class("flat")
-            button.set_valign(Gtk.Align.CENTER)
-            button.set_tooltip_text(tooltip)
-            
-            # Add click handlers for buttons
-            if tooltip == "Open in browser":
-                button.connect("clicked", lambda btn, s=streamer: 
-                             self.open_stream_in_browser(s))
-            elif tooltip == "Unfollow":
-                button.connect("clicked", lambda btn, s=streamer:
-                             self.unfollow_streamer(s))
-            
-            row.add_suffix(button)
-
-        # Add expanded content
-        info_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
-        info_box.add_css_class("boxed-list")
-        info_box.set_margin_start(6)
-        info_box.set_margin_end(6)
-        info_box.set_margin_top(6)
-        info_box.set_margin_bottom(6)
-
-        # Add some example info (you can customize this)
-        info_labels = [
-            f"Game: {info.get('game', 'Unknown')}",
-            f"Title: {info.get('title', 'No title')}",
-            f"Viewers: {info.get('viewers', 'N/A')}",
-            f"Uptime: {info.get('uptime', 'N/A')}"
+        # Create action buttons with tooltips and handlers
+        buttons = [
+            ("web-browser-symbolic", "Open in browser"),
+            ("edit-delete-symbolic", "Unfollow"),
+            ("video-display-symbolic", "Show VODs")
         ]
 
-        for info in info_labels:
-            label = Gtk.Label(label=info, xalign=0)
-            label.set_ellipsize(Pango.EllipsizeMode.END)
-            label.set_tooltip_text(info)
-            info_box.append(label)
-
-        row.add_row(info_box)
+        # Add buttons in different order based on online/offline status
+        if info:  # Online streamer - add in forward order
+            for icon_name, tooltip in buttons:
+                button = Gtk.Button(icon_name=icon_name)
+                button.add_css_class("flat")
+                button.set_valign(Gtk.Align.CENTER)
+                button.set_tooltip_text(tooltip)
+                
+                if tooltip == "Open in browser":
+                    button.connect("clicked", lambda btn, s=streamer: 
+                                 self.open_stream_in_browser(s))
+                elif tooltip == "Unfollow":
+                    button.connect("clicked", lambda btn, s=streamer:
+                                 self.unfollow_streamer(s))
+                
+                row.add_suffix(button)
+        else:  # Offline streamer - add in reverse order
+            for icon_name, tooltip in reversed(buttons):
+                button = Gtk.Button(icon_name=icon_name)
+                button.add_css_class("flat")
+                button.set_valign(Gtk.Align.CENTER)
+                button.set_tooltip_text(tooltip)
+                
+                if tooltip == "Open in browser":
+                    button.connect("clicked", lambda btn, s=streamer: 
+                                 self.open_stream_in_browser(s))
+                elif tooltip == "Unfollow":
+                    button.connect("clicked", lambda btn, s=streamer:
+                                 self.unfollow_streamer(s))
+                
+                row.add_suffix(button)
 
         return row
 
