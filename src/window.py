@@ -29,6 +29,8 @@ import os
 import json
 from pathlib import Path
 from .preferences import StreamlinePreferences
+from .twitch import TwitchAPI
+from .stream_player import StreamPlayer
 import requests
 from datetime import datetime, timezone
 
@@ -57,6 +59,18 @@ class StreamlineWindow(Adw.ApplicationWindow):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+        
+        # Load config first
+        config = self.load_config()
+        
+        # Initialize TwitchAPI
+        self.twitch = TwitchAPI(
+            config.get("twitch_client_id", ""),
+            config.get("twitch_client_secret", "")
+        )
+        
+        # Initialize StreamPlayer
+        self.player = StreamPlayer(self)
         
         # Dictionary to store row references
         self.streamer_rows = {}
@@ -140,53 +154,7 @@ class StreamlineWindow(Adw.ApplicationWindow):
         self.update_action_rows(online_streamers, offline_streamers, streamer_info)
 
     def get_streamers(self):
-        """Get list of streamers with their online/offline status."""
-        headers = {
-            'Client-ID': self.client_id,
-            'Authorization': f'Bearer {self.access_token}'
-        }
-        
-        online_streamers = []
-        offline_streamers = []
-        streamer_info = {}
-
-        # Batch the streamers into chunks of 100 (Twitch API limit)
-        for i in range(0, len(self.all_streamers), 100):
-            batch = self.all_streamers[i:i+100]
-            user_logins = '&user_login='.join(batch)
-            url = f'https://api.twitch.tv/helix/streams?user_login={user_logins}'
-            print(f"Fetching data for batch: {batch}")
-            response = requests.get(url, headers=headers)
-            data = response.json()
-            print(f"Response data: {data}")
-
-            for stream in data.get('data', []):
-                user_login = stream['user_login']
-                online_streamers.append(user_login)
-                streamer_info[user_login] = {
-                    "game": stream['game_name'],
-                    "title": stream['title'],
-                    "viewers": stream['viewer_count'],
-                    "uptime": self.calculate_uptime(stream['started_at'])
-                }
-                print(f"Streamer {user_login} is online: {streamer_info[user_login]}")
-
-            offline_streamers_batch = [streamer for streamer in batch if streamer not in online_streamers]
-            offline_streamers.extend(offline_streamers_batch)
-            print(f"Offline streamers in this batch: {offline_streamers_batch}")
-
-        print(f"Total online streamers: {online_streamers}")
-        print(f"Total offline streamers: {offline_streamers}")
-        return online_streamers, offline_streamers, streamer_info
-
-    def calculate_uptime(self, start_time):
-        """Calculate the uptime of a stream."""
-        start_time = datetime.fromisoformat(start_time.replace('Z', '+00:00'))
-        now = datetime.now(timezone.utc)
-        uptime = now - start_time
-        hours, remainder = divmod(uptime.total_seconds(), 3600)
-        minutes, _ = divmod(remainder, 60)
-        return f"{int(hours)}h {int(minutes)}m"
+        return self.twitch.get_streams(self.all_streamers)
 
     def update_action_rows(self, online_streamers, offline_streamers, streamer_info):
         """Update the online and offline streamer lists."""
@@ -286,71 +254,6 @@ class StreamlineWindow(Adw.ApplicationWindow):
         """Open the Twitch stream page in default browser."""
         url = f"https://twitch.tv/{streamer}"
         Gtk.show_uri(parent=self, uri=url, timestamp=0)
-
-    def play_stream(self, streamer):
-        """Open the stream using streamlink."""
-        try:
-            # Get streamlink and player commands
-            streamlink_cmd, player_cmd = self._get_required_executables()
-            
-            # Show the toast BEFORE starting streamlink
-            self.show_toast(f"Checking stream: {streamer}")
-
-            # Build command with or without flatpak-spawn
-            if os.path.exists('/.flatpak-info'):
-                cmd = ['flatpak-spawn', '--host']
-            else:
-                cmd = []
-                
-            cmd.extend([
-                streamlink_cmd,
-                f"twitch.tv/{streamer}",
-                self.stream_quality,
-                '--twitch-disable-ads',
-                f'--player={player_cmd}'
-            ])
-
-            # Run streamlink and capture initial output for error checking
-            process = subprocess.Popen(
-                cmd,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                text=True,
-                start_new_session=True
-            )
-
-            # Check for immediate errors (wait briefly)
-            try:
-                stdout, stderr = process.communicate(timeout=2)
-                if process.returncode != None and process.returncode != 0:
-                    if "error: No playable streams found" in stderr:
-                        raise subprocess.SubprocessError(f"Stream is offline: {streamer}")
-                    else:
-                        raise subprocess.SubprocessError(stderr.strip())
-                else:
-                    # Stream likely starting successfully
-                    self.show_toast(f"Starting stream: {streamer}")
-            except subprocess.TimeoutExpired:
-                # No error within timeout, assume stream is starting
-                self.show_toast(f"Starting stream: {streamer}")
-                # Detach the process
-                process.stdout.close()
-                process.stderr.close()
-
-        except FileNotFoundError:
-            message = (
-                "Could not find streamlink or mpv.\n"
-                "Please make sure they are installed on your system:\n\n"
-                "For Arch Linux:\n"
-                "   sudo pacman -S streamlink mpv\n\n"
-                "For Ubuntu/Debian:\n"
-                "   sudo apt install streamlink mpv\n\n"
-                "For Fedora:\n"
-                "   sudo dnf install streamlink mpv"
-            )
-            self._show_error_dialog("Missing Dependencies", message)
-        except subprocess.SubprocessError as e:
-            self.show_toast(f"Error: {str(e)}", 3)
 
     def _get_required_executables(self):
         """Get paths for streamlink and selected player."""
@@ -617,3 +520,7 @@ class StreamlineWindow(Adw.ApplicationWindow):
             if parent:
                 parent.remove(row)
             del self.streamer_rows[username]
+
+    def play_stream(self, streamer):
+        """Play a stream for the given streamer."""
+        self.player.play_stream(streamer)

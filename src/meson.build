@@ -31,6 +31,8 @@ streamline_sources = [
   'main.py',
   'window.py',
   'preferences.py',
+  'twitch.py',
+  'stream_player.py',
 ]
 
 install_data(streamline_sources, install_dir: moduledir)

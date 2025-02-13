@@ -56,7 +56,7 @@ class StreamlineApplication(Adw.Application):
 
     def on_about_action(self, *args):
         """Callback for the app.about action."""
-        about = Adw.AboutDialog(application_name='streamline',
+        about = Adw.AboutDialog(application_name='Streamline',
                                 application_icon='io.github.jfsen.Streamline',
                                 developer_name='jfsen',
                                 version='0.1.0',
