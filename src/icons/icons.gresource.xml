@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gresources>
+  <gresource prefix="/io/github/jfsen/Streamline/icons">
+    <file preprocess="xml-stripblanks">edit-symbolic.svg</file>
+    <file preprocess="xml-stripblanks">edit-delete-symbolic.svg</file>
+    <file preprocess="xml-stripblanks">list-add-symbolic.svg</file>
+    <file preprocess="xml-stripblanks">media-playback-start-symbolic.svg</file>
+    <file preprocess="xml-stripblanks">open-menu-symbolic.svg</file>
+    <file preprocess="xml-stripblanks">video-display-symbolic.svg</file>
+    <file preprocess="xml-stripblanks">web-browser-symbolic.svg</file>
+    <file preprocess="xml-stripblanks">arrow-circular-top-right-symbolic.svg</file>
+  </gresource>
+</gresources>

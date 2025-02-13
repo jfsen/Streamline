@@ -1,0 +1,10 @@
+class IconNames:
+    """Constants for icon names used in the application."""
+    EDIT = "edit-symbolic"
+    UNFOLLOW = "edit-delete-symbolic"
+    ADD = "list-add-symbolic"
+    PLAY = "media-playback-start-symbolic"
+    MENU = "open-menu-symbolic"
+    VODS = "video-display-symbolic"
+    BROWSER = "web-browser-symbolic"
+    RELOAD = "arrow-circular-top-right-symbolic"

@@ -25,7 +25,7 @@ gi.require_version('Adw', '1')
 
 from gi.repository import Gtk, Gio, Adw
 from .window import StreamlineWindow
-
+from .icon_names import IconNames
 
 class StreamlineApplication(Adw.Application):
     """The main application singleton class."""
@@ -33,6 +33,10 @@ class StreamlineApplication(Adw.Application):
     def __init__(self):
         super().__init__(application_id='io.github.jfsen.Streamline',
                          flags=Gio.ApplicationFlags.FLAGS_NONE)
+        
+        # Fix: Use pkgdatadir to load icons resource
+        resource = Gio.Resource.load('/app/share/streamline/streamline-icons.gresource')
+        resource._register()
 
     def do_startup(self):
         """Called when application is starting up."""

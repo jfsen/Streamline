@@ -2,8 +2,18 @@ pkgdatadir = get_option('prefix') / get_option('datadir') / meson.project_name()
 moduledir = pkgdatadir / 'streamline'
 gnome = import('gnome')
 
+# Main application resources
 gnome.compile_resources('streamline',
   'streamline.gresource.xml',
+  gresource_bundle: true,
+  install: true,
+  install_dir: pkgdatadir,
+)
+
+# Icons resources - updated with correct source_dir
+gnome.compile_resources('streamline-icons',
+  'icons/icons.gresource.xml',
+  source_dir: 'icons',  # Add this line to specify icons directory
   gresource_bundle: true,
   install: true,
   install_dir: pkgdatadir,
@@ -33,6 +43,8 @@ streamline_sources = [
   'preferences.py',
   'twitch.py',
   'stream_player.py',
+  'vod_page.py',
+  'icon_names.py'
 ]
 
 install_data(streamline_sources, install_dir: moduledir)

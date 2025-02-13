@@ -12,7 +12,9 @@
         "--socket=wayland",
         "--talk-name=org.freedesktop.Flatpak",
         "--command=streamlink",
-        "--command=mpv"
+        "--command=mpv",
+        "--persist=.config",
+        "--persist=.cache"
     ],
     "cleanup" : [
         "/include",

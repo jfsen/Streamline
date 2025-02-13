@@ -1,13 +1,18 @@
 import requests
-from datetime import datetime, timezone
+import json
+from datetime import datetime, timezone, timedelta
 from time import time
+from pathlib import Path
 
 class TwitchAPI:
     def __init__(self, client_id, client_secret):
         self.client_id = client_id
         self.client_secret = client_secret
+        self.access_token = None
+        self.token_expires_at = None
         print(f"[Twitch] Initializing API (client_id: {client_id[:5]}...)")
-        self.access_token = self._get_access_token()
+        self.user_id_cache = self._load_user_id_cache()
+        self._load_token_cache()
 
     def _get_access_token(self):
         url = 'https://id.twitch.tv/oauth2/token'
@@ -20,14 +25,122 @@ class TwitchAPI:
         try:
             response = requests.post(url, params=params)
             response.raise_for_status()
+            data = response.json()
+            self.access_token = data['access_token']
+            # Set expiration time (token is valid for 60 days, we'll set it to 59 to be safe)
+            self.token_expires_at = datetime.now(timezone.utc) + timedelta(days=59)
+            self._save_token_cache()
             print("[Twitch] Access token obtained successfully")
-            return response.json()['access_token']
+            return self.access_token
         except requests.exceptions.RequestException as e:
             print(f"[Twitch] Failed to get access token: {str(e)}")
             raise
 
+    def _ensure_access_token(self):
+        """Ensure we have a valid access token before making API calls."""
+        if (self.access_token is None or 
+            self.token_expires_at is None or 
+            datetime.now(timezone.utc) >= self.token_expires_at):
+            self._get_access_token()
+
+    def _get_token_cache_path(self):
+        """Get path to token cache file."""
+        cache_dir = Path.home() / ".cache" / "Streamline"
+        cache_dir.mkdir(parents=True, exist_ok=True)
+        return cache_dir / "token.json"
+
+    def _load_token_cache(self):
+        """Load access token from cache if available and not expired."""
+        try:
+            with open(self._get_token_cache_path()) as f:
+                cache_data = json.load(f)
+                expires_at = datetime.fromisoformat(cache_data['expires_at'])
+                if datetime.now(timezone.utc) < expires_at:
+                    self.access_token = cache_data['access_token']
+                    self.token_expires_at = expires_at
+                    print("[Twitch] Loaded valid token from cache")
+        except (json.JSONDecodeError, KeyError, OSError, FileNotFoundError):
+            pass
+
+    def _save_token_cache(self):
+        """Save access token to cache with expiration."""
+        try:
+            cache_data = {
+                'access_token': self.access_token,
+                'expires_at': self.token_expires_at.isoformat()
+            }
+            with open(self._get_token_cache_path(), 'w') as f:
+                json.dump(cache_data, f, indent=4)
+        except OSError:
+            print("[Twitch] Failed to save token cache")
+
+    def _get_cache_path(self):
+        """Get path to user ID cache file."""
+        cache_dir = Path.home() / ".cache" / "Streamline"
+        cache_dir.mkdir(parents=True, exist_ok=True)
+        return cache_dir / "user_ids.json"
+
+    def _load_user_id_cache(self):
+        """Load user IDs from cache file."""
+        try:
+            with open(self._get_cache_path()) as f:
+                return json.load(f)
+        except (json.JSONDecodeError, OSError, FileNotFoundError):
+            return {}
+
+    def _save_user_id_cache(self):
+        """Save user IDs to cache file."""
+        try:
+            with open(self._get_cache_path(), 'w') as f:
+                json.dump(self.user_id_cache, f, indent=4)
+        except OSError:
+            print("[Twitch] Failed to save user ID cache")
+
+    def _get_streams_cache_path(self):
+        """Get path to streams cache file."""
+        cache_dir = Path.home() / ".cache" / "Streamline"
+        cache_dir.mkdir(parents=True, exist_ok=True)
+        return cache_dir / "streams.json"
+
+    def _load_streams_cache(self):
+        """Load streams data from cache if available and not expired."""
+        try:
+            with open(self._get_streams_cache_path()) as f:
+                cache_data = json.load(f)
+            
+            # Check if cache is expired (5 minutes)
+            cache_time = datetime.fromisoformat(cache_data['timestamp'])
+            now = datetime.now(timezone.utc)
+            if (now - cache_time).total_seconds() > 300:  # 5 minutes
+                return None
+                
+            return cache_data['data']
+        except (json.JSONDecodeError, KeyError, OSError, FileNotFoundError):
+            return None
+
+    def _save_streams_cache(self, data):
+        """Save streams data to cache with timestamp."""
+        try:
+            cache_data = {
+                'timestamp': datetime.now(timezone.utc).isoformat(),
+                'data': data
+            }
+            with open(self._get_streams_cache_path(), 'w') as f:
+                json.dump(cache_data, f, indent=4)
+        except OSError:
+            print("[Twitch] Failed to save streams cache")
+
     def get_streams(self, usernames):
         """Get stream information for multiple users."""
+        # Try to load from cache first
+        cached_data = self._load_streams_cache()
+        if cached_data is not None:
+            print("[Twitch] Using cached stream data")
+            return cached_data['online'], cached_data['offline'], cached_data['info']
+
+        # Only get access token if we need to make API calls
+        self._ensure_access_token()
+        
         start_time = time()
         print(f"[Twitch] Fetching streams for {len(usernames)} users")
         
@@ -54,6 +167,8 @@ class TwitchAPI:
                 for stream in data.get('data', []):
                     user_login = stream['user_login']
                     online_streamers.append(user_login)
+                    # Cache the user ID
+                    self.user_id_cache[user_login] = stream['user_id']
                     streamer_info[user_login] = {
                         "game": stream['game_name'],
                         "title": stream['title'],
@@ -67,13 +182,89 @@ class TwitchAPI:
                 if offline_streamers_batch:
                     print(f"[Twitch] Offline: {', '.join(offline_streamers_batch)}")
 
+                # Save cache after updating
+                self._save_user_id_cache()
+
             except requests.exceptions.RequestException as e:
                 print(f"[Twitch] API request failed: {str(e)}")
                 raise
 
         elapsed = time() - start_time
         print(f"[Twitch] Completed in {elapsed:.2f}s - {len(online_streamers)} online, {len(offline_streamers)} offline")
+        
+        # Save to cache
+        cache_data = {
+            'online': online_streamers,
+            'offline': offline_streamers,
+            'info': streamer_info
+        }
+        self._save_streams_cache(cache_data)
+        
         return online_streamers, offline_streamers, streamer_info
+
+    def get_user_vods(self, username, limit=10):
+        """Get recent VODs for a user."""
+        print(f"[Twitch] Fetching VODs for {username}")
+        
+        # Only get access token if we need to make API calls
+        self._ensure_access_token()
+        
+        headers = {
+            'Client-ID': self.client_id,
+            'Authorization': f'Bearer {self.access_token}'
+        }
+        
+        # Try to get user ID from cache first
+        user_id = self.user_id_cache.get(username)
+        
+        if not user_id:
+            # If not in cache, fetch it from API
+            user_url = f'https://api.twitch.tv/helix/users?login={username}'
+            try:
+                response = requests.get(user_url, headers=headers)
+                response.raise_for_status()
+                user_data = response.json()['data']
+                if not user_data:
+                    return []
+                    
+                user_id = user_data[0]['id']
+                # Cache the user ID and save to file
+                self.user_id_cache[username] = user_id
+                self._save_user_id_cache()
+                
+            except requests.exceptions.RequestException as e:
+                print(f"[Twitch] Failed to fetch user ID: {str(e)}")
+                raise
+
+        # Now get VODs
+        vods_url = f'https://api.twitch.tv/helix/videos?user_id={user_id}&first={limit}&type=archive'
+        try:
+            response = requests.get(vods_url, headers=headers)
+            response.raise_for_status()
+            vods = response.json()['data']
+            
+            formatted_vods = []
+            for vod in vods:
+                formatted_vods.append({
+                    'id': vod['id'],
+                    'title': vod['title'],
+                    'url': vod['url'],
+                    'duration': vod['duration'],
+                    'created_at': self._format_date(vod['created_at']),
+                    'view_count': vod['view_count']
+                })
+            
+            print(f"[Twitch] Found {len(formatted_vods)} VODs for {username}")
+            return formatted_vods
+            
+        except requests.exceptions.RequestException as e:
+            print(f"[Twitch] Failed to fetch VODs: {str(e)}")
+            raise
+
+    def _format_date(self, date_str):
+        """Format date string to readable format."""
+        date = datetime.fromisoformat(date_str.replace('Z', '+00:00'))
+        return date.strftime('%Y-%m-%d %H:%M')
 
     def _calculate_uptime(self, start_time):
         """Calculate stream uptime."""
