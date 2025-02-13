@@ -32,10 +32,6 @@ from .preferences import StreamlinePreferences
 import requests
 from datetime import datetime, timezone
 
-# Add your Twitch API credentials here
-CLIENT_ID = 'client_id'
-CLIENT_SECRET = 'client_secret'
-
 # Function to get the access token
 def get_access_token(client_id, client_secret):
     url = 'https://id.twitch.tv/oauth2/token'
@@ -47,9 +43,6 @@ def get_access_token(client_id, client_secret):
     response = requests.post(url, params=params)
     response.raise_for_status()
     return response.json()['access_token']
-
-# Get the access token
-ACCESS_TOKEN = get_access_token(CLIENT_ID, CLIENT_SECRET)
 
 @Gtk.Template(resource_path='/io/github/jfsen/Streamline/window.ui')
 class StreamlineWindow(Adw.ApplicationWindow):
@@ -64,6 +57,23 @@ class StreamlineWindow(Adw.ApplicationWindow):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+        
+        # Dictionary to store row references
+        self.streamer_rows = {}
+        
+        # Load config
+        config = self.load_config()
+        
+        # Get credentials from config
+        self.client_id = config.get("twitch_client_id", "")
+        self.client_secret = config.get("twitch_client_secret", "")
+        
+        # Get access token if credentials exist
+        if self.client_id and self.client_secret:
+            self.access_token = get_access_token(self.client_id, self.client_secret)
+        else:
+            print("Warning: Twitch credentials not found in config")
+        
         self.last_refresh = datetime.now(timezone.utc)
         
         # Load config
@@ -132,8 +142,8 @@ class StreamlineWindow(Adw.ApplicationWindow):
     def get_streamers(self):
         """Get list of streamers with their online/offline status."""
         headers = {
-            'Client-ID': CLIENT_ID,
-            'Authorization': f'Bearer {ACCESS_TOKEN}'
+            'Client-ID': self.client_id,
+            'Authorization': f'Bearer {self.access_token}'
         }
         
         online_streamers = []
@@ -180,24 +190,33 @@ class StreamlineWindow(Adw.ApplicationWindow):
 
     def update_action_rows(self, online_streamers, offline_streamers, streamer_info):
         """Update the online and offline streamer lists."""
-        # Remove all rows from ListBoxes
-        while self.online_list.get_last_child():
-            self.online_list.remove(self.online_list.get_last_child())
-        while self.offline_list.get_last_child():
-            self.offline_list.remove(self.offline_list.get_last_child())
+        # Clear existing rows
+        while True:
+            row = self.online_list.get_first_child()
+            if row is None:
+                break
+            self.online_list.remove(row)
+        
+        while True:
+            row = self.offline_list.get_first_child()
+            if row is None:
+                break
+            self.offline_list.remove(row)
 
         # Sort streamers alphabetically (case-insensitive)
         online_streamers.sort(key=str.lower)
         offline_streamers.sort(key=str.lower)
 
-        # Add new streamer rows
+        # Add new streamer rows and store references
         for streamer in online_streamers:
             row = self.create_row(streamer, streamer_info.get(streamer, {}))
             self.online_list.append(row)
+            self.streamer_rows[streamer] = row
         
         for streamer in offline_streamers:
             row = self.create_row(streamer, {})
             self.offline_list.append(row)
+            self.streamer_rows[streamer] = row
 
     def create_row(self, streamer, info):
         """Create an ExpanderRow with buttons and additional info."""
@@ -412,9 +431,7 @@ class StreamlineWindow(Adw.ApplicationWindow):
         if response == "unfollow":
             self.all_streamers.remove(streamer)
             self.save_config()
-            # Refresh the lists
-            online_streamers, offline_streamers, streamer_info = self.get_streamers()
-            self.update_action_rows(online_streamers, offline_streamers, streamer_info)
+            self.remove_streamer_row(streamer)
 
     def show_follow_dialog(self, *args):
         """Show dialog to follow new streamer."""
@@ -460,9 +477,7 @@ class StreamlineWindow(Adw.ApplicationWindow):
                 if username not in self.all_streamers:
                     self.all_streamers.append(username)
                     self.save_config()
-                    # Refresh the lists
-                    online_streamers, offline_streamers, streamer_info = self.get_streamers()
-                    self.update_action_rows(online_streamers, offline_streamers, streamer_info)
+                    self.add_offline_streamer(username)
                 else:
                     error = Adw.MessageDialog(
                         transient_for=self,
@@ -534,6 +549,8 @@ class StreamlineWindow(Adw.ApplicationWindow):
             "player_type": "mpv",
             "custom_player_path": "",
             "stream_quality": "best",  # Add default quality
+            "twitch_client_id": "",  # Add Twitch client ID
+            "twitch_client_secret": ""  # Add Twitch client secret
         }
 
         try:
@@ -558,6 +575,8 @@ class StreamlineWindow(Adw.ApplicationWindow):
             "player_type": self.player_type,
             "custom_player_path": self.custom_player_path,
             "stream_quality": self.stream_quality,  # Add quality to saved config
+            "twitch_client_id": self.client_id,  # Save Twitch client ID
+            "twitch_client_secret": self.client_secret  # Save Twitch client secret
         }
 
         try:
@@ -582,3 +601,19 @@ class StreamlineWindow(Adw.ApplicationWindow):
         toast = Adw.Toast.new(text)
         toast.set_timeout(timeout)
         self.toast_overlay.add_toast(toast)
+
+    def add_offline_streamer(self, username):
+        """Create and add row for new offline streamer."""
+        row = self.create_row(username, {})
+        self.offline_list.append(row)
+        self.streamer_rows[username] = row
+        return row
+
+    def remove_streamer_row(self, username):
+        """Remove streamer row from UI."""
+        if username in self.streamer_rows:
+            row = self.streamer_rows[username]
+            parent = row.get_parent()
+            if parent:
+                parent.remove(row)
+            del self.streamer_rows[username]
