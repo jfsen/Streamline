@@ -29,6 +29,27 @@ import os
 import json
 from pathlib import Path
 from .preferences import StreamlinePreferences
+import requests
+from datetime import datetime, timezone
+
+# Add your Twitch API credentials here
+CLIENT_ID = 'client_id'
+CLIENT_SECRET = 'client_secret'
+
+# Function to get the access token
+def get_access_token(client_id, client_secret):
+    url = 'https://id.twitch.tv/oauth2/token'
+    params = {
+        'client_id': client_id,
+        'client_secret': client_secret,
+        'grant_type': 'client_credentials'
+    }
+    response = requests.post(url, params=params)
+    response.raise_for_status()
+    return response.json()['access_token']
+
+# Get the access token
+ACCESS_TOKEN = get_access_token(CLIENT_ID, CLIENT_SECRET)
 
 @Gtk.Template(resource_path='/io/github/jfsen/Streamline/window.ui')
 class StreamlineWindow(Adw.ApplicationWindow):
@@ -43,6 +64,7 @@ class StreamlineWindow(Adw.ApplicationWindow):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+        self.last_refresh = datetime.now(timezone.utc)
         
         # Load config
         config = self.load_config()
@@ -74,20 +96,89 @@ class StreamlineWindow(Adw.ApplicationWindow):
         self.refresh_button.connect("clicked", self.on_refresh_button_clicked)
         self.quick_play_button.connect("clicked", self.show_quick_play_dialog)
         # Get initial streamers
-        online_streamers, offline_streamers = self.get_streamers()
-        self.update_action_rows(online_streamers, offline_streamers)
+        online_streamers, offline_streamers, streamer_info = self.get_streamers()
+        self.update_action_rows(online_streamers, offline_streamers, streamer_info)
+
+    def check_refresh_cooldown(self):
+        """Update refresh button state and tooltip."""
+        now = datetime.now(timezone.utc)
+        time_since_refresh = (now - self.last_refresh).total_seconds()
+        
+        if time_since_refresh < 60:
+            remaining = int(60 - time_since_refresh)
+            self.refresh_button.set_sensitive(False)
+            self.refresh_button.set_tooltip_text(f"Wait {remaining}s")
+            return True
+        
+        self.refresh_button.set_sensitive(True)
+        self.refresh_button.set_tooltip_text("Refresh")
+        return False
 
     def on_refresh_button_clicked(self, button):
-        # Replace this with the actual function that returns the lists of online and offline streamers
-        online_streamers, offline_streamers = self.get_streamers()
-        self.update_action_rows(online_streamers, offline_streamers)
+        now = datetime.now(timezone.utc)
+        if (now - self.last_refresh).total_seconds() < 60:
+            return
+            
+        self.last_refresh = now
+        self.refresh_button.set_sensitive(False)
+        
+        # Start updating tooltip countdown
+        GLib.timeout_add_seconds(1, self.check_refresh_cooldown)
+        
+        # Get fresh streamer data
+        online_streamers, offline_streamers, streamer_info = self.get_streamers()
+        self.update_action_rows(online_streamers, offline_streamers, streamer_info)
 
     def get_streamers(self):
-        """Get list of streamers with all set to offline by default."""
-        # Return all streamers as offline for now
-        return [], self.all_streamers.copy()
+        """Get list of streamers with their online/offline status."""
+        headers = {
+            'Client-ID': CLIENT_ID,
+            'Authorization': f'Bearer {ACCESS_TOKEN}'
+        }
+        
+        online_streamers = []
+        offline_streamers = []
+        streamer_info = {}
 
-    def update_action_rows(self, online_streamers, offline_streamers):
+        # Batch the streamers into chunks of 100 (Twitch API limit)
+        for i in range(0, len(self.all_streamers), 100):
+            batch = self.all_streamers[i:i+100]
+            user_logins = '&user_login='.join(batch)
+            url = f'https://api.twitch.tv/helix/streams?user_login={user_logins}'
+            print(f"Fetching data for batch: {batch}")
+            response = requests.get(url, headers=headers)
+            data = response.json()
+            print(f"Response data: {data}")
+
+            for stream in data.get('data', []):
+                user_login = stream['user_login']
+                online_streamers.append(user_login)
+                streamer_info[user_login] = {
+                    "game": stream['game_name'],
+                    "title": stream['title'],
+                    "viewers": stream['viewer_count'],
+                    "uptime": self.calculate_uptime(stream['started_at'])
+                }
+                print(f"Streamer {user_login} is online: {streamer_info[user_login]}")
+
+            offline_streamers_batch = [streamer for streamer in batch if streamer not in online_streamers]
+            offline_streamers.extend(offline_streamers_batch)
+            print(f"Offline streamers in this batch: {offline_streamers_batch}")
+
+        print(f"Total online streamers: {online_streamers}")
+        print(f"Total offline streamers: {offline_streamers}")
+        return online_streamers, offline_streamers, streamer_info
+
+    def calculate_uptime(self, start_time):
+        """Calculate the uptime of a stream."""
+        start_time = datetime.fromisoformat(start_time.replace('Z', '+00:00'))
+        now = datetime.now(timezone.utc)
+        uptime = now - start_time
+        hours, remainder = divmod(uptime.total_seconds(), 3600)
+        minutes, _ = divmod(remainder, 60)
+        return f"{int(hours)}h {int(minutes)}m"
+
+    def update_action_rows(self, online_streamers, offline_streamers, streamer_info):
         """Update the online and offline streamer lists."""
         # Remove all rows from ListBoxes
         while self.online_list.get_last_child():
@@ -101,14 +192,14 @@ class StreamlineWindow(Adw.ApplicationWindow):
 
         # Add new streamer rows
         for streamer in online_streamers:
-            row = self.create_row(streamer)
+            row = self.create_row(streamer, streamer_info.get(streamer, {}))
             self.online_list.append(row)
         
         for streamer in offline_streamers:
-            row = self.create_row(streamer)
+            row = self.create_row(streamer, {})
             self.offline_list.append(row)
 
-    def create_row(self, streamer):
+    def create_row(self, streamer, info):
         """Create an ExpanderRow with buttons and additional info."""
         row = Adw.ExpanderRow.new()
         row.set_title(streamer)
@@ -156,10 +247,10 @@ class StreamlineWindow(Adw.ApplicationWindow):
 
         # Add some example info (you can customize this)
         info_labels = [
-            "Game: Just Chatting",
-            "Title: Stream title goes hereeeeeeeeee eeeeeee eeeeee eeeeeeeee eeeeeeeeee eeeee eee eeeeeeeee eeeeeeeeeeeeeee eeeeee eeeee eeeeeeee eeeeeee eeeeeeeee eeeeee",
-            "Viewers: 1,234",
-            "Uptime: 2h 30m"
+            f"Game: {info.get('game', 'Unknown')}",
+            f"Title: {info.get('title', 'No title')}",
+            f"Viewers: {info.get('viewers', 'N/A')}",
+            f"Uptime: {info.get('uptime', 'N/A')}"
         ]
 
         for info in info_labels:
@@ -322,8 +413,8 @@ class StreamlineWindow(Adw.ApplicationWindow):
             self.all_streamers.remove(streamer)
             self.save_config()
             # Refresh the lists
-            online_streamers, offline_streamers = self.get_streamers()
-            self.update_action_rows(online_streamers, offline_streamers)
+            online_streamers, offline_streamers, streamer_info = self.get_streamers()
+            self.update_action_rows(online_streamers, offline_streamers, streamer_info)
 
     def show_follow_dialog(self, *args):
         """Show dialog to follow new streamer."""
@@ -370,8 +461,8 @@ class StreamlineWindow(Adw.ApplicationWindow):
                     self.all_streamers.append(username)
                     self.save_config()
                     # Refresh the lists
-                    online_streamers, offline_streamers = self.get_streamers()
-                    self.update_action_rows(online_streamers, offline_streamers)
+                    online_streamers, offline_streamers, streamer_info = self.get_streamers()
+                    self.update_action_rows(online_streamers, offline_streamers, streamer_info)
                 else:
                     error = Adw.MessageDialog(
                         transient_for=self,

@@ -27,6 +27,13 @@
     ],
     "modules" : [
         {
+            "name": "python3-requests",
+            "buildsystem": "simple",
+            "build-commands": [
+                "pip3 install requests --prefix=/app"
+            ]
+        },
+        {
             "name" : "streamline",
             "builddir" : true,
             "buildsystem" : "meson",
@@ -42,6 +49,9 @@
         }
     ],
     "build-options" : {
-        "env" : {        }
+        "env" : { },
+        "build-args": [
+            "--share=network"
+        ]
     }
 }
