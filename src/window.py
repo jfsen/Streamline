@@ -130,7 +130,22 @@ class StreamlineWindow(Adw.ApplicationWindow):
 
     def on_refresh_button_clicked(self, button):
         """Refresh streamer data."""
-        # Get fresh streamer data
+        if not self.twitch:
+            self.show_toast("API not available")
+            return
+
+        # Check cache status
+        cached_data, seconds_until_refresh = self.twitch._load_streams_cache()
+        
+        if cached_data is not None:
+            # Data is still cached, inform user how long until refresh is available
+            minutes = int(seconds_until_refresh / 60)
+            seconds = int(seconds_until_refresh % 60)
+            self.show_toast(f"Please wait {minutes}m {seconds}s before refreshing again")
+            return
+            
+        # Cache is expired, do refresh
+        self.show_toast("Refreshing streamer data...")
         online_streamers, offline_streamers, streamer_info = self.get_streamers()
         self.update_action_rows(online_streamers, offline_streamers, streamer_info)
 

@@ -111,12 +111,14 @@ class TwitchAPI:
             # Check if cache is expired (5 minutes)
             cache_time = datetime.fromisoformat(cache_data['timestamp'])
             now = datetime.now(timezone.utc)
-            if (now - cache_time).total_seconds() > 300:  # 5 minutes
-                return None
+            seconds_until_refresh = 300 - (now - cache_time).total_seconds()  # 5 minutes in seconds
+            
+            if seconds_until_refresh > 0:
+                return cache_data['data'], int(seconds_until_refresh)
                 
-            return cache_data['data']
+            return None, 0
         except (json.JSONDecodeError, KeyError, OSError, FileNotFoundError):
-            return None
+            return None, 0
 
     def _save_streams_cache(self, data):
         """Save streams data to cache with timestamp."""
@@ -133,9 +135,9 @@ class TwitchAPI:
     def get_streams(self, usernames):
         """Get stream information for multiple users."""
         # Try to load from cache first
-        cached_data = self._load_streams_cache()
+        cached_data, seconds_until_refresh = self._load_streams_cache()
         if cached_data is not None:
-            print("[Twitch] Using cached stream data")
+            print(f"[Twitch] Using cached stream data (refresh in {seconds_until_refresh}s)")
             return cached_data['online'], cached_data['offline'], cached_data['info']
 
         # Only get access token if we need to make API calls
