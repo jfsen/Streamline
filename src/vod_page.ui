@@ -3,5 +3,37 @@
   <requires lib="gtk" version="4.0"/>
   <requires lib="libadwaita" version="1.0"/>
   <template class="VODPage" parent="AdwNavigationPage">
+    <property name="title" translatable="yes">VODs</property>
+    <property name="can-pop">true</property>
+    <child>
+      <object class="AdwToolbarView">
+        <child type="top">
+          <object class="AdwHeaderBar">
+            <property name="show-back-button">true</property>
+            <property name="title-widget">
+              <object class="AdwWindowTitle">
+                <property name="title" bind-source="VODPage" bind-property="title"/>
+              </object>
+            </property>
+          </object>
+        </child>
+        <property name="content">
+          <object class="GtkScrolledWindow" id="scroll">
+            <property name="vexpand">true</property>
+            <child>
+              <object class="GtkListBox" id="list_box">
+                <property name="margin-start">24</property>
+                <property name="margin-end">24</property>
+                <property name="margin-top">24</property>
+                <property name="margin-bottom">24</property>
+                <style>
+                  <class name="boxed-list"/>
+                </style>
+              </object>
+            </child>
+          </object>
+        </property>
+      </object>
+    </child>
   </template>
 </interface>

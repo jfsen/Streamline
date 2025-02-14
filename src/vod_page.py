@@ -12,46 +12,47 @@ from .icon_names import IconNames
 class VODPage(Adw.NavigationPage):
     __gtype_name__ = 'VODPage'
 
-    def __init__(self, parent, streamer, twitch_api, player):
-        # Create main box for content
-        content = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+    # Template children
+    list_box = Gtk.Template.Child()
+    scroll = Gtk.Template.Child()
+
+    def __init__(self, parent, streamer, twitch, player):
+        # Create navigation page with proper title
+        super().__init__(title=f"{streamer}'s VODs")
         
-        super().__init__(
-            title=f"VODs - {streamer}",
-            child=content
-        )
-        
-        self.parent = parent
+        # Use weak reference for parent
+        from weakref import proxy
+        self.parent = proxy(parent)
         self.streamer = streamer
-        self.twitch_api = twitch_api
+        self.twitch = twitch
         self.player = player
         
-        # Add header bar with back button
-        header = Gtk.HeaderBar()
-        header.set_title_widget(Gtk.Label(label=f"VODs - {streamer}"))
-        self.back_button = Gtk.Button(icon_name="go-previous-symbolic")
-        self.back_button.add_css_class("flat")
-        self.back_button.connect("clicked", self.on_back_clicked)
-        header.pack_start(self.back_button)
-        content.append(header)
-        
-        # Add scrolled window
-        scrolled = Gtk.ScrolledWindow()
-        scrolled.set_vexpand(True)
-        content.append(scrolled)
-        
-        # Add list box
-        self.list_box = Gtk.ListBox()
-        self.list_box.add_css_class("boxed-list")
+        # Setup list box properties
         self.list_box.set_selection_mode(Gtk.SelectionMode.NONE)
-        self.list_box.set_margin_start(12)
-        self.list_box.set_margin_end(12)
-        self.list_box.set_margin_top(12)
-        self.list_box.set_margin_bottom(12)
-        scrolled.set_child(self.list_box)
+        self.list_box.add_css_class("boxed-list")
+        
+        # Connect cleanup signal
+        self.connect('hidden', self._on_hidden)
         
         # Load VODs
-        self.load_vods()
+        self._load_vods()
+
+    def _on_hidden(self, page):
+        """Clean up when page is hidden"""
+        # Clear list box children
+        while row := self.list_box.get_first_child():
+            self.list_box.remove(row)
+        
+        # Clear references
+        self.list_box = None
+        self.scroll = None
+        self.content = None
+        self.twitch = None
+        self.player = None
+        self.parent = None
+        # Force cleanup
+        import gc
+        gc.collect()
 
     def on_back_clicked(self, button):
         """Handle back button click."""
@@ -95,7 +96,7 @@ class VODPage(Adw.NavigationPage):
         except OSError:
             pass  # Ignore cache write failures
 
-    def load_vods(self, force_refresh=False):
+    def _load_vods(self, force_refresh=False):
         """Load and display VODs."""
         try:
             # Try to load from cache first
@@ -160,7 +161,7 @@ class VODPage(Adw.NavigationPage):
 
     def on_refresh_clicked(self, button):
         """Handle refresh button click."""
-        self.load_vods(force_refresh=True)
+        self._load_vods(force_refresh=True)
 
     def play_vod(self, vod):
         """Play VOD using streamlink."""
