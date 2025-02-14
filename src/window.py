@@ -52,12 +52,9 @@ class StreamlineWindow(Adw.ApplicationWindow):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         
-        # Load config first
-        config = self.load_config()
-        
-        # Get credentials from config
-        self.client_id = config.get("twitch_client_id", "")
-        self.client_secret = config.get("twitch_client_secret", "")
+        # Load config once and store all values
+        self.config = self.load_config()
+        self._initialize_from_config(self.config)
         
         # Initialize API-related attributes
         self.twitch = None
@@ -127,6 +124,19 @@ class StreamlineWindow(Adw.ApplicationWindow):
             child=self.main_content
         )
         self.navigation_view.add(self.main_page)
+        self._executable_cache = {}
+
+    def _initialize_from_config(self, config):
+        """Initialize all attributes from config in one pass"""
+        self.client_id = config.get("twitch_client_id", "")
+        self.client_secret = config.get("twitch_client_secret", "")
+        self.player_type = config.get("player_type", "mpv")
+        self.custom_player_path = config.get("custom_player_path", "")
+        self.streamlink_path = config.get("streamlink_path", "/usr/bin/streamlink")
+        self.mpv_path = config.get("mpv_path", "/usr/bin/mpv")
+        self.vlc_path = config.get("vlc_path", "/usr/bin/vlc")
+        self.all_streamers = config.get("streamers", [])
+        self.stream_quality = config.get("stream_quality", "best")
 
     def on_refresh_button_clicked(self, button):
         """Refresh streamer data."""
@@ -178,17 +188,12 @@ class StreamlineWindow(Adw.ApplicationWindow):
             self.show_toast("API not available - showing all streamers as offline", 4)
         
         # Clear existing rows
-        while True:
-            row = self.online_list.get_first_child()
-            if row is None:
-                break
-            self.online_list.remove(row)
-        
-        while True:
-            row = self.offline_list.get_first_child()
-            if row is None:
-                break
-            self.offline_list.remove(row)
+        def clear_list(list_box):
+            while row := list_box.get_first_child():
+                list_box.remove(row)
+                
+        clear_list(self.online_list)
+        clear_list(self.offline_list)
 
         # Sort streamers alphabetically (case-insensitive)
         online_streamers.sort(key=str.lower)
@@ -209,14 +214,18 @@ class StreamlineWindow(Adw.ApplicationWindow):
         """Create an ActionRow with buttons and additional info."""
         row = Adw.ActionRow.new()
         
-        # Get display name from cache if available, fall back to username
-        display_name = None
-        if self.twitch:
-            display_name = self.twitch.display_name_cache.get(streamer)
+        # Create buttons once and reuse for all rows
+        BUTTONS = [
+            (IconNames.PLAY, "Play stream", lambda s: self.play_stream(s)),
+            (IconNames.BROWSER, "Open in browser", self.open_stream_in_browser),
+            (IconNames.UNFOLLOW, "Unfollow", self.unfollow_streamer),
+            (IconNames.VODS, "Show VODs", self.show_vods_page)
+        ]
         
-        # Set title - use display name if available, otherwise use username
+        # Cache display name lookup
+        display_name = self.twitch.display_name_cache.get(streamer) if self.twitch else None
         row.set_title(display_name or streamer)
-        row.set_title_lines(1)  # Prevent line wrapping for title
+        row.set_title_lines(1)
 
         if info:  # Online streamer
             # Set viewers and category as subtitle
@@ -283,7 +292,10 @@ class StreamlineWindow(Adw.ApplicationWindow):
         return streamlink_cmd, player_cmd
 
     def _find_executable(self, name):
-        """Find executable in various locations."""
+        """Find executable with caching"""
+        if name in self._executable_cache:
+            return self._executable_cache[name]
+            
         # Check if running in flatpak
         if os.path.exists('/.flatpak-info'):
             # Try host system path first
@@ -294,6 +306,7 @@ class StreamlineWindow(Adw.ApplicationWindow):
                     text=True
                 )
                 if result.returncode == 0:
+                    self._executable_cache[name] = result.stdout.strip()
                     return result.stdout.strip()
             except subprocess.SubprocessError:
                 pass
@@ -308,8 +321,10 @@ class StreamlineWindow(Adw.ApplicationWindow):
         
         for path in paths:
             if os.path.exists(path) and os.access(path, os.X_OK):
+                self._executable_cache[name] = path
                 return path
                 
+        self._executable_cache[name] = None
         return None
 
     def _show_error_dialog(self, heading, message):
@@ -345,38 +360,19 @@ class StreamlineWindow(Adw.ApplicationWindow):
 
     def show_follow_dialog(self, *args):
         """Show dialog to follow new streamer."""
-        dialog = Adw.MessageDialog(
-            transient_for=self,
+        dialog, entry = self._create_input_dialog(
             heading="Follow Streamer",
-            body="Enter the Twitch username of the streamer you want to follow:"
+            body="Enter the Twitch username of the streamer you want to follow:",
+            default_response="follow"
         )
 
-        # Create a box for the entry with proper spacing and width
-        content_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
-        content_box.set_margin_start(20)
-        content_box.set_margin_end(20)
-        content_box.set_margin_top(10)
-        content_box.set_margin_bottom(10)
-
-        # Add entry with minimum width and activate signal
-        entry = Gtk.Entry()
-        entry.set_width_chars(30)
-        entry.set_hexpand(True)
-        entry.connect("activate", lambda w: dialog.response("follow"))
-        content_box.append(entry)
-
-        dialog.set_extra_child(content_box)
-
-        # Add dialog buttons
         dialog.add_response("cancel", "Cancel")
         dialog.add_response("follow", "Follow")
         dialog.set_response_appearance("follow", Adw.ResponseAppearance.SUGGESTED)
         dialog.set_default_response("follow")
 
-        # Handle response
         dialog.connect("response", self._on_follow_response, entry)
         dialog.present()
-        # Focus the entry
         entry.grab_focus()
 
     def _on_follow_response(self, dialog, response, entry):
@@ -400,38 +396,19 @@ class StreamlineWindow(Adw.ApplicationWindow):
 
     def show_quick_play_dialog(self, *args):
         """Show dialog to quickly play a stream."""
-        dialog = Adw.MessageDialog(
-            transient_for=self,
+        dialog, entry = self._create_input_dialog(
             heading="Quick Play Stream",
-            body="Enter the Twitch username of the streamer:"
+            body="Enter the Twitch username of the streamer:",
+            default_response="play"
         )
 
-        # Create a box for the entry
-        content_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
-        content_box.set_margin_start(20)
-        content_box.set_margin_end(20)
-        content_box.set_margin_top(10)
-        content_box.set_margin_bottom(10)
-
-        # Add entry with minimum width and activate signal
-        entry = Gtk.Entry()
-        entry.set_width_chars(30)
-        entry.set_hexpand(True)
-        entry.connect("activate", lambda w: dialog.response("play"))
-        content_box.append(entry)
-
-        dialog.set_extra_child(content_box)
-
-        # Add dialog buttons
         dialog.add_response("cancel", "Cancel")
         dialog.add_response("play", "Play")
         dialog.set_response_appearance("play", Adw.ResponseAppearance.SUGGESTED)
         dialog.set_default_response("play")
 
-        # Handle response
         dialog.connect("response", self._on_quick_play_response, entry)
         dialog.present()
-        # Focus the entry
         entry.grab_focus()
 
     def _on_quick_play_response(self, dialog, response, entry):
@@ -542,3 +519,31 @@ class StreamlineWindow(Adw.ApplicationWindow):
         """Show VODs page for the given streamer."""
         page = VODPage(self, streamer, self.twitch, self.player)
         self.navigation_view.push(page)
+
+    def _create_input_dialog(self, heading, body, default_response="ok"):
+        """Create reusable input dialog"""
+        dialog = Adw.MessageDialog(
+            transient_for=self,
+            heading=heading,
+            body=body
+        )
+        
+        content_box = Gtk.Box(
+            orientation=Gtk.Orientation.VERTICAL,
+            margin_start=20,
+            margin_end=20,
+            margin_top=10,
+            margin_bottom=10
+        )
+        
+        entry = Gtk.Entry(
+            width_chars=30,
+            hexpand=True,
+            activates_default=True
+        )
+        
+        content_box.append(entry)
+        dialog.set_extra_child(content_box)
+        dialog.set_default_response(default_response)
+        
+        return dialog, entry
