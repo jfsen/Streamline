@@ -107,7 +107,7 @@ class VODPage(Adw.NavigationPage):
                     return
 
             # Fetch fresh data
-            vods = self.twitch_api.get_user_vods(self.streamer)
+            vods = self.twitch.get_user_vods(self.streamer)
             self.save_vods_cache(vods)
             self.display_vods(vods)
                 
