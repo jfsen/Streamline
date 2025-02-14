@@ -44,7 +44,10 @@ streamline_sources = [
   'twitch.py',
   'stream_player.py',
   'vod_page.py',
-  'icon_names.py'
+  'icon_names.py',
+  'dialogs.py',
+  'config.py',
+  'rows.py'
 ]
 
 install_data(streamline_sources, install_dir: moduledir)

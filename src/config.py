@@ -28,6 +28,32 @@ class ConfigManager:
         config_dir.mkdir(parents=True, exist_ok=True)
         return config_dir / "config.json"
 
+    def get_config_path(self):
+        """Get the path to the config file."""
+        # Check if running in Flatpak
+        if os.path.exists('/.flatpak-info'):
+            config_dir = Path(os.environ.get('XDG_CONFIG_HOME', 
+                        Path.home() / '.var/app/io.github.jfsen.Streamline/config')) / "Streamline"
+        else:
+            config_dir = Path.home() / ".config" / "Streamline"
+        
+        config_dir.mkdir(parents=True, exist_ok=True)
+        return config_dir / "config.json"
+
+    def create_config_dict(self, window):
+        """Create configuration dictionary from window state."""
+        return {
+            "streamers": window.all_streamers,
+            "streamlink_path": window.streamlink_path,
+            "mpv_path": window.mpv_path,
+            "vlc_path": window.vlc_path,
+            "player_type": window.player_type,
+            "custom_player_path": window.custom_player_path,
+            "stream_quality": window.stream_quality,
+            "twitch_client_id": window.client_id,
+            "twitch_client_secret": window.client_secret
+        }
+
     def load(self):
         """Load configuration from file."""
         try:

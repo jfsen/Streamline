@@ -36,6 +36,9 @@ from .twitch import TwitchAPI
 from .stream_player import StreamPlayer
 from .vod_page import VODPage
 from .icon_names import IconNames
+from .config import ConfigManager
+from .dialogs import StreamlineDialogs
+from .rows import StreamerRowManager
 
 
 @Gtk.Template(resource_path='/io/github/jfsen/Streamline/window.ui')
@@ -52,8 +55,13 @@ class StreamlineWindow(Adw.ApplicationWindow):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         
+        # Initialize managers
+        self.config_manager = ConfigManager()
+        self.dialogs = StreamlineDialogs(self)
+        self.row_manager = StreamerRowManager(self)
+        
         # Load config once and store all values
-        self.config = self.load_config()
+        self.config = self.config_manager.load()
         self._initialize_from_config(self.config)
         
         # Initialize API-related attributes
@@ -212,59 +220,7 @@ class StreamlineWindow(Adw.ApplicationWindow):
 
     def create_row(self, streamer, info):
         """Create an ActionRow with buttons and additional info."""
-        row = Adw.ActionRow.new()
-        
-        # Create buttons once and reuse for all rows
-        BUTTONS = [
-            (IconNames.PLAY, "Play stream", lambda s: self.play_stream(s)),
-            (IconNames.BROWSER, "Open in browser", self.open_stream_in_browser),
-            (IconNames.UNFOLLOW, "Unfollow", self.unfollow_streamer),
-            (IconNames.VODS, "Show VODs", self.show_vods_page)
-        ]
-        
-        # Cache display name lookup
-        display_name = self.twitch.display_name_cache.get(streamer) if self.twitch else None
-        row.set_title(display_name or streamer)
-        row.set_title_lines(1)
-
-        if info:  # Online streamer
-            # Set viewers and category as subtitle
-            viewers = info.get('viewers', 'N/A')
-            game = info.get('game', 'Unknown')
-            row.set_subtitle(f"{game} • {viewers} viewers")
-            row.set_subtitle_lines(1)
-
-            # Set title and uptime as tooltip
-            title = GLib.markup_escape_text(info.get('title', 'No title'))
-            uptime = info.get('uptime', 'N/A')
-            tooltip = f"Title: {title}\nUptime: {uptime}"
-            row.set_tooltip_text(tooltip)
-
-        # Create play button separately to add as prefix
-        play_button = Gtk.Button(icon_name=IconNames.PLAY)
-        play_button.add_css_class("flat")
-        play_button.set_valign(Gtk.Align.CENTER)
-        play_button.set_tooltip_text("Play stream")
-        play_button.connect("clicked", lambda btn, s=streamer: self.play_stream(s))
-        row.add_prefix(play_button)
-
-        # Create action buttons with tooltips and handlers
-        buttons = [
-            (IconNames.BROWSER, "Open in browser", self.open_stream_in_browser),
-            (IconNames.UNFOLLOW, "Unfollow", self.unfollow_streamer),
-            (IconNames.VODS, "Show VODs", self.show_vods_page)
-        ]
-
-        # Add all buttons in the same order for both online and offline streamers
-        for icon_name, tooltip, handler in buttons:
-            button = Gtk.Button(icon_name=icon_name)
-            button.add_css_class("flat")
-            button.set_valign(Gtk.Align.CENTER)
-            button.set_tooltip_text(tooltip)
-            button.connect("clicked", lambda btn, s=streamer, h=handler: h(s))
-            row.add_suffix(button)
-
-        return row
+        return self.row_manager.create_row(streamer, info)
 
     def open_stream_in_browser(self, streamer):
         """Open the Twitch stream page in default browser."""
@@ -329,27 +285,12 @@ class StreamlineWindow(Adw.ApplicationWindow):
 
     def _show_error_dialog(self, heading, message):
         """Show error dialog with the given heading and message."""
-        dialog = Adw.MessageDialog(
-            transient_for=self,
-            heading=heading,
-            body=message
-        )
-        dialog.add_response("ok", "OK")
-        dialog.present()
+        self.dialogs.show_error_dialog(heading, message)
 
     def unfollow_streamer(self, streamer):
         """Remove a streamer from the list."""
         if streamer in self.all_streamers:
-            dialog = Adw.MessageDialog(
-                transient_for=self,
-                heading=f"Unfollow {streamer}?",
-                body="Are you sure you want to unfollow this streamer?"
-            )
-            dialog.add_response("cancel", "Cancel")
-            dialog.add_response("unfollow", "Unfollow")
-            dialog.set_response_appearance("unfollow", Adw.ResponseAppearance.DESTRUCTIVE)
-            dialog.connect("response", self._on_unfollow_response, streamer)
-            dialog.present()
+            self.dialogs.show_unfollow_dialog(streamer, self._on_unfollow_response)
 
     def _on_unfollow_response(self, dialog, response, streamer):
         """Handle unfollow dialog response."""
@@ -385,13 +326,7 @@ class StreamlineWindow(Adw.ApplicationWindow):
                     self.save_config()
                     self.add_offline_streamer(username)
                 else:
-                    error = Adw.MessageDialog(
-                        transient_for=self,
-                        heading="Already Following",
-                        body=f"You are already following {username}"
-                    )
-                    error.add_response("ok", "OK")
-                    error.present()
+                    self.dialogs.show_already_following_dialog(username)
         dialog.close()
 
     def show_quick_play_dialog(self, *args):
@@ -419,70 +354,18 @@ class StreamlineWindow(Adw.ApplicationWindow):
                 self.play_stream(username)
         dialog.close()
 
-    def get_config_path(self):
-        """Get the path to the config file."""
-        # Check if running in Flatpak
-        if os.path.exists('/.flatpak-info'):
-            config_dir = Path(os.environ.get('XDG_CONFIG_HOME', 
-                        Path.home() / '.var/app/io.github.jfsen.Streamline/config')) / "Streamline"
-        else:
-            config_dir = Path.home() / ".config" / "Streamline"
-        
-        config_dir.mkdir(parents=True, exist_ok=True)
-        return config_dir / "config.json"
-
     def load_config(self):
         """Load configuration from file."""
-        config_path = self.get_config_path()
-        default_config = {
-            "streamers": [],
-            "streamlink_path": "/usr/bin/streamlink",
-            "mpv_path": "/usr/bin/mpv",
-            "vlc_path": "/usr/bin/vlc",  # Add VLC path
-            "player_type": "mpv",
-            "custom_player_path": "",
-            "stream_quality": "best",  # Add default quality
-            "twitch_client_id": "",  # Add Twitch client ID
-            "twitch_client_secret": ""  # Add Twitch client secret
-        }
-
-        try:
-            if config_path.exists():
-                with open(config_path, 'r') as f:
-                    return json.load(f)
-            else:
-                # Create default config file
-                with open(config_path, 'w') as f:
-                    json.dump(default_config, f, indent=4)
-                return default_config
-        except (json.JSONDecodeError, OSError):
-            return default_config
+        return self.config_manager.load()
 
     def save_config(self):
         """Save current configuration to file."""
-        config = {
-            "streamers": self.all_streamers,
-            "streamlink_path": self.streamlink_path,
-            "mpv_path": self.mpv_path,
-            "vlc_path": self.vlc_path,  # Add VLC path
-            "player_type": self.player_type,
-            "custom_player_path": self.custom_player_path,
-            "stream_quality": self.stream_quality,  # Add quality to saved config
-            "twitch_client_id": self.client_id,  # Save Twitch client ID
-            "twitch_client_secret": self.client_secret  # Save Twitch client secret
-        }
-
-        try:
-            with open(self.get_config_path(), 'w') as f:
-                json.dump(config, f, indent=4)
-        except OSError as e:
-            error_dialog = Adw.MessageDialog(
-                transient_for=self,
-                heading="Error Saving Config",
-                body=f"Could not save configuration: {str(e)}"
+        config = self.config_manager.create_config_dict(self)
+        if not self.config_manager.save(config):
+            self.dialogs.show_error_dialog(
+                "Error Saving Config",
+                "Could not save configuration"
             )
-            error_dialog.add_response("ok", "OK")
-            error_dialog.present()
 
     def show_preferences(self, *args):
         """Show the preferences window."""
@@ -504,12 +387,12 @@ class StreamlineWindow(Adw.ApplicationWindow):
 
     def remove_streamer_row(self, username):
         """Remove streamer row from UI."""
-        if username in self.streamer_rows:
-            row = self.streamer_rows[username]
+        if username in self.row_manager.streamer_rows:
+            row = self.row_manager.streamer_rows[username]
             parent = row.get_parent()
             if parent:
                 parent.remove(row)
-            del self.streamer_rows[username]
+            del self.row_manager.streamer_rows[username]
 
     def play_stream(self, streamer):
         """Play a stream for the given streamer."""
@@ -522,28 +405,4 @@ class StreamlineWindow(Adw.ApplicationWindow):
 
     def _create_input_dialog(self, heading, body, default_response="ok"):
         """Create reusable input dialog"""
-        dialog = Adw.MessageDialog(
-            transient_for=self,
-            heading=heading,
-            body=body
-        )
-        
-        content_box = Gtk.Box(
-            orientation=Gtk.Orientation.VERTICAL,
-            margin_start=20,
-            margin_end=20,
-            margin_top=10,
-            margin_bottom=10
-        )
-        
-        entry = Gtk.Entry(
-            width_chars=30,
-            hexpand=True,
-            activates_default=True
-        )
-        
-        content_box.append(entry)
-        dialog.set_extra_child(content_box)
-        dialog.set_default_response(default_response)
-        
-        return dialog, entry
+        return self.dialogs.create_input_dialog(heading, body, default_response)

@@ -32,4 +32,25 @@ class StreamerRowManager:
 
     def _add_row_buttons(self, row, streamer):
         """Add action buttons to the row"""
-        # Implementation of button creation and connection...
+        # Create play button as prefix
+        play_button = Gtk.Button(icon_name=IconNames.PLAY)
+        play_button.add_css_class("flat")
+        play_button.set_valign(Gtk.Align.CENTER)
+        play_button.set_tooltip_text("Play stream")
+        play_button.connect("clicked", lambda btn: self.window.play_stream(streamer))
+        row.add_prefix(play_button)
+
+        # Create action buttons with tooltips and handlers
+        buttons = [
+            (IconNames.BROWSER, "Open in browser", self.window.open_stream_in_browser),
+            (IconNames.UNFOLLOW, "Unfollow", self.window.unfollow_streamer),
+            (IconNames.VODS, "Show VODs", self.window.show_vods_page)
+        ]
+
+        for icon_name, tooltip, handler in buttons:
+            button = Gtk.Button(icon_name=icon_name)
+            button.add_css_class("flat")
+            button.set_valign(Gtk.Align.CENTER)
+            button.set_tooltip_text(tooltip)
+            button.connect("clicked", lambda btn, h=handler: h(streamer))
+            row.add_suffix(button)
