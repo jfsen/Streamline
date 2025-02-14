@@ -139,9 +139,7 @@ class StreamlineWindow(Adw.ApplicationWindow):
         
         if cached_data is not None:
             # Data is still cached, inform user how long until refresh is available
-            minutes = int(seconds_until_refresh / 60)
-            seconds = int(seconds_until_refresh % 60)
-            self.show_toast(f"Please wait {minutes}m {seconds}s before refreshing again")
+            self.show_toast(f"Please wait {seconds_until_refresh}s before refreshing again")
             return
             
         # Cache is expired, do refresh
@@ -210,15 +208,22 @@ class StreamlineWindow(Adw.ApplicationWindow):
     def create_row(self, streamer, info):
         """Create an ActionRow with buttons and additional info."""
         row = Adw.ActionRow.new()
-        row.set_title(streamer)
+        
+        # Get display name from cache if available, fall back to username
+        display_name = None
+        if self.twitch:
+            display_name = self.twitch.display_name_cache.get(streamer)
+        
+        # Set title - use display name if available, otherwise use username
+        row.set_title(display_name or streamer)
         row.set_title_lines(1)  # Prevent line wrapping for title
 
         if info:  # Online streamer
-            # Set viewers and category as two-line subtitle
+            # Set viewers and category as subtitle
             viewers = info.get('viewers', 'N/A')
             game = info.get('game', 'Unknown')
-            row.set_subtitle(f"{viewers} viewers\n{game}")
-            row.set_subtitle_lines(2)
+            row.set_subtitle(f"{game} • {viewers} viewers")
+            row.set_subtitle_lines(1)
 
             # Set title and uptime as tooltip
             title = GLib.markup_escape_text(info.get('title', 'No title'))
