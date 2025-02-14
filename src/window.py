@@ -133,6 +133,7 @@ class StreamlineWindow(Adw.ApplicationWindow):
         )
         self.navigation_view.add(self.main_page)
         self._executable_cache = {}
+        self._preferences = None
 
     def _initialize_from_config(self, config):
         """Initialize all attributes from config in one pass"""
@@ -368,9 +369,13 @@ class StreamlineWindow(Adw.ApplicationWindow):
             )
 
     def show_preferences(self, *args):
-        """Show the preferences window."""
-        prefs = StreamlinePreferences(self)
-        prefs.present()
+        """Show preferences window."""
+        if not self._preferences:
+            prefs = StreamlinePreferences(self)
+            prefs.connect('destroy', lambda w: setattr(self, '_preferences', None))
+            self._preferences = prefs
+            
+        self._preferences.present()
 
     def show_toast(self, text, timeout=2):
         """Show a toast notification."""
@@ -401,7 +406,15 @@ class StreamlineWindow(Adw.ApplicationWindow):
     def show_vods_page(self, streamer):
         """Show VODs page for the given streamer."""
         page = VODPage(self, streamer, self.twitch, self.player)
+        # Store weak reference to track the current VOD page
+        from weakref import proxy
+        self._current_vod_page = proxy(page)
         self.navigation_view.push(page)
+
+    def _cleanup_vod_page(self, page):
+        """Clean up VOD page references"""
+        if hasattr(self, '_current_vod_page'):
+            delattr(self, '_current_vod_page')
 
     def _create_input_dialog(self, heading, body, default_response="ok"):
         """Create reusable input dialog"""

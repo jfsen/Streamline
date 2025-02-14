@@ -14,12 +14,30 @@ class StreamlinePreferences(Adw.PreferencesWindow):
 
     def __init__(self, parent, **kwargs):
         super().__init__(**kwargs)
-        
         self.set_transient_for(parent)
+        
+        # Store parent reference directly since window lifecycle is managed by GTK
         self.parent = parent
         
+        # Define quality options first
+        self._qualities = ["best", "1080p60", "1080p", "720p60", 
+                         "720p", "480p", "360p", "worst"]
+        
+        # Setup models
+        self._player_model = Gtk.StringList.new(["MPV", "VLC", "Custom"])
+        self._quality_model = Gtk.StringList.new(self._qualities)
+        
+        # Setup UI
+        self._setup_models()
+        self._setup_values()
+        self._connect_signals()
+        
+        # Use hide-on-close to let GTK manage window lifecycle
+        self.set_hide_on_close(True)
+        
+    def _setup_models(self):
         # Setup player selection
-        self.player_row.set_model(Gtk.StringList.new(["MPV", "VLC", "Custom"]))
+        self.player_row.set_model(self._player_model)
         if self.parent.player_type == "mpv":
             self.player_row.set_selected(0)
         elif self.parent.player_type == "vlc":
@@ -28,29 +46,39 @@ class StreamlinePreferences(Adw.PreferencesWindow):
             self.player_row.set_selected(2)
         
         # Setup quality selection
-        qualities = ["best", "1080p60", "1080p", "720p60", "720p", "480p", "360p", "worst"]
-        self.quality_row.set_model(Gtk.StringList.new(qualities))
+        self.quality_row.set_model(self._quality_model)
         
+    def _setup_values(self):
         # Set current values
-        self.streamlink_entry.set_text(parent.streamlink_path)
-        self.mpv_entry.set_text(parent.mpv_path)
-        self.vlc_entry.set_text(parent.vlc_path)
-        self.custom_player_row.set_text(parent.custom_player_path)
-        self.custom_player_row.set_sensitive(parent.player_type == "custom")
+        self.streamlink_entry.set_text(self.parent.streamlink_path)
+        self.mpv_entry.set_text(self.parent.mpv_path)
+        self.vlc_entry.set_text(self.parent.vlc_path)
+        self.custom_player_row.set_text(self.parent.custom_player_path)
+        self.custom_player_row.set_sensitive(self.parent.player_type == "custom")
         
         # Set current quality
-        if parent.stream_quality in qualities:
-            self.quality_row.set_selected(qualities.index(parent.stream_quality))
-        else:
+        try:
+            quality_index = self._qualities.index(self.parent.stream_quality)
+            self.quality_row.set_selected(quality_index)
+        except ValueError:
             self.quality_row.set_selected(0)  # Default to "best"
         
-        # Connect signals
-        self.streamlink_entry.connect('changed', self._on_path_changed)
-        self.mpv_entry.connect('changed', self._on_path_changed)
-        self.vlc_entry.connect('changed', self._on_path_changed)
-        self.player_row.connect('notify::selected', self._on_player_changed)
-        self.custom_player_row.connect('changed', self._on_custom_path_changed)
-        self.quality_row.connect('notify::selected', self._on_quality_changed)
+    def _connect_signals(self):
+        # Store signal handler IDs
+        self._signal_handlers = []
+        
+        # Connect signals and store their IDs
+        self._signal_handlers.extend([
+            self.streamlink_entry.connect('changed', self._on_path_changed),
+            self.mpv_entry.connect('changed', self._on_path_changed),
+            self.vlc_entry.connect('changed', self._on_path_changed),
+            self.player_row.connect('notify::selected', self._on_player_changed),
+            self.custom_player_row.connect('changed', self._on_custom_path_changed),
+            self.quality_row.connect('notify::selected', self._on_quality_changed)
+        ])
+        
+        # Connect to destroy signal instead of close-request
+        self.connect('destroy', self._on_destroy)
 
     def _on_path_changed(self, entry):
         """Save changes when paths are modified."""
@@ -76,3 +104,21 @@ class StreamlinePreferences(Adw.PreferencesWindow):
         selected = qualities[row.get_selected()]
         self.parent.stream_quality = selected
         self.parent.save_config()
+    
+    def _on_destroy(self, window):
+        """Clean up resources when window is destroyed."""
+        # Disconnect signals
+        for handler_id in self._signal_handlers:
+            source = self.get_object_for_signal_handler(handler_id)
+            if source:
+                source.disconnect(handler_id)
+        
+        # Clear models
+        self.player_row.set_model(None)
+        self.quality_row.set_model(None)
+        
+        # Clear references
+        self._player_model = None
+        self._quality_model = None
+        self._signal_handlers = None
+        self.parent = None
