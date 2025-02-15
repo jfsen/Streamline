@@ -131,10 +131,10 @@ class TwitchAPI:
             with open(self._get_streams_cache_path()) as f:
                 cache_data = json.load(f)
             
-            # Check if cache is expired (2 minutes)
+            # Check if cache is expired (3 minutes)
             cache_time = datetime.fromisoformat(cache_data['timestamp'])
             now = datetime.now(timezone.utc)
-            seconds_until_refresh = 120 - (now - cache_time).total_seconds() #TIMER
+            seconds_until_refresh = 180 - (now - cache_time).total_seconds() #TIMER
             
             if seconds_until_refresh > 0:
                 return cache_data['data'], int(seconds_until_refresh)
@@ -229,7 +229,7 @@ class TwitchAPI:
         
         return online_streamers, offline_streamers, streamer_info
 
-    def get_user_vods(self, username, limit=10):
+    def get_user_vods(self, username, limit=20):
         """Get recent VODs for a user."""
         print(f"[Twitch] Fetching VODs for {username}")
         
