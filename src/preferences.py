@@ -11,6 +11,7 @@ class StreamlinePreferences(Adw.PreferencesWindow):
     player_row = Gtk.Template.Child()
     custom_player_row = Gtk.Template.Child()
     quality_row = Gtk.Template.Child()
+    window_size_row = Gtk.Template.Child()
 
     def __init__(self, parent, **kwargs):
         super().__init__(**kwargs)
@@ -31,6 +32,9 @@ class StreamlinePreferences(Adw.PreferencesWindow):
         self._setup_models()
         self._setup_values()
         self._connect_signals()
+        
+        # Initialize window size preference using narrow_mode
+        self.window_size_row.set_selected(1 if parent.narrow_mode else 0)
         
         # Use hide-on-close to let GTK manage window lifecycle
         self.set_hide_on_close(True)
@@ -74,7 +78,8 @@ class StreamlinePreferences(Adw.PreferencesWindow):
             self.vlc_entry.connect('changed', self._on_path_changed),
             self.player_row.connect('notify::selected', self._on_player_changed),
             self.custom_player_row.connect('changed', self._on_custom_path_changed),
-            self.quality_row.connect('notify::selected', self._on_quality_changed)
+            self.quality_row.connect('notify::selected', self._on_quality_changed),
+            self.window_size_row.connect('notify::selected', self._on_window_size_changed)
         ])
         
         # Connect to destroy signal instead of close-request
@@ -103,6 +108,14 @@ class StreamlinePreferences(Adw.PreferencesWindow):
         qualities = ["best", "1080p60", "1080p", "720p60", "720p", "480p", "360p", "worst"]
         selected = qualities[row.get_selected()]
         self.parent.stream_quality = selected
+        self.parent.save_config()
+    
+    def _on_window_size_changed(self, row, _):
+        """Handle window size preference change"""
+        narrow_mode = row.get_selected() == 1
+        self.parent.narrow_mode = narrow_mode
+        if narrow_mode:
+            self.parent.set_default_size(360, 600)
         self.parent.save_config()
     
     def _on_destroy(self, window):

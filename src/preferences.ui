@@ -30,6 +30,24 @@
           </object>
         </child>
         <child>
+          <object class="AdwPreferencesGroup" id="appearance_group">
+            <property name="title">Appearance</property>
+            <child>
+              <object class="AdwComboRow" id="window_size_row">
+                <property name="title">Default Window Size</property>
+                <property name="model">
+                  <object class="GtkStringList">
+                    <items>
+                      <item>Regular</item>
+                      <item>Narrow</item>
+                    </items>
+                  </object>
+                </property>
+              </object>
+            </child>
+          </object>
+        </child>
+        <child>
           <object class="AdwPreferencesGroup">
             <property name="title" translatable="yes">Application Paths</property>
             <child>

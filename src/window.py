@@ -55,12 +55,21 @@ class StreamlineWindow(Adw.ApplicationWindow):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         
-        # Initialize managers except row_manager
+        # Initialize config manager first
         self.config_manager = ConfigManager()
+        self.config = self.config_manager.load()
+        
+        # Initialize window size attribute
+        self.narrow_mode = self.config.get("narrow_mode", False)
+        
+        # Set initial window size based on preference
+        if self.narrow_mode:
+            self.set_default_size(360, 600)
+        
+        # Initialize other managers
         self.dialogs = StreamlineDialogs(self)
         
-        # Load config once and store all values
-        self.config = self.config_manager.load()
+        # Load remaining config values
         self._initialize_from_config(self.config)
 
         # Create ListBoxes for online and offline streamers first
@@ -148,6 +157,7 @@ class StreamlineWindow(Adw.ApplicationWindow):
         self.vlc_path = config.get("vlc_path", "/usr/bin/vlc")
         self.all_streamers = config.get("streamers", [])
         self.stream_quality = config.get("stream_quality", "best")
+        self.narrow_mode = config.get("narrow_mode", False)
 
     def on_refresh_button_clicked(self, button):
         """Refresh streamer data."""

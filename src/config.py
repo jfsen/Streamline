@@ -14,7 +14,8 @@ class ConfigManager:
             "custom_player_path": "",
             "stream_quality": "best",
             "twitch_client_id": "",
-            "twitch_client_secret": ""
+            "twitch_client_secret": "",
+            "narrow_mode": False
         }
 
     def _get_config_path(self):
@@ -51,7 +52,8 @@ class ConfigManager:
             "custom_player_path": window.custom_player_path,
             "stream_quality": window.stream_quality,
             "twitch_client_id": window.client_id,
-            "twitch_client_secret": window.client_secret
+            "twitch_client_secret": window.client_secret,
+            "narrow_mode": window.narrow_mode
         }
 
     def load(self):
