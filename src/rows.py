@@ -18,8 +18,7 @@ class StreamerRowManager:
         if info:  # Online streamer
             viewers = info.get('viewers', 'N/A')
             game = info.get('game', 'Unknown')
-            row.set_subtitle(f"{game} • {viewers} viewers")
-            row.set_subtitle_lines(1)
+            row.set_subtitle(f"{game}\n{viewers} viewers")
 
             title = GLib.markup_escape_text(info.get('title', 'No title'))
             uptime = info.get('uptime', 'N/A')
