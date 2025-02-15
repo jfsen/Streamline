@@ -155,6 +155,29 @@ class TwitchAPI:
         except OSError:
             print("[Twitch] Failed to save streams cache")
 
+    def update_streams_cache(self, username, add=True):
+        """Update streams cache without modifying timestamp."""
+        try:
+            with open(self._get_streams_cache_path()) as f:
+                cache_data = json.load(f)
+                
+            if 'data' in cache_data:
+                if add:
+                    if username not in cache_data['data']['offline']:
+                        cache_data['data']['offline'].append(username)
+                        cache_data['data']['offline'].sort(key=str.lower)
+                else:
+                    cache_data['data']['online'] = [s for s in cache_data['data']['online'] if s != username]
+                    cache_data['data']['offline'] = [s for s in cache_data['data']['offline'] if s != username]
+                    if username in cache_data['data']['info']:
+                        del cache_data['data']['info'][username]
+                
+                with open(self._get_streams_cache_path(), 'w') as f:
+                    json.dump(cache_data, f, indent=4)
+                    
+        except (OSError, json.JSONDecodeError):
+            pass  # Silently fail if cache update fails
+
     def get_streams(self, usernames):
         """Get stream information for multiple users."""
         # Try to load from cache first

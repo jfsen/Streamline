@@ -5,6 +5,8 @@ class StreamerRowManager:
     def __init__(self, window):
         self.window = window
         self.streamer_rows = {}
+        self.online_list = window.online_list
+        self.offline_list = window.offline_list
 
     def create_row(self, streamer, info):
         """Create an ActionRow with buttons and additional info."""
@@ -53,3 +55,59 @@ class StreamerRowManager:
             button.set_tooltip_text(tooltip)
             button.connect("clicked", lambda btn, h=handler: h(streamer))
             row.add_suffix(button)
+
+    def add_offline_streamer(self, username):
+        """Create and add row for new offline streamer."""
+        row = self.create_row(username, {})
+        
+        # Find insertion point to maintain alphabetical order
+        index = 0
+        child = self.offline_list.get_first_child()
+        while child is not None:
+            title = child.get_title()
+            if title.lower() > username.lower():
+                break
+            index += 1
+            child = child.get_next_sibling()
+        
+        self.offline_list.insert(row, index)
+        self.streamer_rows[username] = row
+        self.window._update_streams_cache(username, add=True)
+        return row
+
+    def remove_streamer_row(self, username):
+        """Remove streamer row from UI."""
+        if username in self.streamer_rows:
+            row = self.streamer_rows[username]
+            parent = row.get_parent()
+            if parent:
+                parent.remove(row)
+            # Clean up row reference
+            del self.streamer_rows[username]
+            self.window._update_streams_cache(username, add=False)
+
+    def update_rows(self, online_streamers, offline_streamers, streamer_info):
+        """Update all streamer rows."""
+        # Clear existing rows
+        def clear_list(list_box):
+            while row := list_box.get_first_child():
+                list_box.remove(row)
+                
+        clear_list(self.online_list)
+        clear_list(self.offline_list)
+        self.streamer_rows.clear()
+
+        # Sort streamers alphabetically (case-insensitive)
+        online_streamers.sort(key=str.lower)
+        offline_streamers.sort(key=str.lower)
+
+        # Add new streamer rows
+        for streamer in online_streamers:
+            row = self.create_row(streamer, streamer_info.get(streamer, {}))
+            self.online_list.append(row)
+            self.streamer_rows[streamer] = row
+        
+        for streamer in offline_streamers:
+            row = self.create_row(streamer, {})
+            self.offline_list.append(row)
+            self.streamer_rows[streamer] = row

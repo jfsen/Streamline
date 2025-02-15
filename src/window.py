@@ -55,14 +55,27 @@ class StreamlineWindow(Adw.ApplicationWindow):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         
-        # Initialize managers
+        # Initialize managers except row_manager
         self.config_manager = ConfigManager()
         self.dialogs = StreamlineDialogs(self)
-        self.row_manager = StreamerRowManager(self)
         
         # Load config once and store all values
         self.config = self.config_manager.load()
         self._initialize_from_config(self.config)
+
+        # Create ListBoxes for online and offline streamers first
+        self.online_list = Gtk.ListBox()
+        self.online_list.add_css_class("boxed-list")
+        self.online_list.set_selection_mode(Gtk.SelectionMode.NONE)
+        self.online_group.add(self.online_list)
+        
+        self.offline_list = Gtk.ListBox()
+        self.offline_list.add_css_class("boxed-list")
+        self.offline_list.set_selection_mode(Gtk.SelectionMode.NONE)
+        self.offline_group.add(self.offline_list)
+
+        # Now initialize row manager after lists are created
+        self.row_manager = StreamerRowManager(self)
         
         # Initialize API-related attributes
         self.twitch = None
@@ -104,17 +117,6 @@ class StreamlineWindow(Adw.ApplicationWindow):
         # Add stream quality setting
         self.stream_quality = config.get("stream_quality", "best")
 
-        # Create ListBoxes for online and offline streamers
-        self.online_list = Gtk.ListBox()
-        self.online_list.add_css_class("boxed-list")
-        self.online_list.set_selection_mode(Gtk.SelectionMode.NONE)
-        self.online_group.add(self.online_list)
-        
-        self.offline_list = Gtk.ListBox()
-        self.offline_list.add_css_class("boxed-list")
-        self.offline_list.set_selection_mode(Gtk.SelectionMode.NONE)
-        self.offline_group.add(self.offline_list)
-        
         self.refresh_button.connect("clicked", self.on_refresh_button_clicked)
         self.quick_play_button.connect("clicked", self.show_quick_play_dialog)
         # Get initial streamers
@@ -192,32 +194,10 @@ class StreamlineWindow(Adw.ApplicationWindow):
 
     def update_action_rows(self, online_streamers, offline_streamers, streamer_info):
         """Update the online and offline streamer lists."""
-        # Show warning if API is not working
         if not self.twitch:
             self.show_toast("API not available - showing all streamers as offline", 4)
         
-        # Clear existing rows
-        def clear_list(list_box):
-            while row := list_box.get_first_child():
-                list_box.remove(row)
-                
-        clear_list(self.online_list)
-        clear_list(self.offline_list)
-
-        # Sort streamers alphabetically (case-insensitive)
-        online_streamers.sort(key=str.lower)
-        offline_streamers.sort(key=str.lower)
-
-        # Add new streamer rows and store references
-        for streamer in online_streamers:
-            row = self.create_row(streamer, streamer_info.get(streamer, {}))
-            self.online_list.append(row)
-            self.streamer_rows[streamer] = row
-        
-        for streamer in offline_streamers:
-            row = self.create_row(streamer, {})
-            self.offline_list.append(row)
-            self.streamer_rows[streamer] = row
+        self.row_manager.update_rows(online_streamers, offline_streamers, streamer_info)
 
     def create_row(self, streamer, info):
         """Create an ActionRow with buttons and additional info."""
@@ -383,21 +363,18 @@ class StreamlineWindow(Adw.ApplicationWindow):
         toast.set_timeout(timeout)
         self.toast_overlay.add_toast(toast)
 
+    def _update_streams_cache(self, username, add=True):
+        """Update streams cache without modifying timestamp."""
+        if self.twitch:
+            self.twitch.update_streams_cache(username, add)
+
     def add_offline_streamer(self, username):
-        """Create and add row for new offline streamer."""
-        row = self.create_row(username, {})
-        self.offline_list.append(row)
-        self.streamer_rows[username] = row
-        return row
+        """Add new offline streamer row."""
+        return self.row_manager.add_offline_streamer(username)
 
     def remove_streamer_row(self, username):
         """Remove streamer row from UI."""
-        if username in self.row_manager.streamer_rows:
-            row = self.row_manager.streamer_rows[username]
-            parent = row.get_parent()
-            if parent:
-                parent.remove(row)
-            del self.row_manager.streamer_rows[username]
+        self.row_manager.remove_streamer_row(username)
 
     def play_stream(self, streamer):
         """Play a stream for the given streamer."""
