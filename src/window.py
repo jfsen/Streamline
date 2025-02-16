@@ -255,7 +255,11 @@ class StreamlineWindow(Adw.ApplicationWindow):
 
     def _handle_quick_play(self, username):
         """Handle quick play dialog callback."""
-        self.play_stream(username)
+        try:
+            if self.player.play_content(f"twitch.tv/{username}", is_vod=False):
+                self.show_toast("Playback starting...", 2)
+        except Exception as e:
+            self.show_toast(f"Error: {str(e)}", 4)
 
     def load_config(self):
         """Load configuration from file."""
@@ -297,10 +301,6 @@ class StreamlineWindow(Adw.ApplicationWindow):
     def remove_streamer_row(self, username):
         """Remove streamer row from UI."""
         self.row_manager.remove_streamer_row(username)
-
-    def play_stream(self, streamer):
-        """Play a stream for the given streamer."""
-        self.player.play_stream(streamer)
 
     def show_vods_page(self, streamer):
         """Show VODs page for the given streamer."""

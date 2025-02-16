@@ -38,7 +38,15 @@ class StreamerRowManager:
         play_button.add_css_class("flat")
         play_button.set_valign(Gtk.Align.CENTER)
         play_button.set_tooltip_text("Play stream")
-        play_button.connect("clicked", lambda btn: self.window.play_stream(streamer))
+        
+        def on_play_clicked(btn):
+            try:
+                if self.window.player.play_content(f"twitch.tv/{streamer}", is_vod=False):
+                    self.window.show_toast("Playback starting...", 2)
+            except Exception as e:
+                self.window.show_toast(f"Error: {str(e)}", 4)
+        
+        play_button.connect("clicked", on_play_clicked)
         row.add_prefix(play_button)
 
         # Create action buttons with tooltips and handlers

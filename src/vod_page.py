@@ -166,27 +166,8 @@ class VODPage(Adw.NavigationPage):
     def play_vod(self, vod):
         """Play VOD using streamlink."""
         try:
-            streamlink_cmd, player_cmd = self.player._get_required_executables()
-            
-            cmd = ['flatpak-spawn', '--host'] if os.path.exists('/.flatpak-info') else []
-            cmd.extend([
-                streamlink_cmd,
-                vod['url'],
-                self.player.window.stream_quality,
-                '--player-passthrough=hls',
-                f'--player={player_cmd}'
-            ])
-            
-            subprocess.Popen(
-                cmd,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                text=True,
-                start_new_session=True
-            )
-            
-            self.player.window.show_toast(f"Starting VOD playback")
-            
+            self.player.play_content(vod['url'], is_vod=True)
+            self.show_toast(f"Starting VOD: {vod['title']}")
         except Exception as e:
             self.player.window._show_error_dialog("Playback Error", str(e))
     

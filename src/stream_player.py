@@ -7,40 +7,48 @@ class StreamPlayer:
         self.window = window
         self._executable_cache = {}
 
-    def play_stream(self, streamer):
-        """Play a stream using streamlink and configured player."""
+    def play_content(self, url, is_vod=False):
+        """Play a stream or VOD using streamlink and configured player."""
         try:
             streamlink_cmd, player_cmd = self._get_required_executables()
 
             cmd = ['flatpak-spawn', '--host'] if os.path.exists('/.flatpak-info') else []
             cmd.extend([
                 streamlink_cmd,
-                f"twitch.tv/{streamer}",
+                url,
                 self.window.stream_quality,
-                '--twitch-disable-ads',
-                f'--player={player_cmd}',
-                '--player-no-close'  # Keep player open on error
+                f'--player={player_cmd}'
             ])
 
-            # Don't capture output - let streamlink show its own errors
+            # Add specific options based on content type
+            if is_vod:
+                cmd.append('--player-passthrough=hls')
+            else:
+                cmd.extend([
+                    '--twitch-disable-ads',
+                    '--player-no-close'
+                ])
+
+            # Start the process
             process = subprocess.Popen(
                 cmd,
                 start_new_session=True
             )
 
-            # Just wait a moment to catch immediate startup failures
+            # Check for immediate failures
             try:
                 process.wait(timeout=1)
                 if process.returncode != 0:
-                    raise subprocess.SubprocessError("Failed to start streamlink")
+                    raise subprocess.SubprocessError("Failed to start playback")
             except subprocess.TimeoutExpired:
                 # Process is still running - this is good
-                self.window.show_toast(f"Starting stream: {streamer}")
+                return True
 
         except FileNotFoundError:
             self._show_missing_deps_error()
-        except subprocess.SubprocessError as e:
-            self.window.show_toast(str(e), 3)
+            return False
+        except Exception as e:
+            raise
 
     def _get_required_executables(self):
         """Get paths for streamlink and selected player."""
