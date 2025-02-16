@@ -281,69 +281,34 @@ class StreamlineWindow(Adw.ApplicationWindow):
     def unfollow_streamer(self, streamer):
         """Remove a streamer from the list."""
         if streamer in self.all_streamers:
-            self.dialogs.show_unfollow_dialog(streamer, self._on_unfollow_response)
+            self.dialogs.show_unfollow_dialog(streamer, self._handle_unfollow)
 
-    def _on_unfollow_response(self, dialog, response, streamer):
-        """Handle unfollow dialog response."""
-        if response == "unfollow":
-            self.all_streamers.remove(streamer)
-            self.save_config()
-            self.remove_streamer_row(streamer)
+    def _handle_unfollow(self, dialog, response, streamer):
+        """Handle unfollow action."""
+        self.all_streamers.remove(streamer)
+        self.save_config()
+        self.remove_streamer_row(streamer)
 
-    def show_follow_dialog(self, *args):
+    def follow_streamer(self, *args):
         """Show dialog to follow new streamer."""
-        dialog, entry = self._create_input_dialog(
-            heading="Follow Streamer",
-            body="Enter the Twitch username of the streamer you want to follow:",
-            default_response="follow"
-        )
+        self.dialogs.show_follow_dialog(self._handle_follow)
 
-        dialog.add_response("cancel", "Cancel")
-        dialog.add_response("follow", "Follow")
-        dialog.set_response_appearance("follow", Adw.ResponseAppearance.SUGGESTED)
-        dialog.set_default_response("follow")
+    def _handle_follow(self, username):
+        """Handle follow dialog callback."""
+        if username not in self.all_streamers:
+            self.all_streamers.append(username)
+            self.save_config()
+            self.add_offline_streamer(username)
+        else:
+            self.dialogs.show_already_following_dialog(username)
 
-        dialog.connect("response", self._on_follow_response, entry)
-        dialog.present()
-        entry.grab_focus()
-
-    def _on_follow_response(self, dialog, response, entry):
-        """Handle follow dialog response."""
-        if response == "follow":
-            username = entry.get_text().strip()
-            if username:
-                if username not in self.all_streamers:
-                    self.all_streamers.append(username)
-                    self.save_config()
-                    self.add_offline_streamer(username)
-                else:
-                    self.dialogs.show_already_following_dialog(username)
-        dialog.close()
-
-    def show_quick_play_dialog(self, *args):
+    def quick_play(self, *args):
         """Show dialog to quickly play a stream."""
-        dialog, entry = self._create_input_dialog(
-            heading="Quick Play Stream",
-            body="Enter the Twitch username of the streamer:",
-            default_response="play"
-        )
+        self.dialogs.show_quick_play_dialog(self._handle_quick_play)
 
-        dialog.add_response("cancel", "Cancel")
-        dialog.add_response("play", "Play")
-        dialog.set_response_appearance("play", Adw.ResponseAppearance.SUGGESTED)
-        dialog.set_default_response("play")
-
-        dialog.connect("response", self._on_quick_play_response, entry)
-        dialog.present()
-        entry.grab_focus()
-
-    def _on_quick_play_response(self, dialog, response, entry):
-        """Handle quick play dialog response."""
-        if response == "play":
-            username = entry.get_text().strip()
-            if username:
-                self.play_stream(username)
-        dialog.close()
+    def _handle_quick_play(self, username):
+        """Handle quick play dialog callback."""
+        self.play_stream(username)
 
     def load_config(self):
         """Load configuration from file."""

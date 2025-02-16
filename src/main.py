@@ -80,7 +80,7 @@ class StreamlineApplication(Adw.Application):
         """Show follow dialog."""
         win = self.props.active_window
         if win:
-            win.show_follow_dialog()
+            win.follow_streamer()
 
     def create_action(self, name, callback, shortcuts=None):
         """Add an application action.
