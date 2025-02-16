@@ -15,6 +15,7 @@ class VODPage(Adw.NavigationPage):
     # Template children
     list_box = Gtk.Template.Child()
     scroll = Gtk.Template.Child()
+    toast_overlay = Gtk.Template.Child()
 
     def __init__(self, parent, streamer, twitch, player):
         # Create navigation page with proper title
@@ -36,6 +37,12 @@ class VODPage(Adw.NavigationPage):
         
         # Load VODs
         self._load_vods()
+
+    def show_toast(self, message, timeout=2):
+        """Show a toast notification in the VOD page."""
+        toast = Adw.Toast.new(message)
+        toast.set_timeout(timeout)
+        self.toast_overlay.add_toast(toast)
 
     def _on_hidden(self, page):
         """Clean up when page is hidden"""
@@ -110,8 +117,10 @@ class VODPage(Adw.NavigationPage):
             vods = self.twitch.get_user_vods(self.streamer)
             self.save_vods_cache(vods)
             self.display_vods(vods)
+            self.show_toast("VODs refreshed")
                 
         except Exception as e:
+            self.show_toast(f"Error: {str(e)}", 4)
             row = Adw.ActionRow(
                 title="Error loading VODs",
                 subtitle=str(e)
@@ -169,7 +178,7 @@ class VODPage(Adw.NavigationPage):
             self.player.play_content(vod['url'], is_vod=True)
             self.show_toast(f"Starting VOD: {vod['title']}")
         except Exception as e:
-            self.player.window._show_error_dialog("Playback Error", str(e))
+            self.show_toast(f"Error playing VOD: {str(e)}", 4)
     
     def open_in_browser(self, vod):
         """Open VOD in web browser."""
