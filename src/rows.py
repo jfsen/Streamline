@@ -44,8 +44,8 @@ class StreamerRowManager:
         # Create action buttons with tooltips and handlers
         buttons = [
             (IconNames.BROWSER, "Open in browser", self.window.open_stream_in_browser),
-            (IconNames.UNFOLLOW, "Unfollow", self.window.unfollow_streamer),
-            (IconNames.VODS, "Show VODs", self.window.show_vods_page)
+            (IconNames.VODS, "Show VODs", self.window.show_vods_page),
+            (IconNames.UNFOLLOW, "Unfollow", self.window.unfollow_streamer)
         ]
 
         for icon_name, tooltip, handler in buttons:
