@@ -45,6 +45,20 @@
                 </property>
               </object>
             </child>
+            <child>
+              <object class="AdwComboRow" id="theme_row">
+                <property name="title">Theme</property>
+                <property name="model">
+                  <object class="GtkStringList">
+                    <items>
+                      <item>System</item>
+                      <item>Light</item>
+                      <item>Dark</item>
+                    </items>
+                  </object>
+                </property>
+              </object>
+            </child>
           </object>
         </child>
         <child>

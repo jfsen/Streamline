@@ -1,4 +1,4 @@
-from gi.repository import Adw, Gtk
+from gi.repository import Adw, Gtk, Gdk
 
 @Gtk.Template(resource_path='/io/github/jfsen/Streamline/preferences.ui')
 class StreamlinePreferences(Adw.PreferencesWindow):
@@ -12,6 +12,7 @@ class StreamlinePreferences(Adw.PreferencesWindow):
     custom_player_row = Gtk.Template.Child()
     quality_row = Gtk.Template.Child()
     window_size_row = Gtk.Template.Child()
+    theme_row = Gtk.Template.Child()
 
     def __init__(self, parent, **kwargs):
         super().__init__(**kwargs)
@@ -38,6 +39,15 @@ class StreamlinePreferences(Adw.PreferencesWindow):
         
         # Use hide-on-close to let GTK manage window lifecycle
         self.set_hide_on_close(True)
+        
+        # Set up theme selection
+        theme_style = Adw.StyleManager.get_default().get_color_scheme()
+        if theme_style == Adw.ColorScheme.FORCE_LIGHT:
+            self.theme_row.set_selected(1)
+        elif theme_style == Adw.ColorScheme.FORCE_DARK:
+            self.theme_row.set_selected(2)
+        else:
+            self.theme_row.set_selected(0)
         
     def _setup_models(self):
         # Setup player selection
@@ -68,19 +78,15 @@ class StreamlinePreferences(Adw.PreferencesWindow):
             self.quality_row.set_selected(0)  # Default to "best"
         
     def _connect_signals(self):
-        # Store signal handler IDs
-        self._signal_handlers = []
-        
-        # Connect signals and store their IDs
-        self._signal_handlers.extend([
-            self.streamlink_entry.connect('changed', self._on_path_changed),
-            self.mpv_entry.connect('changed', self._on_path_changed),
-            self.vlc_entry.connect('changed', self._on_path_changed),
-            self.player_row.connect('notify::selected', self._on_player_changed),
-            self.custom_player_row.connect('changed', self._on_custom_path_changed),
-            self.quality_row.connect('notify::selected', self._on_quality_changed),
-            self.window_size_row.connect('notify::selected', self._on_window_size_changed)
-        ])
+        """Connect signals to handlers."""
+        self.streamlink_entry.connect('changed', self._on_path_changed)
+        self.mpv_entry.connect('changed', self._on_path_changed)
+        self.vlc_entry.connect('changed', self._on_path_changed)
+        self.player_row.connect('notify::selected', self._on_player_changed)
+        self.custom_player_row.connect('notify::text', self._on_custom_path_changed)
+        self.quality_row.connect('notify::selected', self._on_quality_changed)
+        self.window_size_row.connect('notify::selected', self._on_window_size_changed)
+        self.theme_row.connect('notify::selected', self._on_theme_changed)
         
         # Connect to destroy signal instead of close-request
         self.connect('destroy', self._on_destroy)
@@ -116,6 +122,17 @@ class StreamlinePreferences(Adw.PreferencesWindow):
         self.parent.narrow_mode = narrow_mode
         if narrow_mode:
             self.parent.set_default_size(360, 600)
+        self.parent.save_config()
+    
+    def _on_theme_changed(self, row, _):
+        style_manager = Adw.StyleManager.get_default()
+        selected = row.get_selected()
+        if selected == 0:
+            style_manager.set_color_scheme(Adw.ColorScheme.DEFAULT)
+        elif selected == 1:
+            style_manager.set_color_scheme(Adw.ColorScheme.FORCE_LIGHT)
+        else:
+            style_manager.set_color_scheme(Adw.ColorScheme.FORCE_DARK)
         self.parent.save_config()
     
     def _on_destroy(self, window):

@@ -1,10 +1,11 @@
 import os
 import json
 from pathlib import Path
+from gi.repository import Adw
 
 class ConfigManager:
     def __init__(self):
-        self.config_path = self._get_config_path()
+        self.config_path = self.get_config_path()
         self.default_config = {
             "streamers": [],
             "streamlink_path": "/usr/bin/streamlink",
@@ -15,7 +16,8 @@ class ConfigManager:
             "stream_quality": "best",
             "twitch_client_id": "",
             "twitch_client_secret": "",
-            "narrow_mode": False
+            "narrow_mode": False,
+            "theme": "system"
         }
 
     def _get_config_path(self):
@@ -43,6 +45,9 @@ class ConfigManager:
 
     def create_config_dict(self, window):
         """Create configuration dictionary from window state."""
+        style_manager = Adw.StyleManager.get_default()
+        color_scheme = style_manager.get_color_scheme()
+        
         return {
             "streamers": window.all_streamers,
             "streamlink_path": window.streamlink_path,
@@ -53,7 +58,10 @@ class ConfigManager:
             "stream_quality": window.stream_quality,
             "twitch_client_id": window.client_id,
             "twitch_client_secret": window.client_secret,
-            "narrow_mode": window.narrow_mode
+            "narrow_mode": window.narrow_mode,
+            "theme": "dark" if color_scheme == Adw.ColorScheme.FORCE_DARK 
+                    else "light" if color_scheme == Adw.ColorScheme.FORCE_LIGHT 
+                    else "system"
         }
 
     def load(self):
