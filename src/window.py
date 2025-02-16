@@ -143,7 +143,6 @@ class StreamlineWindow(Adw.ApplicationWindow):
             child=self.main_content
         )
         self.navigation_view.add(self.main_page)
-        self._executable_cache = {}
         self._preferences = None
 
     def _initialize_from_config(self, config):
@@ -217,62 +216,6 @@ class StreamlineWindow(Adw.ApplicationWindow):
         """Open the Twitch stream page in default browser."""
         url = f"https://twitch.tv/{streamer}"
         Gtk.show_uri(parent=self, uri=url, timestamp=0)
-
-    def _get_required_executables(self):
-        """Get paths for streamlink and selected player."""
-        # Find streamlink
-        streamlink_cmd = self._find_executable('streamlink')
-        if not streamlink_cmd:
-            raise FileNotFoundError("Could not find streamlink")
-
-        # Get player command based on preferences
-        if self.player_type == "mpv":
-            player_cmd = self._find_executable('mpv')
-        elif self.player_type == "vlc":
-            player_cmd = self._find_executable('vlc')
-        else:  # custom
-            player_cmd = self.custom_player_path
-
-        if not player_cmd:
-            raise FileNotFoundError(f"Could not find player: {self.player_type}")
-            
-        return streamlink_cmd, player_cmd
-
-    def _find_executable(self, name):
-        """Find executable with caching"""
-        if name in self._executable_cache:
-            return self._executable_cache[name]
-            
-        # Check if running in flatpak
-        if os.path.exists('/.flatpak-info'):
-            # Try host system path first
-            try:
-                result = subprocess.run(
-                    ['flatpak-spawn', '--host', 'which', name],
-                    capture_output=True,
-                    text=True
-                )
-                if result.returncode == 0:
-                    self._executable_cache[name] = result.stdout.strip()
-                    return result.stdout.strip()
-            except subprocess.SubprocessError:
-                pass
-        
-        # Try direct path
-        paths = [
-            f"/usr/bin/{name}",
-            f"/usr/local/bin/{name}",
-            f"/app/bin/{name}",
-            f"{str(Path.home())}/.local/bin/{name}"
-        ]
-        
-        for path in paths:
-            if os.path.exists(path) and os.access(path, os.X_OK):
-                self._executable_cache[name] = path
-                return path
-                
-        self._executable_cache[name] = None
-        return None
 
     def _show_error_dialog(self, heading, message):
         """Show error dialog with the given heading and message."""
