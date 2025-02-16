@@ -72,7 +72,7 @@ class StreamlineWindow(Adw.ApplicationWindow):
         # Load remaining config values
         self._initialize_from_config(self.config)
 
-        # Create ListBoxes for online and offline streamers first
+        # Create ListBoxes for online and offline streamers
         self.online_list = Gtk.ListBox()
         self.online_list.add_css_class("boxed-list")
         self.online_list.set_selection_mode(Gtk.SelectionMode.NONE)
@@ -120,21 +120,25 @@ class StreamlineWindow(Adw.ApplicationWindow):
         # Set paths from config
         self.streamlink_path = config.get("streamlink_path", "/usr/bin/streamlink")
         self.mpv_path = config.get("mpv_path", "/usr/bin/mpv")
-        self.vlc_path = config.get("vlc_path", "/usr/bin/vlc")  # Add VLC path
-        self.all_streamers = config.get("streamers", [])
+        self.vlc_path = config.get("vlc_path", "/usr/bin/vlc")
 
         # Add stream quality setting
         self.stream_quality = config.get("stream_quality", "best")
 
-        self.refresh_button.connect("clicked", self.on_refresh_button_clicked)
-        self.quick_play_button.connect("clicked", self.show_quick_play_dialog)
-        # Get initial streamers
+        # Fetch streamer list from config
+        self.all_streamers = config.get("streamers", [])
+
+        # Get initial streamer data
         online_streamers, offline_streamers, streamer_info = self.get_streamers()
         self.update_action_rows(online_streamers, offline_streamers, streamer_info)
 
+        # Connect headerbar buttons
+        self.refresh_button.connect("clicked", self.on_refresh_button_clicked)
+        self.quick_play_button.connect("clicked", self.quick_play)
+
         # Add navigation view
         self.navigation_view = Adw.NavigationView()
-        self.main_content = self.get_content()  # Save current content
+        self.main_content = self.get_content()
         self.set_content(self.navigation_view)
 
         # Add main page
@@ -173,7 +177,7 @@ class StreamlineWindow(Adw.ApplicationWindow):
             return
             
         # Cache is expired, do refresh
-        self.show_toast("Refreshing streamer data...")
+        self.show_toast("Stream data refreshed")
         online_streamers, offline_streamers, streamer_info = self.get_streamers()
         self.update_action_rows(online_streamers, offline_streamers, streamer_info)
 
