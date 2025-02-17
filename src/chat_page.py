@@ -9,6 +9,8 @@ class ChatPage(Adw.NavigationPage):
         super().__init__(title=f"{streamer}'s Chat")
         self.streamer = streamer
         self.autoscroll = True  # Add this flag
+        self.max_messages = 2000
+        self.message_count = 0
         
         # Create toast overlay
         self.toast_overlay = Adw.ToastOverlay()
@@ -167,13 +169,25 @@ class ChatPage(Adw.NavigationPage):
             GLib.idle_add(self._append_message, timestamp, username, message)
 
     def _append_message(self, timestamp, username, message):
-        """Append message to chat view"""
-        end = self.chat_buffer.get_end_iter()
+        """Append message to chat view with message limit"""
+        # Check if we need to remove old messages
+        if self.message_count >= self.max_messages:
+            # Get start and end iters for the first line
+            start = self.chat_buffer.get_start_iter()
+            end = start.copy()
+            end.forward_line()
+            
+            # Remove the first line
+            self.chat_buffer.delete(start, end)
+            self.message_count -= 1
         
-        # Insert timestamp and username
+        # Add new message
+        end = self.chat_buffer.get_end_iter()
         self.chat_buffer.insert_with_tags_by_name(end, f"[{timestamp}] ", "timestamp")
         self.chat_buffer.insert_with_tags_by_name(end, f"{username}: ", "username")
         self.chat_buffer.insert_with_tags_by_name(end, f"{message}\n", "message")
+        
+        self.message_count += 1
         
         # Only auto-scroll if enabled
         if self.autoscroll:
