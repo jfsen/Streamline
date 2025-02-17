@@ -3,14 +3,48 @@ import socket
 import ssl
 import threading
 import re
+from dataclasses import dataclass
+from typing import List, Dict
+
+@dataclass
+class ChatMessage:
+    timestamp: str
+    username: str
+    message: str
+
+# Static chat store that persists across page instances
+class ChatStore:
+    _messages: Dict[str, List[ChatMessage]] = {}
+    _max_messages = 500  # Match the ChatPage limit
+
+    @classmethod
+    def add_message(cls, channel: str, msg: ChatMessage) -> None:
+        """Add a new message to the store"""
+        if channel not in cls._messages:
+            cls._messages[channel] = []
+            
+        messages = cls._messages[channel]
+        
+        # Don't add if message already exists
+        if msg in messages:
+            return
+                
+        messages.append(msg)
+        if len(messages) > cls._max_messages:
+            messages.pop(0)
+    
+    @classmethod
+    def get_messages(cls, channel: str) -> List[ChatMessage]:
+        return cls._messages.get(channel, [])
 
 class ChatPage(Adw.NavigationPage):
     def __init__(self, streamer):
         super().__init__(title=f"{streamer}'s Chat")
         self.streamer = streamer
-        self.autoscroll = True  # Add this flag
-        self.max_messages = 2000
+        self.autoscroll = True
+        self.max_messages = 1000
         self.message_count = 0
+        self.has_loaded_stored = False
         
         # Create toast overlay
         self.toast_overlay = Adw.ToastOverlay()
@@ -72,6 +106,10 @@ class ChatPage(Adw.NavigationPage):
         self.chat_buffer.create_tag("timestamp", foreground="gray")
         self.chat_buffer.create_tag("username", weight=Pango.Weight.BOLD)
         self.chat_buffer.create_tag("message")
+        self.chat_buffer.create_tag("separator", 
+            foreground="gray",
+            justification=Gtk.Justification.CENTER,
+            style=Pango.Style.ITALIC)
         
         # Create scrolled window
         self.scrolled = Gtk.ScrolledWindow()
@@ -115,6 +153,9 @@ class ChatPage(Adw.NavigationPage):
         self.irc_port = 6697
         self.nickname = "justinfan" + str(GLib.random_int_range(1000, 99999))
         self.channel = f"#{streamer}"
+        
+        # Load existing messages before starting IRC
+        self._load_stored_messages()
         
         # Start IRC connection
         self.connect_to_chat()
@@ -162,34 +203,53 @@ class ChatPage(Adw.NavigationPage):
     
     def _process_message(self, data):
         """Process and display chat messages"""
-        match = re.search(r':(\w+)!\w+@\w+\.tmi\.twitch\.tv PRIVMSG #\w+ :(.*)', data)
-        if match:
+        if match := re.search(r':(\w+)!\w+@\w+\.tmi\.twitch\.tv PRIVMSG #\w+ :(.*)', data):
             username, message = match.groups()
             timestamp = GLib.DateTime.new_now_local().format("%H:%M")
-            GLib.idle_add(self._append_message, timestamp, username, message)
+            msg = ChatMessage(timestamp, username, message)
+            GLib.idle_add(self._append_message, msg)
 
-    def _append_message(self, timestamp, username, message):
-        """Append message to chat view with message limit"""
-        # Check if we need to remove old messages
+    def _load_stored_messages(self):
+        """Load existing messages from the store"""
+        if self.has_loaded_stored:
+            return
+            
+        messages = ChatStore.get_messages(self.streamer)
+        if messages:
+            # First load all stored messages
+            for msg in messages:
+                # Add to view without re-storing
+                self._append_message(msg, store=False)
+            
+            # Then add a single separator after all messages
+            end = self.chat_buffer.get_end_iter()
+            self.chat_buffer.insert_with_tags_by_name(
+                end,
+                "\n─────── Previous Messages ───────\n\n",
+                "separator"
+            )
+        
+        self.has_loaded_stored = True
+
+    def _append_message(self, msg: ChatMessage, store=True):
+        """Append message to chat view"""
+        if store:
+            ChatStore.add_message(self.streamer, msg)
+    
         if self.message_count >= self.max_messages:
-            # Get start and end iters for the first line
             start = self.chat_buffer.get_start_iter()
             end = start.copy()
             end.forward_line()
-            
-            # Remove the first line
             self.chat_buffer.delete(start, end)
             self.message_count -= 1
-        
-        # Add new message
+    
         end = self.chat_buffer.get_end_iter()
-        self.chat_buffer.insert_with_tags_by_name(end, f"[{timestamp}] ", "timestamp")
-        self.chat_buffer.insert_with_tags_by_name(end, f"{username}: ", "username")
-        self.chat_buffer.insert_with_tags_by_name(end, f"{message}\n", "message")
-        
+        self.chat_buffer.insert_with_tags_by_name(end, f"[{msg.timestamp}] ", "timestamp")
+        self.chat_buffer.insert_with_tags_by_name(end, f"{msg.username}: ", "username")
+        self.chat_buffer.insert_with_tags_by_name(end, f"{msg.message}\n", "message")
+    
         self.message_count += 1
-        
-        # Only auto-scroll if enabled
+    
         if self.autoscroll:
             mark = self.chat_buffer.create_mark(None, end, False)
             self.chat_view.scroll_mark_onscreen(mark)

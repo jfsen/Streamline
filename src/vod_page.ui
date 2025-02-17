@@ -24,10 +24,10 @@
                 <property name="vexpand">true</property>
                 <child>
                   <object class="GtkListBox" id="list_box">
-                    <property name="margin-start">24</property>
-                    <property name="margin-end">24</property>
-                    <property name="margin-top">24</property>
-                    <property name="margin-bottom">24</property>
+                    <property name="margin-start">12</property>
+                    <property name="margin-end">12</property>
+                    <property name="margin-top">12</property>
+                    <property name="margin-bottom">12</property>
                     <style>
                       <class name="boxed-list"/>
                     </style>
