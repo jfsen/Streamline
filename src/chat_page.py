@@ -1,10 +1,11 @@
-from gi.repository import Adw, Gtk, GLib, Pango
+from gi.repository import Adw, Gtk, GLib, Pango, GdkPixbuf
 import socket
 import ssl
 import threading
 import re
 from dataclasses import dataclass
 from typing import List, Dict
+from .emote_cache import EmoteCache
 
 @dataclass
 class ChatMessage:
@@ -41,10 +42,17 @@ class ChatPage(Adw.NavigationPage):
     def __init__(self, streamer):
         super().__init__(title=f"{streamer}'s Chat")
         self.streamer = streamer
+        self.running = True
+        self.irc = None  # Initialize IRC socket reference
         self.autoscroll = True
         self.max_messages = 1000
         self.message_count = 0
         self.has_loaded_stored = False
+        
+        # Initialize EmoteCache first
+        self.emote_cache = EmoteCache()
+        # Only fetch metadata, not actual emotes
+        self.emote_cache.fetch_emote_data(streamer)
         
         # Create toast overlay
         self.toast_overlay = Adw.ToastOverlay()
@@ -154,11 +162,13 @@ class ChatPage(Adw.NavigationPage):
         self.nickname = "justinfan" + str(GLib.random_int_range(1000, 99999))
         self.channel = f"#{streamer}"
         
-        # Load existing messages before starting IRC
+        # Load existing messages after EmoteCache is initialized
         self._load_stored_messages()
         
         # Start IRC connection
         self.connect_to_chat()
+        
+        self.running = True  # Add flag to control IRC thread
     
     def connect_to_chat(self):
         """Initialize IRC connection in a separate thread"""
@@ -184,7 +194,7 @@ class ChatPage(Adw.NavigationPage):
             self.irc.send(f"JOIN {self.channel}\r\n".encode())
             
             # Message processing loop
-            while True:
+            while self.running and self.get_root() is not None:
                 data = self.irc.recv(4096).decode('utf-8')
                 if not data:
                     break
@@ -199,7 +209,17 @@ class ChatPage(Adw.NavigationPage):
                     self._process_message(data)
                     
         except Exception as e:
-            GLib.idle_add(self._show_error, str(e))
+            if self.running:  # Only show error if we're still supposed to be running
+                print(f"[DEBUG] IRC worker error: {e}")
+                GLib.idle_add(self._show_error, str(e))
+        finally:
+            # Clean up socket
+            try:
+                if self.irc:
+                    self.irc.shutdown(socket.SHUT_RDWR)
+                    self.irc.close()
+            except Exception:
+                pass
     
     def _process_message(self, data):
         """Process and display chat messages"""
@@ -234,6 +254,7 @@ class ChatPage(Adw.NavigationPage):
     def _append_message(self, msg: ChatMessage, store=True):
         """Append message to chat view"""
         if store:
+            # Store the message in ChatStore
             ChatStore.add_message(self.streamer, msg)
     
         if self.message_count >= self.max_messages:
@@ -246,10 +267,24 @@ class ChatPage(Adw.NavigationPage):
         end = self.chat_buffer.get_end_iter()
         self.chat_buffer.insert_with_tags_by_name(end, f"[{msg.timestamp}] ", "timestamp")
         self.chat_buffer.insert_with_tags_by_name(end, f"{msg.username}: ", "username")
-        self.chat_buffer.insert_with_tags_by_name(end, f"{msg.message}\n", "message")
-    
+        
+        # Split message and check for emotes
+        words = msg.message.split()
+        for word in words:
+            # Emotes are loaded on demand when they appear
+            if pixbuf := self.emote_cache.get_emote_pixbuf(word):
+                image = Gtk.Image.new_from_pixbuf(pixbuf)
+                anchor = self.chat_buffer.create_child_anchor(end)
+                self.chat_view.add_child_at_anchor(image, anchor)
+                self.chat_buffer.insert(end, " ")
+            else:
+                self.chat_buffer.insert_with_tags_by_name(end, f"{word} ", "message")
+        
+        # Add a newline after each message
+        self.chat_buffer.insert(end, "\n")
+
         self.message_count += 1
-    
+
         if self.autoscroll:
             mark = self.chat_buffer.create_mark(None, end, False)
             self.chat_view.scroll_mark_onscreen(mark)
@@ -299,3 +334,13 @@ class ChatPage(Adw.NavigationPage):
         toast = Adw.Toast.new(text)
         toast.set_timeout(timeout)
         self.toast_overlay.add_toast(toast)
+    
+    def do_destroy(self):
+        """Clean up when page is destroyed"""
+        self.running = False  # Signal IRC thread to stop
+        try:
+            self.irc.shutdown(socket.SHUT_RDWR)
+            self.irc.close()
+        except Exception:
+            pass
+        super().do_destroy()

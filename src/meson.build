@@ -48,7 +48,8 @@ streamline_sources = [
   'dialogs.py',
   'config.py',
   'rows.py',
-  'chat_page.py'
+  'chat_page.py',
+  'emote_cache.py'
 ]
 
 install_data(streamline_sources, install_dir: moduledir)
