@@ -2,8 +2,6 @@ from gi.repository import Adw
 from gi.repository import Gtk
 from gi.repository import GLib
 import json
-import os
-import subprocess
 from pathlib import Path
 from datetime import datetime, timezone
 from .icon_names import IconNames
@@ -53,7 +51,6 @@ class VODPage(Adw.NavigationPage):
         # Clear references
         self.list_box = None
         self.scroll = None
-        self.content = None
         self.twitch = None
         self.player = None
         self.parent = None
@@ -100,24 +97,22 @@ class VODPage(Adw.NavigationPage):
             }
             with open(self.get_cache_path(), 'w') as f:
                 json.dump(cache_data, f, indent=4)
-        except OSError:
-            pass  # Ignore cache write failures
+        except OSError as e:
+            print(f"[DEBUG] Failed to write VOD cache: {e}")
 
-    def _load_vods(self, force_refresh=False):
+    def _load_vods(self):
         """Load and display VODs."""
         try:
             # Try to load from cache first
-            if not force_refresh:
-                cached_vods = self.load_cached_vods()
-                if cached_vods is not None:
-                    self.display_vods(cached_vods)
-                    return
+            cached_vods = self.load_cached_vods()
+            if cached_vods is not None:
+                self.display_vods(cached_vods)
+                return
 
             # Fetch fresh data
             vods = self.twitch.get_user_vods(self.streamer)
             self.save_vods_cache(vods)
             self.display_vods(vods)
-            self.show_toast("VODs refreshed")
                 
         except Exception as e:
             self.show_toast(f"Error: {str(e)}", 4)
@@ -129,11 +124,8 @@ class VODPage(Adw.NavigationPage):
 
     def display_vods(self, vods):
         """Display VODs in the list box."""
-        # Clear existing rows
-        while True:
-            row = self.list_box.get_first_child()
-            if row is None:
-                break
+        # Clear existing rows using the same pattern as _on_hidden
+        while row := self.list_box.get_first_child():
             self.list_box.remove(row)
 
         if not vods:
@@ -167,10 +159,6 @@ class VODPage(Adw.NavigationPage):
             row.add_suffix(browser_button)
             
             self.list_box.append(row)
-
-    def on_refresh_clicked(self, button):
-        """Handle refresh button click."""
-        self._load_vods(force_refresh=True)
 
     def play_vod(self, vod):
         """Play VOD using streamlink."""
