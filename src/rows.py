@@ -52,6 +52,7 @@ class StreamerRowManager:
         # Create action buttons with tooltips and handlers
         buttons = [
             (IconNames.BROWSER, "Open in browser", self.window.open_stream_in_browser),
+            ("chat-message-new-symbolic", "Open Chat", self.window.show_chat_page),
             (IconNames.VODS, "Show VODs", self.window.show_vods_page),
             (IconNames.UNFOLLOW, "Unfollow", self.window.unfollow_streamer)
         ]

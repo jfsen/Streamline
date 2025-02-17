@@ -24,10 +24,12 @@ import requests
 import gi
 gi.require_version('Adw', '1')
 gi.require_version('Gtk', '4.0')
+gi.require_version('WebKit', '6.0')
 from gi.repository import Adw
 from gi.repository import Gtk
 from gi.repository import Pango
 from gi.repository import GLib
+from gi.repository import WebKit
 from pathlib import Path
 from datetime import datetime, timezone
 
@@ -39,6 +41,7 @@ from .icon_names import IconNames
 from .config import ConfigManager
 from .dialogs import StreamlineDialogs
 from .rows import StreamerRowManager
+from .chat_page import ChatPage
 
 
 @Gtk.Template(resource_path='/io/github/jfsen/Streamline/window.ui')
@@ -318,3 +321,8 @@ class StreamlineWindow(Adw.ApplicationWindow):
     def _create_input_dialog(self, heading, body, default_response="ok"):
         """Create reusable input dialog"""
         return self.dialogs.create_input_dialog(heading, body, default_response)
+
+    def show_chat_page(self, streamer):
+        """Show chat page for the given streamer."""
+        page = ChatPage(streamer)
+        self.navigation_view.push(page)

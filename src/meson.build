@@ -47,7 +47,8 @@ streamline_sources = [
   'icon_names.py',
   'dialogs.py',
   'config.py',
-  'rows.py'
+  'rows.py',
+  'chat_page.py'
 ]
 
 install_data(streamline_sources, install_dir: moduledir)
