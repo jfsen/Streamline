@@ -83,6 +83,7 @@ class ChatPage(Adw.NavigationPage):
         css_provider.load_from_data('''
             textview {
                 padding: 6px;
+                font-size: 13pt;
             }
             textview text {
                 background: none;
@@ -94,7 +95,7 @@ class ChatPage(Adw.NavigationPage):
                 padding: 8px;
                 background: @view_fg_color;
                 color: @view_bg_color;
-                opacity: 0.9;
+                opacity: 0.7;
             }
             .floating:hover {
                 opacity: 1;
@@ -265,7 +266,7 @@ class ChatPage(Adw.NavigationPage):
             self.message_count -= 1
     
         end = self.chat_buffer.get_end_iter()
-        self.chat_buffer.insert_with_tags_by_name(end, f"[{msg.timestamp}] ", "timestamp")
+        #self.chat_buffer.insert_with_tags_by_name(end, f"[{msg.timestamp}] ", "timestamp")
         self.chat_buffer.insert_with_tags_by_name(end, f"{msg.username}: ", "username")
         
         # Split message and check for emotes
