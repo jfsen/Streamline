@@ -10,10 +10,10 @@ gnome.compile_resources('streamline',
   install_dir: pkgdatadir,
 )
 
-# Icons resources - updated with correct source_dir
+# Icons resources
 gnome.compile_resources('streamline-icons',
   'icons/icons.gresource.xml',
-  source_dir: 'icons',  # Add this line to specify icons directory
+  source_dir: 'icons',
   gresource_bundle: true,
   install: true,
   install_dir: pkgdatadir,

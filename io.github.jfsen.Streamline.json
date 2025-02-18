@@ -42,7 +42,16 @@
             "sources" : [
                 {
                     "type" : "git",
-                    "url" : "file:///home/user/Projects"
+                    "url" : "file:///home/user/Projects",
+                    "branch": "main"
+                },
+                {
+                    "type": "file",
+                    "path": "data/icons/hicolor/scalable/apps/io.github.jfsen.Streamline.svg"
+                },
+                {
+                    "type": "file",
+                    "path": "data/icons/hicolor/symbolic/apps/io.github.jfsen.Streamline-symbolic.svg"
                 }
             ],
             "config-opts" : [
