@@ -226,6 +226,8 @@ class ChatPage(Adw.NavigationPage):
         """Process and display chat messages"""
         if match := re.search(r':(\w+)!\w+@\w+\.tmi\.twitch\.tv PRIVMSG #\w+ :(.*)', data):
             username, message = match.groups()
+            # Remove control characters
+            message = re.sub(r'[\x00-\x1F\x7F]', '', message)
             timestamp = GLib.DateTime.new_now_local().format("%H:%M")
             msg = ChatMessage(timestamp, username, message)
             GLib.idle_add(self._append_message, msg)
