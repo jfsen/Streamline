@@ -83,7 +83,7 @@ class ChatPage(Adw.NavigationPage):
         css_provider.load_from_data('''
             textview {
                 padding: 6px;
-                font-size: 13pt;
+                font-size: 12pt;
             }
             textview text {
                 background: none;
@@ -95,7 +95,7 @@ class ChatPage(Adw.NavigationPage):
                 padding: 8px;
                 background: @view_fg_color;
                 color: @view_bg_color;
-                opacity: 0.7;
+                opacity: 0.9;
             }
             .floating:hover {
                 opacity: 1;
@@ -259,30 +259,31 @@ class ChatPage(Adw.NavigationPage):
         if store:
             # Store the message in ChatStore
             ChatStore.add_message(self.streamer, msg)
-    
+
         if self.message_count >= self.max_messages:
             start = self.chat_buffer.get_start_iter()
             end = start.copy()
             end.forward_line()
             self.chat_buffer.delete(start, end)
             self.message_count -= 1
-    
+
         end = self.chat_buffer.get_end_iter()
         #self.chat_buffer.insert_with_tags_by_name(end, f"[{msg.timestamp}] ", "timestamp")
         self.chat_buffer.insert_with_tags_by_name(end, f"{msg.username}: ", "username")
-        
+
         # Split message and check for emotes
         words = msg.message.split()
         for word in words:
             # Emotes are loaded on demand when they appear
             if pixbuf := self.emote_cache.get_emote_pixbuf(word):
                 image = Gtk.Image.new_from_pixbuf(pixbuf)
+                image.set_size_request(28, 28)
                 anchor = self.chat_buffer.create_child_anchor(end)
                 self.chat_view.add_child_at_anchor(image, anchor)
                 self.chat_buffer.insert(end, " ")
             else:
                 self.chat_buffer.insert_with_tags_by_name(end, f"{word} ", "message")
-        
+
         # Add a newline after each message
         self.chat_buffer.insert(end, "\n")
 

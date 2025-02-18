@@ -44,7 +44,7 @@ class EmoteCache:
                 "SMOrc": "52",
                 "FrankerZ": "65",
                 "BloodTrail": "69",
-                "PogChamp": "88",
+                "PogChamp": "305954156",
                 "BibleThump": "86",
                 "4Head": "354",
                 "FailFish": "360",
@@ -72,7 +72,6 @@ class EmoteCache:
                 "PepeLaugh": "897723",
                 "POGGERS": "897724",
                 "monkaS": "897726",
-                "COPIUM": "897727",
                 "AYAYA": "897731",
                 "Pepega": "897734",
                 "monkaW": "897736",
@@ -98,7 +97,7 @@ class EmoteCache:
                 url = f"https://static-cdn.jtvnw.net/emoticons/v2/{id}/default/dark/1.0"
                 self.emote_urls[name] = url
         except Exception as e:
-            print(f"[DEBUG] Error setting up global emotes: {e}")
+            print(f"[DEBUG] Error setting up global Twitch emotes: {e}")
 
     def _fetch_global_bttv_emotes(self):
         """Fetch global BTTV emotes"""
@@ -222,16 +221,27 @@ class EmoteCache:
         if name in self.emote_urls:
             try:
                 path = self.emotes_dir / f"{name}.webp"
+                url = self.emote_urls[name]
+                
                 if not path.exists():
-                    print(f"[DEBUG] Downloading emote: {name}")
-                    response = requests.get(self.emote_urls[name])
+                    print(f"[DEBUG] Downloading emote: {name} from {url}")
+                    response = requests.get(url)
                     if response.status_code == 200:
                         path.write_bytes(response.content)
-                        print(f"[DEBUG] Saved emote to {path}")
+                        print(f"[DEBUG] Successfully saved emote to {path}")
+                    else:
+                        print(f"[DEBUG] Failed to download emote {name}: HTTP {response.status_code}")
+                        print(f"[DEBUG] Response content: {response.text[:200]}")  # First 200 chars of error
+                        return None
+                        
+                print(f"[DEBUG] Loading emote from {path}")
                 pixbuf = GdkPixbuf.Pixbuf.new_from_file(str(path))
                 self.pixbufs[name] = pixbuf
                 return pixbuf
+                
+            except requests.RequestException as e:
+                print(f"[DEBUG] Network error downloading emote {name}: {e}")
             except Exception as e:
-                print(f"[DEBUG] Error loading emote {name}: {e}")
+                print(f"[DEBUG] Error loading emote {name} from {self.emote_urls[name]}: {e}")
                 
         return None
