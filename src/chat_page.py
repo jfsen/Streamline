@@ -411,10 +411,11 @@ class ChatPage(Adw.NavigationPage):
         while self.watchdog_running and self.get_root() is not None:
             if self.irc and self.running:
                 current_time = GLib.get_monotonic_time() / 1000000
-                
-                # Check if we need to send a ping
-                if not self.waiting_for_pong and (current_time - self.last_ping_sent) > self.ping_interval:
-                    print("[DEBUG] Sending PING to verify connection")
+                time_since_last_data = current_time - self.last_received
+                                
+                # Only send ping if we haven't received data within ping interval
+                if not self.waiting_for_pong and time_since_last_data > self.ping_interval:
+                    print("[DEBUG] No data for {:.1f}s - sending PING".format(time_since_last_data))
                     try:
                         self.irc.send("PING :tmi.twitch.tv\r\n".encode())
                         self.last_ping_sent = current_time
