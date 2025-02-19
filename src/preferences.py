@@ -71,17 +71,31 @@ class StreamlinePreferences(Adw.PreferencesWindow):
         self.show_unfollow_button_checkbox.connect("notify::active", self.on_show_unfollow_button_toggled)
         
     def _setup_models(self):
+        """Setup models for dropdowns with null checks."""
+        # Check if widgets are properly bound
+        if not self.player_row:
+            print("Warning: player_row not bound from template")
+            return
+            
+        if not self._player_model:
+            print("Warning: player_model not initialized")
+            return
+
         # Setup player selection
-        self.player_row.set_model(self._player_model)
-        if self.parent.player_type == "mpv":
-            self.player_row.set_selected(0)
-        elif self.parent.player_type == "vlc":
-            self.player_row.set_selected(1)
-        else:
-            self.player_row.set_selected(2)
-        
+        try:
+            self.player_row.set_model(self._player_model)
+            if self.parent.player_type == "mpv":
+                self.player_row.set_selected(0)
+            elif self.parent.player_type == "vlc":
+                self.player_row.set_selected(1)
+            else:
+                self.player_row.set_selected(2)
+        except Exception as e:
+            print(f"Error setting up player model: {e}")
+
         # Setup quality selection
-        self.quality_row.set_model(self._quality_model)
+        if self.quality_row and self._quality_model:
+            self.quality_row.set_model(self._quality_model)
         
     def _setup_values(self):
         # Set current values
