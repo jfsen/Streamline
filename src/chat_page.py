@@ -265,12 +265,7 @@ class ChatPage(Adw.NavigationPage):
                 
         finally:
             # Clean up socket
-            try:
-                if self.irc:
-                    self.irc.shutdown(socket.SHUT_RDWR)
-                    self.irc.close()
-            except Exception:
-                pass
+            self._cleanup_socket()
     
     def _process_message(self, data):
         """Process and display chat messages"""
@@ -394,12 +389,7 @@ class ChatPage(Adw.NavigationPage):
         print("[DEBUG] Chat page being destroyed, cleaning up")
         self.running = False
         self.watchdog_running = False
-        try:
-            if self.irc:
-                self.irc.shutdown(socket.SHUT_RDWR)
-                self.irc.close()
-        except Exception:
-            pass
+        self._cleanup_socket()
         super().do_destroy()
     
     def _set_connection_status(self, connected: bool):
@@ -463,14 +453,7 @@ class ChatPage(Adw.NavigationPage):
             self._append_message(msg, store=False)  # Set store=False for system message
             
             # Clean up existing connection
-            try:
-                if self.irc:
-                    self.irc.shutdown(socket.SHUT_RDWR)
-                    self.irc.close()
-            except Exception:
-                pass
-            
-            self.irc = None
+            self._cleanup_socket()
             
             # Schedule reconnect
             GLib.timeout_add_seconds(self.reconnect_delay, self._attempt_reconnect)
@@ -486,13 +469,7 @@ class ChatPage(Adw.NavigationPage):
             self._append_message(msg, store=False)  # Set store=False for system message
             
             # Clean up connection when max attempts reached
-            try:
-                if self.irc:
-                    self.irc.shutdown(socket.SHUT_RDWR)
-                    self.irc.close()
-                    self.irc = None
-            except Exception:
-                pass
+            self._cleanup_socket()
                 
             # Stop the watchdog from triggering more disconnects
             self.watchdog_running = False
@@ -507,3 +484,13 @@ class ChatPage(Adw.NavigationPage):
         print("[DEBUG] Attempting to reconnect")
         self.connect_to_chat(reset_counter=False)  # Don't reset counter on auto-reconnect
         return False
+
+    def _cleanup_socket(self):
+        """Centralized socket cleanup"""
+        try:
+            if self.irc:
+                self.irc.shutdown(socket.SHUT_RDWR)
+                self.irc.close()
+                self.irc = None
+        except Exception:
+            pass
