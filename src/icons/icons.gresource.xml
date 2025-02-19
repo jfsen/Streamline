@@ -9,5 +9,6 @@
     <file preprocess="xml-stripblanks">video-display-symbolic.svg</file>
     <file preprocess="xml-stripblanks">web-browser-symbolic.svg</file>
     <file preprocess="xml-stripblanks">arrow-circular-top-right-symbolic.svg</file>
+    <file preprocess="xml-stripblanks">chat-bubble-symbolic.svg</file>
   </gresource>
 </gresources>

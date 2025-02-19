@@ -8,3 +8,4 @@ class IconNames:
     VODS = "video-display-symbolic"
     BROWSER = "web-browser-symbolic"
     RELOAD = "arrow-circular-top-right-symbolic"
+    CHAT = "chat-bubble-symbolic"
