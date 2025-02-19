@@ -4,6 +4,7 @@ from gi.repository import GdkPixbuf
 from typing import Dict, Optional
 import json
 import time
+from .global_twitch_emotes import GLOBAL_EMOTES
 
 class EmoteCache:
     def __init__(self):
@@ -32,68 +33,7 @@ class EmoteCache:
         """Fetch global Twitch emotes"""
         try:
             print("[DEBUG] Using hardcoded global Twitch emotes")
-            # Hard-coded list of (some) global Twitch emotes
-            # to avoid making an API request
-            emotes = {
-                "KKona": "14",
-                "Kappa": "25",
-                "DansGame": "33",
-                "SwiftRage": "34",
-                "PJSalt": "36",
-                "Kreygasm": "41",
-                "SMOrc": "52",
-                "FrankerZ": "65",
-                "BloodTrail": "69",
-                "PogChamp": "305954156",
-                "BibleThump": "86",
-                "4Head": "354",
-                "FailFish": "360",
-                "BrokeBack": "4057",
-                "EleGiggle": "4339",
-                "BabyRage": "22639",
-                "WutFace": "28087",
-                "ResidentSleeper": "245",
-                "SeemsGood": "64138",
-                "MingLee": "68856",
-                "VoHiYo": "81274",
-                "cmonBruh": "84608",
-                "KappaPride": "55338",
-                "NotLikeThis": "58765",
-                "OpieOP": "100590",
-                "Jebaited": "114836",
-                "TriHard": "120232",
-                "CoolStoryBob": "123171",
-                "PunOko": "160401",
-                "TehePelo": "160404",
-                "TPFufun": "508650",
-                "KEKW": "581875",
-                "OMEGALUL": "583089",
-                "LUL": "425618",
-                "PepeLaugh": "897723",
-                "POGGERS": "897724",
-                "monkaS": "897726",
-                "AYAYA": "897731",
-                "Pepega": "897734",
-                "monkaW": "897736",
-                "WeirdChamp": "897738",
-                "PepeHands": "897739",
-                "5Head": "897740",
-                "widepeepoHappy": "897741",
-                "monkaHmm": "897742",
-                "HeyGuys": "30259",
-                "PowerUpL": "425688",
-                "PowerUpR": "425671",
-                "GlitchCat": "304486301",
-                "TwitchUnity": "196892",
-                "PopCorn": "724216",
-                "StinkyGlitch": "304486324",
-                "TheIlluminati": "145315",
-                "TwitchVotes": "479745",
-                "RuleFive": "107030",
-                "YEA": "479743",
-                "NAY": "479744",
-            }
-            for name, id in emotes.items():
+            for name, id in GLOBAL_EMOTES.items():
                 url = f"https://static-cdn.jtvnw.net/emoticons/v2/{id}/default/dark/1.0"
                 self.emote_urls[name] = url
         except Exception as e:

@@ -49,7 +49,8 @@ streamline_sources = [
   'config.py',
   'rows.py',
   'chat_page.py',
-  'emote_cache.py'
+  'emote_cache.py',
+  'global_twitch_emotes.py'
 ]
 
 install_data(streamline_sources, install_dir: moduledir)
