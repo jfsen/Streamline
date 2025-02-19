@@ -91,15 +91,26 @@ class EmoteCache:
             pass
         return None
 
-    def _save_bttv_cache(self, channel: str, data: dict):
+    def _save_bttv_cache(self, channel: str, data: dict, force: bool = False):
         """Save BTTV emotes cache for a specific channel"""
         try:
+            cache_file = self.bttv_cache_dir / f"{channel}.json"
+            
+            # If not forcing and file exists, keep existing data on failures
+            if not force and cache_file.exists():
+                try:
+                    existing = json.loads(cache_file.read_text())
+                    if "emotes" in existing and len(existing["emotes"]) > 0:
+                        print(f"[DEBUG] Keeping existing cache for {channel}")
+                        return
+                except (json.JSONDecodeError, OSError):
+                    pass
+            
             # Only store essential data: emote code, id and timestamp
             data = {
                 "timestamp": data["timestamp"],
                 "emotes": [{"code": e["code"], "id": e["id"]} for e in data["emotes"]]
             }
-            cache_file = self.bttv_cache_dir / f"{channel}.json"
             cache_file.write_text(json.dumps(data, indent=4))
         except OSError as e:
             print(f"[DEBUG] Error saving BTTV cache for {channel}: {e}")
@@ -118,16 +129,29 @@ class EmoteCache:
             # Fetch new data if not cached or expired
             print(f"[DEBUG] Fetching user_id for channel: {channel}")
             user_id = self.user_id_cache.get(channel)
+            
+            # Cache empty result if no user_id found
             if not user_id:
                 print(f"[DEBUG] No user ID found for {channel}")
+                empty_cache = {
+                    "timestamp": time.time(),
+                    "emotes": []
+                }
+                self._save_bttv_cache(channel, empty_cache, force=False)
                 return
 
             print(f"[DEBUG] Fetching BTTV emotes for {channel}")
             bttv_url = f"https://api.betterttv.net/3/cached/users/twitch/{user_id}"
             response = requests.get(bttv_url)
 
+            # Cache empty result on API failure
             if response.status_code != 200:
                 print(f"[DEBUG] Failed to fetch BTTV emotes: {response.status_code}")
+                empty_cache = {
+                    "timestamp": time.time(),
+                    "emotes": []
+                }
+                self._save_bttv_cache(channel, empty_cache, force=False)
                 return
 
             data = response.json()
@@ -135,12 +159,12 @@ class EmoteCache:
             shared_emotes = data.get("sharedEmotes", [])
             all_emotes = channel_emotes + shared_emotes
 
-            # Update cache
+            # Update cache (even if empty)
             cache_data = {
                 "timestamp": time.time(),
                 "emotes": all_emotes
             }
-            self._save_bttv_cache(channel, cache_data)
+            self._save_bttv_cache(channel, cache_data, force=True)
 
             print(f"[DEBUG] Found {len(channel_emotes)} channel BTTV emotes")
             print(f"[DEBUG] Found {len(shared_emotes)} shared BTTV emotes")
@@ -152,6 +176,12 @@ class EmoteCache:
 
         except Exception as e:
             print(f"[DEBUG] Error fetching emotes: {e}")
+            # Cache empty result on any error
+            empty_cache = {
+                "timestamp": time.time(),
+                "emotes": []
+            }
+            self._save_bttv_cache(channel, empty_cache, force=False)
 
     def get_emote_pixbuf(self, name: str) -> Optional[GdkPixbuf.Pixbuf]:
         """Get or load emote pixbuf"""
