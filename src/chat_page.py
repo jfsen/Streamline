@@ -194,6 +194,15 @@ class ChatPage(Adw.NavigationPage):
             self.irc.send(f"NICK {self.nickname}\r\n".encode())
             self.irc.send(f"JOIN {self.channel}\r\n".encode())
             
+            # Show connection success message
+            timestamp = GLib.DateTime.new_now_local().format("%H:%M")
+            connection_msg = ChatMessage(
+                timestamp=timestamp,
+                username="<System>",
+                message=f"Connected to {self.streamer}'s chat"
+            )
+            GLib.idle_add(self._append_message, connection_msg)
+            
             # Message processing loop
             while self.running and self.get_root() is not None:
                 data = self.irc.recv(4096).decode('utf-8')
@@ -211,8 +220,14 @@ class ChatPage(Adw.NavigationPage):
                     
         except Exception as e:
             if self.running:  # Only show error if we're still supposed to be running
+                timestamp = GLib.DateTime.new_now_local().format("%H:%M")
+                error_msg = ChatMessage(
+                    timestamp=timestamp,
+                    username="<System>",
+                    message=f"Failed to connect: {str(e)}"
+                )
+                GLib.idle_add(self._append_message, error_msg)
                 print(f"[DEBUG] IRC worker error: {e}")
-                GLib.idle_add(self._show_error, str(e))
         finally:
             # Clean up socket
             try:
