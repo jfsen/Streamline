@@ -13,6 +13,10 @@ class StreamlinePreferences(Adw.PreferencesWindow):
     quality_row = Gtk.Template.Child()
     window_size_row = Gtk.Template.Child()
     theme_row = Gtk.Template.Child()
+    show_weblink_button_checkbox = Gtk.Template.Child()
+    show_chat_button_checkbox = Gtk.Template.Child()
+    show_vods_button_checkbox = Gtk.Template.Child()
+    show_unfollow_button_checkbox = Gtk.Template.Child()
 
     def __init__(self, parent, **kwargs):
         super().__init__(**kwargs)
@@ -48,6 +52,19 @@ class StreamlinePreferences(Adw.PreferencesWindow):
             self.theme_row.set_selected(2)
         else:
             self.theme_row.set_selected(0)
+        
+        # Initialize button preferences using notify::active signal
+        self.show_weblink_button_checkbox.set_active(parent.show_weblink_button)
+        self.show_weblink_button_checkbox.connect("notify::active", self.on_show_weblink_button_toggled)
+
+        self.show_chat_button_checkbox.set_active(parent.show_chat_button)
+        self.show_chat_button_checkbox.connect("notify::active", self.on_show_chat_button_toggled)
+
+        self.show_vods_button_checkbox.set_active(parent.show_vods_button)
+        self.show_vods_button_checkbox.connect("notify::active", self.on_show_vods_button_toggled)
+
+        self.show_unfollow_button_checkbox.set_active(parent.show_unfollow_button)
+        self.show_unfollow_button_checkbox.connect("notify::active", self.on_show_unfollow_button_toggled)
         
     def _setup_models(self):
         # Setup player selection
@@ -152,3 +169,19 @@ class StreamlinePreferences(Adw.PreferencesWindow):
         self._quality_model = None
         self._signal_handlers = None
         self.parent = None
+
+    def on_show_weblink_button_toggled(self, switch_row, *args):
+        self.parent.show_weblink_button = switch_row.get_active()
+        self.parent.save_config()
+
+    def on_show_chat_button_toggled(self, switch_row, *args):
+        self.parent.show_chat_button = switch_row.get_active()
+        self.parent.save_config()
+
+    def on_show_vods_button_toggled(self, switch_row, *args):
+        self.parent.show_vods_button = switch_row.get_active()
+        self.parent.save_config()
+
+    def on_show_unfollow_button_toggled(self, switch_row, *args):
+        self.parent.show_unfollow_button = switch_row.get_active()
+        self.parent.save_config()

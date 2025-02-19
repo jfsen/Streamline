@@ -51,19 +51,20 @@ class StreamerRowManager:
 
         # Create action buttons with tooltips and handlers
         buttons = [
-            (IconNames.BROWSER, "Open in browser", self.window.open_stream_in_browser),
-            ("chat-message-new-symbolic", "Open Chat", self.window.show_chat_page),
-            (IconNames.VODS, "Show VODs", self.window.show_vods_page),
-            (IconNames.UNFOLLOW, "Unfollow", self.window.unfollow_streamer)
+            (IconNames.BROWSER, "Open in browser", self.window.open_stream_in_browser, self.window.show_weblink_button),
+            ("chat-message-new-symbolic", "Open Chat", self.window.show_chat_page, self.window.show_chat_button),
+            (IconNames.VODS, "Show VODs", self.window.show_vods_page, self.window.show_vods_button),
+            (IconNames.UNFOLLOW, "Unfollow", self.window.unfollow_streamer, self.window.show_unfollow_button)
         ]
 
-        for icon_name, tooltip, handler in buttons:
-            button = Gtk.Button(icon_name=icon_name)
-            button.add_css_class("flat")
-            button.set_valign(Gtk.Align.CENTER)
-            button.set_tooltip_text(tooltip)
-            button.connect("clicked", lambda btn, h=handler: h(streamer))
-            row.add_suffix(button)
+        for icon_name, tooltip, handler, show in buttons:
+            if show:
+                button = Gtk.Button(icon_name=icon_name)
+                button.add_css_class("flat")
+                button.set_valign(Gtk.Align.CENTER)
+                button.set_tooltip_text(tooltip)
+                button.connect("clicked", lambda btn, h=handler: h(streamer))
+                row.add_suffix(button)
 
     def add_offline_streamer(self, username):
         """Create and add row for new offline streamer."""

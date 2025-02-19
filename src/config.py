@@ -17,7 +17,11 @@ class ConfigManager:
             "twitch_client_id": "",
             "twitch_client_secret": "",
             "narrow_mode": False,
-            "theme": "system"
+            "theme": "system",
+            "show_weblink_button": True,
+            "show_chat_button": True,
+            "show_vods_button": True,
+            "show_unfollow_button": True
         }
 
     def _get_config_path(self):
@@ -44,27 +48,33 @@ class ConfigManager:
         return config_dir / "config.json"
 
     def create_config_dict(self, window):
-        """Create configuration dictionary from window state."""
-        style_manager = Adw.StyleManager.get_default()
-        color_scheme = style_manager.get_color_scheme()
-        
-        return {
-            "streamers": window.all_streamers,
+        config = {
+            "twitch_client_id": window.client_id,
+            "twitch_client_secret": window.client_secret,
+            "player_type": window.player_type,
+            "custom_player_path": window.custom_player_path,
             "streamlink_path": window.streamlink_path,
             "mpv_path": window.mpv_path,
             "vlc_path": window.vlc_path,
-            "player_type": window.player_type,
-            "custom_player_path": window.custom_player_path,
+            "streamers": window.all_streamers,
             "stream_quality": window.stream_quality,
-            "twitch_client_id": window.client_id,
-            "twitch_client_secret": window.client_secret,
             "narrow_mode": window.narrow_mode,
-            "theme": "dark" if color_scheme == Adw.ColorScheme.FORCE_DARK 
-                    else "light" if color_scheme == Adw.ColorScheme.FORCE_LIGHT 
-                    else "system"
+            "show_weblink_button": window.show_weblink_button,
+            "show_chat_button": window.show_chat_button,
+            "show_vods_button": window.show_vods_button,
+            "show_unfollow_button": window.show_unfollow_button,
         }
+        return config
 
     def load(self):
+        config = self._load_from_file()
+        config.setdefault("show_weblink_button", True)
+        config.setdefault("show_chat_button", True)
+        config.setdefault("show_vods_button", True)
+        config.setdefault("show_unfollow_button", True)
+        return config
+
+    def _load_from_file(self):
         """Load configuration from file."""
         try:
             if self.config_path.exists():

@@ -6,32 +6,12 @@
     <property name="title" translatable="yes">Preferences</property>
     <property name="modal">True</property>
     <child>
-      <object class="AdwPreferencesPage">
-        <child>
-          <object class="AdwPreferencesGroup">
-            <property name="title" translatable="yes">Stream Settings</property>
-            <child>
-              <object class="AdwComboRow" id="player_row">
-                <property name="title" translatable="yes">Player</property>
-                <property name="subtitle" translatable="yes">Select preferred media player</property>
-              </object>
-            </child>
-            <child>
-              <object class="AdwEntryRow" id="custom_player_row">
-                <property name="title" translatable="yes">Custom Player Path</property>
-              </object>
-            </child>
-            <child>
-              <object class="AdwComboRow" id="quality_row">
-                <property name="title" translatable="yes">Stream Quality</property>
-                <property name="subtitle" translatable="yes">Select preferred stream quality</property>
-              </object>
-            </child>
-          </object>
-        </child>
+      <object class="AdwPreferencesPage" id="appearance_page">
+        <property name="title">Appearance</property>
+        <property name="icon-name">preferences-desktop-appearance-symbolic</property>
         <child>
           <object class="AdwPreferencesGroup" id="appearance_group">
-            <property name="title">Appearance</property>
+            <property name="title">Window</property>
             <child>
               <object class="AdwComboRow" id="window_size_row">
                 <property name="title">Default Window Size</property>
@@ -57,6 +37,60 @@
                     </items>
                   </object>
                 </property>
+              </object>
+            </child>
+          </object>
+        </child>
+        <child>
+          <object class="AdwPreferencesGroup">
+            <property name="title">Button Visibility</property>
+            <property name="description">Restart required for changes to take effect</property>
+            <child>
+              <object class="AdwSwitchRow" id="show_weblink_button_checkbox">
+                <property name="title">Show Weblink Button</property>
+              </object>
+            </child>
+            <child>
+              <object class="AdwSwitchRow" id="show_chat_button_checkbox">
+                <property name="title">Show Chat Button</property>
+              </object>
+            </child>
+            <child>
+              <object class="AdwSwitchRow" id="show_vods_button_checkbox">
+                <property name="title">Show VODs Button</property>
+              </object>
+            </child>
+            <child>
+              <object class="AdwSwitchRow" id="show_unfollow_button_checkbox">
+                <property name="title">Show Unfollow Button</property>
+              </object>
+            </child>
+          </object>
+        </child>
+      </object>
+    </child>
+    <child>
+      <object class="AdwPreferencesPage" id="streaming_page">
+        <property name="title">Streaming</property>
+        <property name="icon-name">media-playback-start-symbolic</property>
+        <child>
+          <object class="AdwPreferencesGroup">
+            <property name="title" translatable="yes">Stream Settings</property>
+            <child>
+              <object class="AdwComboRow" id="player_row">
+                <property name="title" translatable="yes">Player</property>
+                <property name="subtitle" translatable="yes">Select preferred media player</property>
+              </object>
+            </child>
+            <child>
+              <object class="AdwEntryRow" id="custom_player_row">
+                <property name="title" translatable="yes">Custom Player Path</property>
+              </object>
+            </child>
+            <child>
+              <object class="AdwComboRow" id="quality_row">
+                <property name="title" translatable="yes">Stream Quality</property>
+                <property name="subtitle" translatable="yes">Select preferred stream quality</property>
               </object>
             </child>
           </object>

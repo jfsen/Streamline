@@ -164,6 +164,10 @@ class StreamlineWindow(Adw.ApplicationWindow):
         self.all_streamers = config.get("streamers", [])
         self.stream_quality = config.get("stream_quality", "best")
         self.narrow_mode = config.get("narrow_mode", False)
+        self.show_weblink_button = config.get("show_weblink_button", True)
+        self.show_chat_button = config.get("show_chat_button", True)
+        self.show_vods_button = config.get("show_vods_button", True)
+        self.show_unfollow_button = config.get("show_unfollow_button", True)
 
     def on_refresh_button_clicked(self, button):
         """Refresh streamer data."""
