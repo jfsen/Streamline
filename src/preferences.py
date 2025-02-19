@@ -25,6 +25,10 @@ class StreamlinePreferences(Adw.PreferencesWindow):
         # Store parent reference directly since window lifecycle is managed by GTK
         self.parent = parent
         
+        # Set width based on parent's narrow mode
+        if parent.narrow_mode:
+            self.set_default_size(360, 500)
+
         # Define quality options first
         self._qualities = ["best", "1080p60", "1080p", "720p60", 
                          "720p", "480p", "360p", "worst"]
@@ -139,6 +143,7 @@ class StreamlinePreferences(Adw.PreferencesWindow):
         self.parent.narrow_mode = narrow_mode
         if narrow_mode:
             self.parent.set_default_size(360, 600)
+            self.set_default_size(360, 500)
         self.parent.save_config()
     
     def _on_theme_changed(self, row, _):
