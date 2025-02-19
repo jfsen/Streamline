@@ -61,6 +61,15 @@ class ChatPage(Adw.NavigationPage):
         self.header = Adw.HeaderBar()
         self.header.add_css_class("flat")
         
+        # Add connection status indicator to header
+        self.status_button = Gtk.Button()
+        self.status_button.add_css_class("flat")
+        self.status_button.add_css_class("circular")
+        self.status_button.set_sensitive(False)  # Make it non-clickable
+        self.status_button.set_tooltip_text("Disconnected")
+        self._set_connection_status(False)  # Start with disconnected state
+        self.header.pack_start(self.status_button)
+        
         # Add play button to header
         self.play_button = Gtk.Button(icon_name="media-playback-start-symbolic")
         self.play_button.add_css_class("flat")
@@ -99,6 +108,12 @@ class ChatPage(Adw.NavigationPage):
             }
             .floating:hover {
                 opacity: 1;
+            }
+            .success {
+                color: @success_color;
+            }
+            .error {
+                color: @error_color;
             }
         '''.encode())
         
@@ -170,9 +185,27 @@ class ChatPage(Adw.NavigationPage):
         self.connect_to_chat()
         
         self.running = True  # Add flag to control IRC thread
+        self.reconnect_attempts = 0
+        self.max_reconnect_attempts = 3
+        self.reconnect_delay = 5  # seconds
+        self.last_received = 0  # timestamp of last received data
+        self.last_ping_sent = 0  # timestamp of last ping sent
+        self.ping_interval = 30  # send ping every 30 seconds
+        self.ping_timeout = 2   # wait 2 seconds for pong response
+        self.waiting_for_pong = False
+        self.watchdog_running = True
+        self.max_attempts_reached = False  # Add new flag
+        
+        # Start watchdog thread to monitor connection
+        self.watchdog_thread = threading.Thread(target=self._connection_watchdog)
+        self.watchdog_thread.daemon = True
+        self.watchdog_thread.start()
     
-    def connect_to_chat(self):
+    def connect_to_chat(self, reset_counter=True):
         """Initialize IRC connection in a separate thread"""
+        if reset_counter:
+            self.reconnect_attempts = 0
+            self.max_attempts_reached = False  # Reset the flag on manual connect
         thread = threading.Thread(target=self._irc_worker)
         thread.daemon = True
         thread.start()
@@ -180,6 +213,7 @@ class ChatPage(Adw.NavigationPage):
     def _irc_worker(self):
         """Handle IRC connection and message processing"""
         try:
+            print(f"[DEBUG] Starting IRC connection for {self.streamer}'s chat")
             # Create SSL context
             context = ssl.create_default_context()
             
@@ -194,40 +228,41 @@ class ChatPage(Adw.NavigationPage):
             self.irc.send(f"NICK {self.nickname}\r\n".encode())
             self.irc.send(f"JOIN {self.channel}\r\n".encode())
             
-            # Show connection success message
-            timestamp = GLib.DateTime.new_now_local().format("%H:%M")
-            connection_msg = ChatMessage(
-                timestamp=timestamp,
-                username="<System>",
-                message=f"Connected to {self.streamer}'s chat"
-            )
-            GLib.idle_add(self._append_message, connection_msg)
+            # Update status to connected
+            GLib.idle_add(self._set_connection_status, True)
+            print("[DEBUG] Successfully connected to IRC")
             
             # Message processing loop
             while self.running and self.get_root() is not None:
-                data = self.irc.recv(4096).decode('utf-8')
-                if not data:
-                    break
+                try:
+                    data = self.irc.recv(4096).decode('utf-8')
+                    self.last_received = GLib.get_monotonic_time() / 1000000
                     
-                # Handle PING/PONG
-                if data.startswith('PING'):
-                    self.irc.send('PONG\r\n'.encode())
-                    continue
-                
-                # Process chat messages
-                if 'PRIVMSG' in data:
-                    self._process_message(data)
+                    if not data:
+                        print("[DEBUG] No data received, connection might be closed")
+                        break
+                    
+                    # Handle PING/PONG
+                    if data.startswith('PING'):
+                        print("[DEBUG] Received PING, sending PONG")
+                        self.irc.send('PONG\r\n'.encode())
+                    elif 'PONG' in data:
+                        print("[DEBUG] Received PONG response")
+                        self.waiting_for_pong = False
+                    
+                    # Process chat messages
+                    if 'PRIVMSG' in data:
+                        self._process_message(data)
+                        
+                except socket.timeout:
+                    print("[DEBUG] Socket timeout, continuing...")
+                    continue  # Keep loop running on timeout
                     
         except Exception as e:
-            if self.running:  # Only show error if we're still supposed to be running
-                timestamp = GLib.DateTime.new_now_local().format("%H:%M")
-                error_msg = ChatMessage(
-                    timestamp=timestamp,
-                    username="<System>",
-                    message=f"Failed to connect: {str(e)}"
-                )
-                GLib.idle_add(self._append_message, error_msg)
+            if self.running:
                 print(f"[DEBUG] IRC worker error: {e}")
+                GLib.idle_add(self._handle_disconnect)
+                
         finally:
             # Clean up socket
             try:
@@ -356,10 +391,119 @@ class ChatPage(Adw.NavigationPage):
     
     def do_destroy(self):
         """Clean up when page is destroyed"""
-        self.running = False  # Signal IRC thread to stop
+        print("[DEBUG] Chat page being destroyed, cleaning up")
+        self.running = False
+        self.watchdog_running = False
         try:
-            self.irc.shutdown(socket.SHUT_RDWR)
-            self.irc.close()
+            if self.irc:
+                self.irc.shutdown(socket.SHUT_RDWR)
+                self.irc.close()
         except Exception:
             pass
         super().do_destroy()
+    
+    def _set_connection_status(self, connected: bool):
+        """Update the connection status indicator"""
+        if connected:
+            self.status_button.set_icon_name("network-transmit-receive-symbolic")
+            self.status_button.add_css_class("success")
+            self.status_button.remove_css_class("error")
+            self.status_button.set_tooltip_text(f"Connected to {self.streamer}'s chat")
+        else:
+            self.status_button.set_icon_name("network-offline-symbolic")
+            self.status_button.add_css_class("error")
+            self.status_button.remove_css_class("success")
+            self.status_button.set_tooltip_text("Disconnected")
+    
+    def _connection_watchdog(self):
+        """Monitor connection status using PING/PONG"""
+        print("[DEBUG] Starting connection watchdog")
+        while self.watchdog_running and self.get_root() is not None:
+            if self.irc and self.running:
+                current_time = GLib.get_monotonic_time() / 1000000
+                
+                # Check if we need to send a ping
+                if not self.waiting_for_pong and (current_time - self.last_ping_sent) > self.ping_interval:
+                    print("[DEBUG] Sending PING to verify connection")
+                    try:
+                        self.irc.send("PING :tmi.twitch.tv\r\n".encode())
+                        self.last_ping_sent = current_time
+                        self.waiting_for_pong = True
+                    except Exception as e:
+                        print(f"[DEBUG] Failed to send PING: {e}")
+                        GLib.idle_add(self._handle_disconnect)
+                
+                # Check for PONG timeout
+                elif self.waiting_for_pong and (current_time - self.last_ping_sent) > self.ping_timeout:
+                    print("[DEBUG] PONG response timeout - connection lost")
+                    GLib.idle_add(self._handle_disconnect)
+                    
+            GLib.usleep(1000000)  # Check every second
+        print("[DEBUG] Watchdog thread stopping")
+
+    def _handle_disconnect(self):
+        """Handle disconnection and attempt reconnect"""
+        # Don't handle new disconnects if we've already hit max attempts
+        if self.max_attempts_reached:
+            return False
+            
+        print(f"[DEBUG] Handling disconnect (attempt {self.reconnect_attempts + 1}/{self.max_reconnect_attempts})")
+        self._set_connection_status(False)
+        
+        self.reconnect_attempts += 1
+        
+        if self.reconnect_attempts <= self.max_reconnect_attempts:
+            print(f"[DEBUG] Scheduling reconnect in {self.reconnect_delay} seconds")
+            timestamp = GLib.DateTime.new_now_local().format("%H:%M")
+            msg = ChatMessage(
+                timestamp=timestamp,
+                username="<System>",
+                message=f"Connection lost. Reconnecting... (Attempt {self.reconnect_attempts}/{self.max_reconnect_attempts})"
+            )
+            self._append_message(msg, store=False)  # Set store=False for system message
+            
+            # Clean up existing connection
+            try:
+                if self.irc:
+                    self.irc.shutdown(socket.SHUT_RDWR)
+                    self.irc.close()
+            except Exception:
+                pass
+            
+            self.irc = None
+            
+            # Schedule reconnect
+            GLib.timeout_add_seconds(self.reconnect_delay, self._attempt_reconnect)
+        else:
+            print("[DEBUG] Max reconnection attempts reached")
+            self.max_attempts_reached = True  # Set the flag
+            timestamp = GLib.DateTime.new_now_local().format("%H:%M")
+            msg = ChatMessage(
+                timestamp=timestamp,
+                username="<System>",
+                message="Failed to reconnect after multiple attempts"
+            )
+            self._append_message(msg, store=False)  # Set store=False for system message
+            
+            # Clean up connection when max attempts reached
+            try:
+                if self.irc:
+                    self.irc.shutdown(socket.SHUT_RDWR)
+                    self.irc.close()
+                    self.irc = None
+            except Exception:
+                pass
+                
+            # Stop the watchdog from triggering more disconnects
+            self.watchdog_running = False
+            
+        return False
+
+    def _attempt_reconnect(self):
+        """Attempt to reconnect to chat"""
+        if not self.running:
+            print("[DEBUG] Not reconnecting - page is shutting down")
+            return False
+        print("[DEBUG] Attempting to reconnect")
+        self.connect_to_chat(reset_counter=False)  # Don't reset counter on auto-reconnect
+        return False
