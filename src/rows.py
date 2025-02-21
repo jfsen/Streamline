@@ -8,6 +8,26 @@ class StreamerRowManager:
         self.online_list = window.online_list
         self.offline_list = window.offline_list
 
+        # Add CSS provider for hover effects
+        css_provider = Gtk.CssProvider()
+        css_provider.load_from_data('''
+            .hide-on-leave {
+                opacity: 0;
+                transition: opacity 200ms ease;
+            }
+            .action-row:hover .hide-on-leave,
+            .hide-on-leave:hover {
+                opacity: 1;
+            }
+        '''.encode())
+        
+        # Apply CSS to window
+        Gtk.StyleContext.add_provider_for_display(
+            window.get_display(),
+            css_provider,
+            Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
+        )
+
     def create_row(self, streamer, info):
         """Create an ActionRow with buttons and additional info."""
         row = Adw.ActionRow.new()
@@ -33,6 +53,8 @@ class StreamerRowManager:
 
     def _add_row_buttons(self, row, streamer):
         """Add action buttons to the row"""
+        row.add_css_class("action-row")
+        
         # Create play button as prefix
         play_button = Gtk.Button(icon_name=IconNames.PLAY)
         play_button.add_css_class("flat")
@@ -51,16 +73,22 @@ class StreamerRowManager:
 
         # Create action buttons with tooltips and handlers
         buttons = [
-            (IconNames.BROWSER, "Open in browser", self.window.open_stream_in_browser, self.window.show_weblink_button),
-            ("chat-message-new-symbolic", "Open Chat", self.window.show_chat_page, self.window.show_chat_button),
-            (IconNames.VODS, "Show VODs", self.window.show_vods_page, self.window.show_vods_button),
-            (IconNames.UNFOLLOW, "Unfollow", self.window.unfollow_streamer, self.window.show_unfollow_button)
+            (IconNames.UNFOLLOW, "Unfollow", self.window.unfollow_streamer, 
+             self.window.show_unfollow_button, True),  # Hide unfollow
+            (IconNames.BROWSER, "Open in browser", self.window.open_stream_in_browser, 
+             self.window.show_weblink_button, False),
+            ("chat-message-new-symbolic", "Open Chat", self.window.show_chat_page, 
+             self.window.show_chat_button, False),
+            (IconNames.VODS, "Show VODs", self.window.show_vods_page, 
+             self.window.show_vods_button, False)
         ]
 
-        for icon_name, tooltip, handler, show in buttons:
+        for icon_name, tooltip, handler, show, hide_on_leave in buttons:
             if show:
                 button = Gtk.Button(icon_name=icon_name)
                 button.add_css_class("flat")
+                if hide_on_leave:
+                    button.add_css_class("hide-on-leave")  # Only add to specific buttons
                 button.set_valign(Gtk.Align.CENTER)
                 button.set_tooltip_text(tooltip)
                 button.connect("clicked", lambda btn, h=handler: h(streamer))
