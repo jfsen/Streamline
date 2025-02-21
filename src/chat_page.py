@@ -13,31 +13,6 @@ class ChatMessage:
     username: str
     message: str
 
-# Static chat store that persists across page instances
-class ChatStore:
-    _messages: Dict[str, List[ChatMessage]] = {}
-    _max_messages = 500  # Match the ChatPage limit
-
-    @classmethod
-    def add_message(cls, channel: str, msg: ChatMessage) -> None:
-        """Add a new message to the store"""
-        if channel not in cls._messages:
-            cls._messages[channel] = []
-            
-        messages = cls._messages[channel]
-        
-        # Don't add if message already exists
-        if msg in messages:
-            return
-                
-        messages.append(msg)
-        if len(messages) > cls._max_messages:
-            messages.pop(0)
-    
-    @classmethod
-    def get_messages(cls, channel: str) -> List[ChatMessage]:
-        return cls._messages.get(channel, [])
-
 class ChatPage(Adw.NavigationPage):
     def __init__(self, streamer):
         super().__init__(title=f"{streamer}'s Chat")
@@ -45,7 +20,7 @@ class ChatPage(Adw.NavigationPage):
         self.running = True
         self.irc = None  # Initialize IRC socket reference
         self.autoscroll = True
-        self.max_messages = 1000
+        self.max_messages = 300
         self.message_count = 0
         self.has_loaded_stored = False
         
@@ -180,7 +155,7 @@ class ChatPage(Adw.NavigationPage):
         
         self.running = True  # Add flag to control IRC thread
         self.reconnect_attempts = 0
-        self.max_reconnect_attempts = 3
+        self.max_reconnect_attempts = 5
         self.reconnect_delay = 5  # seconds
         self.last_received = 0  # timestamp of last received data
         self.last_ping_sent = 0  # timestamp of last ping sent
@@ -220,7 +195,10 @@ class ChatPage(Adw.NavigationPage):
         """Initialize IRC connection in a separate thread"""
         if reset_counter:
             self.reconnect_attempts = 0
-            self.max_attempts_reached = False  # Reset the flag on manual connect
+            self.max_attempts_reached = False
+            self.watchdog_running = True
+            
+        # Start new IRC worker thread
         thread = threading.Thread(target=self._irc_worker)
         thread.daemon = True
         thread.start()
@@ -247,8 +225,11 @@ class ChatPage(Adw.NavigationPage):
             GLib.idle_add(self._set_connection_status, True)
             print("[DEBUG] Successfully connected to IRC")
             
+            # Reset reconnect counter on successful connection
+            self.reconnect_attempts = 0
+            
             # Message processing loop
-            while self.running and self.get_root() is not None:
+            while self.running:
                 try:
                     data = self.irc.recv(4096).decode('utf-8')
                     self.last_received = GLib.get_monotonic_time() / 1000000
@@ -271,16 +252,12 @@ class ChatPage(Adw.NavigationPage):
                         
                 except socket.timeout:
                     print("[DEBUG] Socket timeout, continuing...")
-                    continue  # Keep loop running on timeout
+                    continue
                     
         except Exception as e:
             if self.running:
                 print(f"[DEBUG] IRC worker error: {e}")
                 GLib.idle_add(self._handle_disconnect)
-                
-        finally:
-            # Clean up socket
-            self._cleanup_socket()
     
     def _process_message(self, data):
         """Process and display chat messages"""
@@ -415,7 +392,7 @@ class ChatPage(Adw.NavigationPage):
     def _connection_watchdog(self):
         """Monitor connection status using PING/PONG"""
         print("[DEBUG] Starting connection watchdog")
-        while self.watchdog_running and self.get_root() is not None:
+        while self.watchdog_running:
             if self.irc and self.running:
                 current_time = GLib.get_monotonic_time() / 1000000
                 time_since_last_data = current_time - self.last_received
@@ -429,11 +406,13 @@ class ChatPage(Adw.NavigationPage):
                         self.waiting_for_pong = True
                     except Exception as e:
                         print(f"[DEBUG] Failed to send PING: {e}")
+                        self.show_toast("Connection lost - attempting to reconnect", 4)
                         GLib.idle_add(self._handle_disconnect)
                 
                 # Check for PONG timeout
                 elif self.waiting_for_pong and (current_time - self.last_ping_sent) > self.ping_timeout:
                     print("[DEBUG] PONG response timeout - connection lost")
+                    self.show_toast("Connection lost - attempting to reconnect", 4)
                     GLib.idle_add(self._handle_disconnect)
                     
             GLib.usleep(1000000)  # Check every second
@@ -444,42 +423,20 @@ class ChatPage(Adw.NavigationPage):
         # Don't handle new disconnects if we've already hit max attempts
         if self.max_attempts_reached:
             return False
-            
+
         print(f"[DEBUG] Handling disconnect (attempt {self.reconnect_attempts + 1}/{self.max_reconnect_attempts})")
         self._set_connection_status(False)
+        self._cleanup_socket()
         
         self.reconnect_attempts += 1
         
         if self.reconnect_attempts <= self.max_reconnect_attempts:
             print(f"[DEBUG] Scheduling reconnect in {self.reconnect_delay} seconds")
-            timestamp = GLib.DateTime.new_now_local().format("%H:%M")
-            msg = ChatMessage(
-                timestamp=timestamp,
-                username="<System>",
-                message=f"Connection lost. Reconnecting... (Attempt {self.reconnect_attempts}/{self.max_reconnect_attempts})"
-            )
-            self._append_message(msg, store=False)  # Set store=False for system message
-            
-            # Clean up existing connection
-            self._cleanup_socket()
-            
             # Schedule reconnect
             GLib.timeout_add_seconds(self.reconnect_delay, self._attempt_reconnect)
         else:
             print("[DEBUG] Max reconnection attempts reached")
-            self.max_attempts_reached = True  # Set the flag
-            timestamp = GLib.DateTime.new_now_local().format("%H:%M")
-            msg = ChatMessage(
-                timestamp=timestamp,
-                username="<System>",
-                message="Failed to reconnect after multiple attempts"
-            )
-            self._append_message(msg, store=False)  # Set store=False for system message
-            
-            # Clean up connection when max attempts reached
-            self._cleanup_socket()
-                
-            # Stop the watchdog from triggering more disconnects
+            self.max_attempts_reached = True
             self.watchdog_running = False
             
         return False
@@ -501,6 +458,7 @@ class ChatPage(Adw.NavigationPage):
                 self.irc.shutdown(socket.SHUT_RDWR)
                 self.irc.close()
                 self.irc = None
+                self.waiting_for_pong = False
         except Exception:
             self.irc = None
             
