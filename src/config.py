@@ -21,7 +21,8 @@ class ConfigManager:
             "show_weblink_button": True,
             "show_chat_button": True,
             "show_vods_button": True,
-            "show_unfollow_button": True
+            "show_unfollow_button": True,
+            "animate_emotes": False,
         }
 
     def _get_config_path(self):
@@ -59,10 +60,12 @@ class ConfigManager:
             "streamers": window.all_streamers,
             "stream_quality": window.stream_quality,
             "narrow_mode": window.narrow_mode,
+            "theme": window.theme,
             "show_weblink_button": window.show_weblink_button,
             "show_chat_button": window.show_chat_button,
             "show_vods_button": window.show_vods_button,
             "show_unfollow_button": window.show_unfollow_button,
+            "animate_emotes": window.animate_emotes,
         }
         return config
 
@@ -72,6 +75,9 @@ class ConfigManager:
         config.setdefault("show_chat_button", True)
         config.setdefault("show_vods_button", True)
         config.setdefault("show_unfollow_button", True)
+        config.setdefault("animate_emotes", False)
+        config.setdefault("theme", "system")
+        
         return config
 
     def _load_from_file(self):

@@ -17,6 +17,7 @@ class StreamlinePreferences(Adw.PreferencesWindow):
     show_chat_button_checkbox = Gtk.Template.Child()
     show_vods_button_checkbox = Gtk.Template.Child()
     show_unfollow_button_checkbox = Gtk.Template.Child()
+    animate_emotes_checkbox = Gtk.Template.Child()
 
     def __init__(self, parent, **kwargs):
         super().__init__(**kwargs)
@@ -69,6 +70,17 @@ class StreamlinePreferences(Adw.PreferencesWindow):
 
         self.show_unfollow_button_checkbox.set_active(parent.show_unfollow_button)
         self.show_unfollow_button_checkbox.connect("notify::active", self.on_show_unfollow_button_toggled)
+        
+        self.animate_emotes_checkbox.set_active(parent.animate_emotes)
+        self.animate_emotes_checkbox.connect("notify::active", self.on_animate_emotes_toggled)
+        
+        # Set current theme
+        self.theme_row.set_selected(
+            ["system", "light", "dark"].index(parent.theme)
+        )
+        
+        # Connect theme change signal
+        self.theme_row.connect('notify::selected', self.on_theme_changed)
         
     def _setup_models(self):
         """Setup models for dropdowns with null checks."""
@@ -203,4 +215,12 @@ class StreamlinePreferences(Adw.PreferencesWindow):
 
     def on_show_unfollow_button_toggled(self, switch_row, *args):
         self.parent.show_unfollow_button = switch_row.get_active()
+        self.parent.save_config()
+
+    def on_animate_emotes_toggled(self, switch_row, *args):
+        self.parent.animate_emotes = switch_row.get_active()
+        self.parent.save_config()
+
+    def on_theme_changed(self, row, *args):
+        self.parent.theme = ["system", "light", "dark"][row.get_selected()]
         self.parent.save_config()

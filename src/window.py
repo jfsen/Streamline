@@ -62,6 +62,17 @@ class StreamlineWindow(Adw.ApplicationWindow):
         self.config_manager = ConfigManager()
         self.config = self.config_manager.load()
         
+        # Initialize all attributes from config
+        self._initialize_from_config(self.config)
+        
+        # Get and store style manager reference
+        self.style_manager = Adw.StyleManager.get_default()
+        self.style_manager.set_color_scheme({
+            "system": Adw.ColorScheme.DEFAULT,
+            "light": Adw.ColorScheme.FORCE_LIGHT,
+            "dark": Adw.ColorScheme.FORCE_DARK
+        }[self.theme])
+        
         # Initialize window size attribute
         self.narrow_mode = self.config.get("narrow_mode", False)
         
@@ -72,9 +83,6 @@ class StreamlineWindow(Adw.ApplicationWindow):
         # Initialize other managers
         self.dialogs = StreamlineDialogs(self)
         
-        # Load remaining config values
-        self._initialize_from_config(self.config)
-
         # Create ListBoxes for online and offline streamers
         self.online_list = Gtk.ListBox()
         self.online_list.add_css_class("boxed-list")
@@ -168,6 +176,8 @@ class StreamlineWindow(Adw.ApplicationWindow):
         self.show_chat_button = config.get("show_chat_button", True)
         self.show_vods_button = config.get("show_vods_button", True)
         self.show_unfollow_button = config.get("show_unfollow_button", True)
+        self.animate_emotes = config.get("animate_emotes", False)
+        self.theme = config.get("theme", "system")
 
     def on_refresh_button_clicked(self, button):
         """Refresh streamer data."""

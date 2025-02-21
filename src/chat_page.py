@@ -335,8 +335,9 @@ class ChatPage(Adw.NavigationPage):
                 image = Gtk.Picture()
                 image.set_size_request(28, 28)
                 
-                if isinstance(emote, GdkPixbuf.PixbufAnimation):
-                    # Use shared animation state for this emote
+                window = self.get_root()
+                if isinstance(emote, GdkPixbuf.PixbufAnimation) and window.animate_emotes:
+                    # Handle animated emote only if animations are enabled
                     emote_id = id(emote)
                     if emote_id not in self.emote_animations:
                         # First time seeing this animation
@@ -358,10 +359,18 @@ class ChatPage(Adw.NavigationPage):
                     image.set_paintable(anim_state['current_texture'])
                     anim_state['images'].add(image)
                 else:
-                    # Static images remain the same
-                    if not hasattr(emote, '_texture'):
-                        emote._texture = Gdk.Texture.new_for_pixbuf(emote)
-                    image.set_paintable(emote._texture)
+                    # For static images or when animations are disabled
+                    if isinstance(emote, GdkPixbuf.PixbufAnimation):
+                        # Get static frame for animated emotes
+                        static_pixbuf = emote.get_static_image()
+                        if not hasattr(static_pixbuf, '_texture'):
+                            static_pixbuf._texture = Gdk.Texture.new_for_pixbuf(static_pixbuf)
+                        image.set_paintable(static_pixbuf._texture)
+                    else:
+                        # Handle normal static emotes
+                        if not hasattr(emote, '_texture'):
+                            emote._texture = Gdk.Texture.new_for_pixbuf(emote)
+                        image.set_paintable(emote._texture)
                     
                 anchor = self.chat_buffer.create_child_anchor(end)
                 self.chat_view.add_child_at_anchor(image, anchor)
