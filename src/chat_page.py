@@ -48,7 +48,7 @@ class ChatPage(Adw.NavigationPage):
         # Add play button to header
         self.play_button = Gtk.Button(icon_name="media-playback-start-symbolic")
         self.play_button.add_css_class("flat")
-        self.play_button.set_tooltip_text("Play stream")
+        self.play_button.set_tooltip_text("Play this stream")
         self.play_button.connect("clicked", self._on_play_clicked)
         self.header.pack_end(self.play_button)
         
@@ -61,16 +61,20 @@ class ChatPage(Adw.NavigationPage):
         self.chat_view.set_editable(False)
         self.chat_view.set_cursor_visible(False)
         self.chat_view.set_wrap_mode(Gtk.WrapMode.WORD_CHAR)
+        self.chat_view.set_overflow(Gtk.Overflow.HIDDEN)
         
         # Add CSS styling
         css_provider = Gtk.CssProvider()
         css_provider.load_from_data('''
             textview {
-                padding: 6px;
                 font-size: 12pt;
+                padding: 6px;
             }
             textview text {
                 background: none;
+            }
+            textview > * {
+                background-clip: padding-box;
             }
             .floating {
                 margin: 6px;
