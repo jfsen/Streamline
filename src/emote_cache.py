@@ -1,7 +1,7 @@
 from pathlib import Path
 import requests
-from gi.repository import GdkPixbuf
-from typing import Dict, Optional
+from gi.repository import GdkPixbuf, Gio, GLib, Gdk  # Add Gdk import
+from typing import Dict, Optional, Union
 import json
 import time
 from .global_twitch_emotes import GLOBAL_EMOTES
@@ -15,7 +15,7 @@ class EmoteCache:
         for directory in [self.emotes_dir, self.bttv_cache_dir]:
             directory.mkdir(parents=True, exist_ok=True)
         self.emote_urls: Dict[str, str] = {}
-        self.pixbufs: Dict[str, GdkPixbuf.Pixbuf] = {}
+        self.pixbufs: Dict[str, Union[GdkPixbuf.Pixbuf, Gdk.Texture]] = {}  # Update type hint
         self.user_id_cache = self._load_user_id_cache()
         self._fetch_global_emotes()
         self._fetch_global_bttv_emotes()
@@ -183,35 +183,53 @@ class EmoteCache:
             }
             self._save_bttv_cache(channel, empty_cache, force=False)
 
-    def get_emote_pixbuf(self, name: str) -> Optional[GdkPixbuf.Pixbuf]:
-        """Get or load emote pixbuf"""
+    def get_emote_pixbuf(self, name: str) -> Optional[Union[GdkPixbuf.Pixbuf, GdkPixbuf.PixbufAnimation]]:
+        """Get or load emote"""
         if name in self.pixbufs:
             return self.pixbufs[name]
             
         if name in self.emote_urls:
             try:
-                path = self.emotes_dir / f"{name}.webp"
                 url = self.emote_urls[name]
                 
-                if not path.exists():
+                # First check if we already downloaded the emote
+                for ext in ['.gif', '.png', '.webp']:
+                    path = self.emotes_dir / f"{name}{ext}"
+                    if path.exists():
+                        break
+                else:  # No existing file found, download it
                     print(f"[DEBUG] Downloading emote: {name} from {url}")
                     response = requests.get(url)
-                    if response.status_code == 200:
-                        path.write_bytes(response.content)
-                        print(f"[DEBUG] Successfully saved emote to {path}")
-                    else:
+                    if response.status_code != 200:
                         print(f"[DEBUG] Failed to download emote {name}: HTTP {response.status_code}")
-                        print(f"[DEBUG] Response content: {response.text[:200]}")  # First 200 chars of error
                         return None
-                        
-                print(f"[DEBUG] Loading emote from {path}")
-                pixbuf = GdkPixbuf.Pixbuf.new_from_file(str(path))
-                self.pixbufs[name] = pixbuf
-                return pixbuf
+
+                    # Get file extension from content-type
+                    content_type = response.headers.get('content-type', '')
+                    if 'gif' in content_type:
+                        ext = '.gif'
+                    elif 'png' in content_type:
+                        ext = '.png'
+                    else:
+                        ext = '.webp'  # default to webp
+                    
+                    path = self.emotes_dir / f"{name}{ext}"
+                    path.write_bytes(response.content)
+                    print(f"[DEBUG] Successfully saved emote to {path}")
                 
-            except requests.RequestException as e:
-                print(f"[DEBUG] Network error downloading emote {name}: {e}")
+                print(f"[DEBUG] Loading emote from {path}")
+                
+                # Use GdkPixbufAnimation for GIFs
+                if path.suffix == '.gif':
+                    anim = GdkPixbuf.PixbufAnimation.new_from_file(str(path))
+                    self.pixbufs[name] = anim
+                    return anim
+                else:
+                    pixbuf = GdkPixbuf.Pixbuf.new_from_file(str(path))
+                    self.pixbufs[name] = pixbuf
+                    return pixbuf
+
             except Exception as e:
-                print(f"[DEBUG] Error loading emote {name} from {self.emote_urls[name]}: {e}")
+                print(f"[DEBUG] Error loading emote {name}: {e}")
                 
         return None
