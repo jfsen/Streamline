@@ -178,12 +178,6 @@ class ChatPage(Adw.NavigationPage):
         self.nickname = "justinfan" + str(GLib.random_int_range(1000, 99999))
         self.channel = f"#{streamer}"
         
-        # Load existing messages after EmoteCache is initialized
-        self._load_stored_messages()
-        
-        # Start IRC connection
-        self.connect_to_chat()
-        
         self.running = True  # Add flag to control IRC thread
         self.reconnect_attempts = 0
         self.max_reconnect_attempts = 3
@@ -196,7 +190,28 @@ class ChatPage(Adw.NavigationPage):
         self.watchdog_running = True
         self.max_attempts_reached = False  # Add new flag
         
-        # Start watchdog thread to monitor connection
+        self.message_queue = []
+        self.queue_timer = None
+        self.batch_delay = 100  # ms
+        
+        self.last_cleanup = 0
+        self.cleanup_interval = 5  # seconds
+        
+        # Connect to destroy signal before starting any threads/timers
+        self.connect('destroy', self._on_destroy)
+        
+        # Connect to navigation signals
+        self.connect('hidden', self._on_hidden)
+        
+        # Start threads and timers only after destroy handler is connected
+        self._start_chat_system()
+    
+    def _start_chat_system(self):
+        """Initialize chat system components"""
+        # Start IRC connection
+        self.connect_to_chat()
+        
+        # Start watchdog thread
         self.watchdog_thread = threading.Thread(target=self._connection_watchdog)
         self.watchdog_thread.daemon = True
         self.watchdog_thread.start()
@@ -384,14 +399,6 @@ class ChatPage(Adw.NavigationPage):
         toast.set_timeout(timeout)
         self.toast_overlay.add_toast(toast)
     
-    def do_destroy(self):
-        """Clean up when page is destroyed"""
-        print("[DEBUG] Chat page being destroyed, cleaning up")
-        self.running = False
-        self.watchdog_running = False
-        self._cleanup_socket()
-        super().do_destroy()
-    
     def _set_connection_status(self, connected: bool):
         """Update the connection status indicator"""
         if connected:
@@ -482,8 +489,9 @@ class ChatPage(Adw.NavigationPage):
         if not self.running:
             print("[DEBUG] Not reconnecting - page is shutting down")
             return False
+            
         print("[DEBUG] Attempting to reconnect")
-        self.connect_to_chat(reset_counter=False)  # Don't reset counter on auto-reconnect
+        self.connect_to_chat(reset_counter=False)
         return False
 
     def _cleanup_socket(self):
@@ -494,4 +502,61 @@ class ChatPage(Adw.NavigationPage):
                 self.irc.close()
                 self.irc = None
         except Exception:
-            pass
+            self.irc = None
+            
+    def _on_hidden(self, page):
+        """Called when page is hidden (navigated away from)"""
+        print("[DEBUG] Chat page hidden, initiating cleanup")
+        self._on_destroy()
+        
+    def _on_destroy(self, *args):
+        """Cleanup when page is destroyed"""
+        # Prevent multiple cleanup calls
+        if not hasattr(self, 'running') or not self.running:
+            return
+            
+        print("[DEBUG] Cleaning up chat page")
+        
+        # Stop watchdog first
+        self.watchdog_running = False
+        if hasattr(self, 'watchdog_thread'):
+            self.watchdog_thread.join(timeout=1.0)
+        
+        # Stop IRC connection
+        self.running = False
+        if hasattr(self, 'irc') and self.irc:
+            try:
+                self.irc.shutdown(socket.SHUT_RDWR)
+                self.irc.close()
+            except:
+                pass
+            self.irc = None
+        
+        # Stop any pending timers
+        if hasattr(self, 'queue_timer') and self.queue_timer:
+            GLib.source_remove(self.queue_timer)
+            self.queue_timer = None
+            
+        if hasattr(self, 'animation_timer') and self.animation_timer:
+            GLib.source_remove(self.animation_timer)
+            self.animation_timer = None
+        
+        # Stop animation timers
+        for anim_state in self.emote_animations.values():
+            if anim_state['timer_id']:
+                GLib.source_remove(anim_state['timer_id'])
+        self.emote_animations.clear()
+        
+        # Clear all collections
+        if hasattr(self, 'message_queue'):
+            self.message_queue.clear()
+        if hasattr(self, 'animated_emotes'):
+            self.animated_emotes.clear()
+        if hasattr(self, 'emote_lookup_cache'):
+            self.emote_lookup_cache.clear()
+        
+        # Clear text buffer last
+        if hasattr(self, 'chat_buffer'):
+            self.chat_buffer.set_text("")
+        
+        print("[DEBUG] Chat page cleanup complete")

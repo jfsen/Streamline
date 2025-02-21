@@ -330,22 +330,16 @@ class StreamlineWindow(Adw.ApplicationWindow):
         """Show chat page for the given streamer."""
         # Cleanup any existing chat page
         if hasattr(self, '_current_chat_page'):
-            self._cleanup_chat_page(self._current_chat_page)
+            old_page = self._current_chat_page
+            self._current_chat_page = None  # Clear reference first
+            self.navigation_view.pop()  # Remove from navigation stack
+            # Let the chat page clean itself up
+            if hasattr(old_page, '_on_destroy'):
+                old_page._on_destroy()
         
         page = ChatPage(streamer)
-        # Store weak reference to track the current chat page
-        from weakref import proxy
-        self._current_chat_page = proxy(page)
-        page.connect('destroy', self._cleanup_chat_page)
+        # Store reference to track the current chat page
+        self._current_chat_page = page
+        
+        # Show the page
         self.navigation_view.push(page)
-
-    def _cleanup_chat_page(self, page):
-        """Clean up chat page references and connections"""
-        if hasattr(self, '_current_chat_page'):
-            try:
-                self._current_chat_page.running = False
-                self._current_chat_page.irc.shutdown(socket.SHUT_RDWR)
-                self._current_chat_page.irc.close()
-            except Exception:
-                pass
-            delattr(self, '_current_chat_page')
