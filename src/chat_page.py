@@ -1,4 +1,4 @@
-from gi.repository import Adw, Gtk, GLib, Pango, GdkPixbuf
+from gi.repository import Adw, Gtk, GLib, Pango, GdkPixbuf, Gdk
 import socket
 import ssl
 import threading
@@ -28,6 +28,9 @@ class ChatPage(Adw.NavigationPage):
         self.emote_cache = EmoteCache()
         # Only fetch metadata, not actual emotes
         self.emote_cache.fetch_emote_data(streamer)
+        
+        self.emote_animations = {}  # Track animations by emote ID
+        self.emote_lookup_cache = {}  # Cache emote lookup results
         
         # Create toast overlay
         self.toast_overlay = Adw.ToastOverlay()
@@ -264,42 +267,49 @@ class ChatPage(Adw.NavigationPage):
                 GLib.idle_add(self._handle_disconnect)
     
     def _process_message(self, data):
-        """Process and display chat messages"""
+        """Queue messages for batch processing"""
         if match := re.search(r':(\w+)!\w+@\w+\.tmi\.twitch\.tv PRIVMSG #\w+ :(.*)', data):
             username, message = match.groups()
             # Remove control characters
             message = re.sub(r'[\x00-\x1F\x7F]', '', message)
             timestamp = GLib.DateTime.new_now_local().format("%H:%M")
             msg = ChatMessage(timestamp, username, message)
-            GLib.idle_add(self._append_message, msg)
+            self.message_queue.append(msg)
+            
+            # Schedule batch update if not already scheduled
+            if not self.queue_timer:
+                self.queue_timer = GLib.timeout_add(self.batch_delay, self._process_message_queue)
 
-    def _load_stored_messages(self):
-        """Load existing messages from the store"""
-        if self.has_loaded_stored:
-            return
+    def _process_message_queue(self):
+        """Process queued messages in batch"""
+        self.queue_timer = None
+        if not self.message_queue:
+            return False
             
-        messages = ChatStore.get_messages(self.streamer)
-        if messages:
-            # First load all stored messages
-            for msg in messages:
-                # Add to view without re-storing
-                self._append_message(msg, store=False)
-            
-            # Then add a single separator after all messages
-            end = self.chat_buffer.get_end_iter()
-            self.chat_buffer.insert_with_tags_by_name(
-                end,
-                "\n─────── Previous Messages ───────\n\n",
-                "separator"
-            )
+        # Start batch update
+        self.chat_buffer.begin_user_action()
         
-        self.has_loaded_stored = True
+        for msg in self.message_queue:
+            self._append_message(msg)
+            
+        self.chat_buffer.end_user_action()
+        self.message_queue.clear()
+        
+        return False
 
     def _append_message(self, msg: ChatMessage, store=True):
         """Append message to chat view"""
-        if store:
-            # Store the message in ChatStore
-            ChatStore.add_message(self.streamer, msg)
+        current_time = GLib.get_monotonic_time() / 1000000
+        
+        # Periodically cleanup old messages in fast chats
+        if current_time - self.last_cleanup > self.cleanup_interval:
+            while self.message_count > self.max_messages / 2:
+                start = self.chat_buffer.get_start_iter()
+                end = start.copy()
+                end.forward_line()
+                self.chat_buffer.delete(start, end)
+                self.message_count -= 1
+            self.last_cleanup = current_time
 
         if self.message_count >= self.max_messages:
             start = self.chat_buffer.get_start_iter()
@@ -315,10 +325,44 @@ class ChatPage(Adw.NavigationPage):
         # Split message and check for emotes
         words = msg.message.split()
         for word in words:
-            # Emotes are loaded on demand when they appear
-            if pixbuf := self.emote_cache.get_emote_pixbuf(word):
-                image = Gtk.Image.new_from_pixbuf(pixbuf)
+            if word in self.emote_lookup_cache:
+                emote = self.emote_lookup_cache[word]
+            else:
+                emote = self.emote_cache.get_emote_pixbuf(word)
+                self.emote_lookup_cache[word] = emote
+                
+            if emote:
+                image = Gtk.Picture()
                 image.set_size_request(28, 28)
+                
+                if isinstance(emote, GdkPixbuf.PixbufAnimation):
+                    # Use shared animation state for this emote
+                    emote_id = id(emote)
+                    if emote_id not in self.emote_animations:
+                        # First time seeing this animation
+                        anim_iter = emote.get_iter()
+                        texture = Gdk.Texture.new_for_pixbuf(anim_iter.get_pixbuf())
+                        self.emote_animations[emote_id] = {
+                            'iter': anim_iter,
+                            'current_texture': texture,
+                            'images': set(),
+                            'timer_id': None
+                        }
+                        # Start shared animation timer
+                        timer_id = GLib.timeout_add(anim_iter.get_delay_time(), 
+                                                  self._advance_shared_animation, emote_id)
+                        self.emote_animations[emote_id]['timer_id'] = timer_id
+                    
+                    # Use current frame for this emote
+                    anim_state = self.emote_animations[emote_id]
+                    image.set_paintable(anim_state['current_texture'])
+                    anim_state['images'].add(image)
+                else:
+                    # Static images remain the same
+                    if not hasattr(emote, '_texture'):
+                        emote._texture = Gdk.Texture.new_for_pixbuf(emote)
+                    image.set_paintable(emote._texture)
+                    
                 anchor = self.chat_buffer.create_child_anchor(end)
                 self.chat_view.add_child_at_anchor(image, anchor)
                 self.chat_buffer.insert(end, " ")
@@ -334,7 +378,37 @@ class ChatPage(Adw.NavigationPage):
             mark = self.chat_buffer.create_mark(None, end, False)
             self.chat_view.scroll_mark_onscreen(mark)
         return False
-    
+
+    def _advance_shared_animation(self, emote_id: int) -> bool:
+        """Advance animation frame for all instances of an emote"""
+        if emote_id not in self.emote_animations:
+            return False
+            
+        anim_state = self.emote_animations[emote_id]
+        iter = anim_state['iter']
+        
+        # Remove destroyed images
+        anim_state['images'] = {img for img in anim_state['images'] if img.get_parent()}
+        
+        if not anim_state['images']:
+            # No more visible instances of this emote
+            del self.emote_animations[emote_id]
+            return False
+            
+        # Get next frame
+        iter.advance(None)
+        texture = Gdk.Texture.new_for_pixbuf(iter.get_pixbuf())
+        anim_state['current_texture'] = texture
+        
+        # Update all instances
+        for image in anim_state['images']:
+            image.set_paintable(texture)
+        
+        # Schedule next frame
+        delay = iter.get_delay_time()
+        anim_state['timer_id'] = GLib.timeout_add(delay, self._advance_shared_animation, emote_id)
+        return False
+
     def _on_scroll_changed(self, adj):
         """Handle manual scrolling"""
         # Check if we're near the bottom
