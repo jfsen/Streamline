@@ -74,7 +74,7 @@ class StreamerRowManager:
         # Create action buttons with tooltips and handlers
         buttons = [
             (IconNames.UNFOLLOW, "Unfollow", self.window.unfollow_streamer, 
-             self.window.show_unfollow_button, True),  # Hide unfollow
+             self.window.show_unfollow_button, False),
             (IconNames.BROWSER, "Open in browser", self.window.open_stream_in_browser, 
              self.window.show_weblink_button, False),
             ("chat-message-new-symbolic", "Open Chat", self.window.show_chat_page, 
@@ -88,7 +88,7 @@ class StreamerRowManager:
                 button = Gtk.Button(icon_name=icon_name)
                 button.add_css_class("flat")
                 if hide_on_leave:
-                    button.add_css_class("hide-on-leave")  # Only add to specific buttons
+                    button.add_css_class("hide-on-leave")  # Not currently used
                 button.set_valign(Gtk.Align.CENTER)
                 button.set_tooltip_text(tooltip)
                 button.connect("clicked", lambda btn, h=handler: h(streamer))
