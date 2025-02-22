@@ -48,9 +48,16 @@ streamline_sources = [
   'dialogs.py',
   'config.py',
   'rows.py',
-  'chat_page.py',
-  'emote_cache.py',
-  'global_twitch_emotes.py'
+  'chat/__init__.py',
+  'chat/page.py',
+  'chat/irc_client.py',
+  'chat/message.py',
+  'chat/emote_renderer.py',
+  'chat/emote_service.py',
+  'chat/emote_store.py',
+  'chat/global_twitch_emotes.py',
 ]
 
 install_data(streamline_sources, install_dir: moduledir)
+
+install_subdir('chat', install_dir: moduledir)

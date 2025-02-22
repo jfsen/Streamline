@@ -41,7 +41,7 @@ from .icon_names import IconNames
 from .config import ConfigManager
 from .dialogs import StreamlineDialogs
 from .rows import StreamerRowManager
-from .chat_page import ChatPage
+from .chat import ChatPage
 
 
 @Gtk.Template(resource_path='/io/github/jfsen/Streamline/window.ui')
