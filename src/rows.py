@@ -1,5 +1,6 @@
 from gi.repository import Adw, Gtk, GLib
 from .icon_names import IconNames
+from html import unescape
 
 class StreamerRowManager:
     def __init__(self, window):
@@ -42,7 +43,9 @@ class StreamerRowManager:
             game = info.get('game', 'Unknown')
             row.set_subtitle(f"{game}\n{viewers} viewers")
 
-            title = GLib.markup_escape_text(info.get('title', 'No title'))
+            # Get raw title and decode HTML entities without re-escaping
+            raw_title = info.get('title', 'No title')
+            title = unescape(raw_title)  # This will convert &apos; to ' etc.
             uptime = info.get('uptime', 'N/A')
             tooltip = f"Title: {title}\nUptime: {uptime}"
             row.set_tooltip_text(tooltip)
