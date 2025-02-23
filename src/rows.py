@@ -1,4 +1,4 @@
-from gi.repository import Adw, Gtk, GLib
+from gi.repository import Adw, Gtk, GLib, Gio
 from .icon_names import IconNames
 from html import unescape
 
@@ -55,7 +55,7 @@ class StreamerRowManager:
         return row
 
     def _add_row_buttons(self, row, streamer):
-        """Add action buttons to the row"""
+        """Add a play button and a dropdown menu to the row."""
         row.add_css_class("action-row")
         
         # Create play button as prefix
@@ -63,42 +63,57 @@ class StreamerRowManager:
         play_button.add_css_class("flat")
         play_button.set_valign(Gtk.Align.CENTER)
         play_button.set_tooltip_text("Play stream")
-        
+
         def on_play_clicked(btn):
             try:
                 if self.window.player.play_content(f"twitch.tv/{streamer}", is_vod=False):
                     self.window.show_toast("Playback starting...", 2)
             except Exception as e:
                 self.window.show_toast(f"Error: {str(e)}", 4)
-        
+
         play_button.connect("clicked", on_play_clicked)
         row.add_prefix(play_button)
 
-        # Create action buttons with tooltips and handlers
-        buttons = [
-            (IconNames.UNFOLLOW, "Unfollow", self.window.unfollow_streamer, 
-             self.window.show_unfollow_button, False),
-            (IconNames.BROWSER, "Open in browser", self.window.open_stream_in_browser, 
-             self.window.show_weblink_button, False),
-            ("chat-message-new-symbolic", "Open Chat", self.window.show_chat_page, 
-             self.window.show_chat_button, False),
-            (IconNames.VODS, "Show VODs", self.window.show_vods_page, 
-             self.window.show_vods_button, False)
+        # Create menu button
+        menu_button = Gtk.MenuButton()
+        menu_button.set_icon_name("view-more-symbolic")
+        menu_button.add_css_class("flat")
+        menu_button.set_valign(Gtk.Align.CENTER)
+        menu_button.set_tooltip_text("More")
+        
+        # Create menu model
+        menu = Gio.Menu.new()
+        
+        # Add menu items - no icons needed
+        menu_items = [
+            ("Open Chat", "open-chat", self.window.show_chat_page),
+            ("Show VODs", "show-vods", self.window.show_vods_page),
+            ("Open in browser", "open-browser", self.window.open_stream_in_browser),
+            ("Unfollow", "unfollow", self.window.unfollow_streamer)
         ]
 
-        for icon_name, tooltip, handler, show, hide_on_leave in buttons:
-            if show:
-                button = Gtk.Button(icon_name=icon_name)
-                button.add_css_class("flat")
-                if hide_on_leave:
-                    button.add_css_class("hide-on-leave")  # Not currently used
-                button.set_valign(Gtk.Align.CENTER)
-                button.set_tooltip_text(tooltip)
-                button.connect("clicked", lambda btn, h=handler: h(streamer))
-                row.add_suffix(button)
+        for label, action_name, handler in menu_items:
+            item = Gio.MenuItem.new(label, f"row.{action_name}")
+            menu.append_item(item)
 
-    def add_offline_streamer(self, username):
-        """Create and add row for new offline streamer."""
+        # Create popup menu
+        popover = Gtk.PopoverMenu.new_from_model(menu)
+        menu_button.set_popover(popover)
+
+        # Add actions to the row
+        action_group = Gio.SimpleActionGroup.new()
+        row.insert_action_group("row", action_group)
+
+        # Create the actions
+        for _, action_name, handler in menu_items:
+            action = Gio.SimpleAction.new(action_name, None)
+            action.connect("activate", lambda act, param, h=handler: h(streamer))
+            action_group.add_action(action)
+
+        row.add_suffix(menu_button)
+
+    def add_new_streamer(self, username):
+        """New streamers are added to the offline list."""
         row = self.create_row(username, {})
         
         # Find insertion point to maintain alphabetical order

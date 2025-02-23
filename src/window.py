@@ -172,10 +172,6 @@ class StreamlineWindow(Adw.ApplicationWindow):
         self.all_streamers = config.get("streamers", [])
         self.stream_quality = config.get("stream_quality", "best")
         self.narrow_mode = config.get("narrow_mode", False)
-        self.show_weblink_button = config.get("show_weblink_button", True)
-        self.show_chat_button = config.get("show_chat_button", True)
-        self.show_vods_button = config.get("show_vods_button", True)
-        self.show_unfollow_button = config.get("show_unfollow_button", True)
         self.animate_emotes = config.get("animate_emotes", False)
         self.theme = config.get("theme", "system")
 
@@ -313,7 +309,7 @@ class StreamlineWindow(Adw.ApplicationWindow):
 
     def add_offline_streamer(self, username):
         """Add new offline streamer row."""
-        return self.row_manager.add_offline_streamer(username)
+        return self.row_manager.add_new_streamer(username)
 
     def remove_streamer_row(self, username):
         """Remove streamer row from UI."""

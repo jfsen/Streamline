@@ -18,10 +18,6 @@ class ConfigManager:
             "twitch_client_secret": "",
             "narrow_mode": False,
             "theme": "system",
-            "show_weblink_button": True,
-            "show_chat_button": True,
-            "show_vods_button": True,
-            "show_unfollow_button": True,
             "animate_emotes": False,
         }
 
@@ -61,20 +57,12 @@ class ConfigManager:
             "stream_quality": window.stream_quality,
             "narrow_mode": window.narrow_mode,
             "theme": window.theme,
-            "show_weblink_button": window.show_weblink_button,
-            "show_chat_button": window.show_chat_button,
-            "show_vods_button": window.show_vods_button,
-            "show_unfollow_button": window.show_unfollow_button,
             "animate_emotes": window.animate_emotes,
         }
         return config
 
     def load(self):
         config = self._load_from_file()
-        config.setdefault("show_weblink_button", True)
-        config.setdefault("show_chat_button", True)
-        config.setdefault("show_vods_button", True)
-        config.setdefault("show_unfollow_button", True)
         config.setdefault("animate_emotes", False)
         config.setdefault("theme", "system")
         
