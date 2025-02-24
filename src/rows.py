@@ -55,7 +55,7 @@ class StreamerRowManager:
         return row
 
     def _add_row_buttons(self, row, streamer):
-        """Add a play button and a dropdown menu to the row."""
+        """Add buttons and dropdown menu to the row."""
         row.add_css_class("action-row")
         
         # Create play button as prefix
@@ -74,6 +74,22 @@ class StreamerRowManager:
         play_button.connect("clicked", on_play_clicked)
         row.add_prefix(play_button)
 
+        # Create chat button
+        chat_button = Gtk.Button(icon_name=IconNames.CHAT)
+        chat_button.add_css_class("flat")
+        chat_button.set_valign(Gtk.Align.CENTER)
+        chat_button.set_tooltip_text("Open Chat")
+        chat_button.connect("clicked", lambda btn: self.window.show_chat_page(streamer))
+        row.add_suffix(chat_button)
+
+        # Create browser button
+        browser_button = Gtk.Button(icon_name=IconNames.BROWSER)
+        browser_button.add_css_class("flat")
+        browser_button.set_valign(Gtk.Align.CENTER)
+        browser_button.set_tooltip_text("Open in browser")
+        browser_button.connect("clicked", lambda btn: self.window.open_stream_in_browser(streamer))
+        row.add_suffix(browser_button)
+
         # Create menu button
         menu_button = Gtk.MenuButton()
         menu_button.set_icon_name("view-more-symbolic")
@@ -86,9 +102,7 @@ class StreamerRowManager:
         
         # Add menu items - no icons needed
         menu_items = [
-            ("Open Chat", "open-chat", self.window.show_chat_page),
             ("Show VODs", "show-vods", self.window.show_vods_page),
-            ("Open in browser", "open-browser", self.window.open_stream_in_browser),
             ("Unfollow", "unfollow", self.window.unfollow_streamer)
         ]
 

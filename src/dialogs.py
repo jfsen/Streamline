@@ -21,7 +21,7 @@ class StreamlineDialogs:
         )
         
         entry = Gtk.Entry(
-            width_chars=30,
+            width_chars=20,
             hexpand=True,
             activates_default=True
         )
