@@ -5,21 +5,21 @@
   <project_license>GPL-3.0-or-later</project_license>
 
   <name>Streamline</name>
-  <summary>Keep the summary shorter, between 10 and 35 characters</summary>
+  <summary>Watch Twitch streams in your local media player</summary>
   <description>
-    <p>No description</p>
+    <p>Follow your favorite Twitch streams, check their online status, and enjoy them in your preferred media player such as mpv or VLC. Display the Twitch chat and explore the stream's VODs.</p>
   </description>
 
   <developer id="tld.vendor">
-    <name>Developer name</name>
+    <name>jfsen</name>
   </developer>
 
   <!-- Requered: Should be a link to the upstream homepage for the component -->
-  <url type="homepage">https://example.org/</url>
+  <url type="homepage">https://jfsen.github.io/</url>
   <!-- Recommended: It is highly recommended for open-source projects to display the source code repository -->
-  <url type="vcs-browser">https://example.org/repository</url>
+  <url type="vcs-browser">https://github.com/jfsen/Streamline</url>
   <!-- Should point to the software's bug tracking system, for users to report new bugs -->
-  <url type="bugtracker">https://example.org/issues</url>
+  <url type="bugtracker">https://github.com/jfsen/Streamline/issues</url>
   <!-- Should link a FAQ page for this software, to answer some of the most-asked questions in detail -->
   <!-- URLs of this type should point to a webpage where users can submit or modify translations of the upstream project -->
   <url type="translate">https://example.org/translate</url>
@@ -42,7 +42,7 @@
 
   <!-- Applications should set a brand color in both light and dark variants like so -->
   <branding>
-    <color type="primary" scheme_preference="light">#ff00ff</color>
+    <color type="primary" scheme_preference="light">#B75656</color>
     <color type="primary" scheme_preference="dark">#993d3d</color>
   </branding>
 
