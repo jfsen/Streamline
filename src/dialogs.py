@@ -73,10 +73,10 @@ class StreamlineDialogs:
         error.present()
 
     def show_follow_dialog(self, callback):
-        """Show dialog to follow new streamer."""
+        """Show dialog to follow new streamer(s)."""
         dialog, entry = self.create_input_dialog(
-            heading="Follow Streamer",
-            body="Enter the Twitch username of the streamer you want to follow:",
+            heading="Follow Streamer(s)",
+            body="Enter Twitch usernames (separate multiple with commas):",
             default_response="follow"
         )
 

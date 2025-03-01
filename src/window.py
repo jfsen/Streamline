@@ -254,13 +254,37 @@ class StreamlineWindow(Adw.ApplicationWindow):
         self.dialogs.show_follow_dialog(self._handle_follow)
 
     def _handle_follow(self, username):
-        """Handle follow dialog callback."""
-        if username not in self.all_streamers:
-            self.all_streamers.append(username)
+        """Handle follow dialog callback with support for multiple streamers."""
+        # Split input by commas and strip whitespace
+        usernames = [name.strip() for name in username.split(',')]
+        
+        # Track newly added streamers
+        added = []
+        already_following = []
+        
+        for name in usernames:
+            if not name:  # Skip empty names
+                continue
+                
+            if name not in self.all_streamers:
+                self.all_streamers.append(name)
+                self.add_offline_streamer(name)
+                added.append(name)
+            else:
+                already_following.append(name)
+        
+        if added:
             self.save_config()
-            self.add_offline_streamer(username)
-        else:
-            self.dialogs.show_already_following_dialog(username)
+            if len(added) == 1:
+                self.show_toast(f"Now following {added[0]}")
+            else:
+                self.show_toast(f"Added {len(added)} new streamers")
+                
+        if already_following:
+            if len(already_following) == 1:
+                self.dialogs.show_already_following_dialog(already_following[0])
+            else:
+                self.show_toast(f"Already following: {', '.join(already_following)}")
 
     def quick_play(self, *args):
         """Show dialog to quickly play a stream."""
