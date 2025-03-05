@@ -4,7 +4,6 @@ from gi.repository import GLib
 import json
 from pathlib import Path
 from datetime import datetime, timezone
-from .icon_names import IconNames
 
 @Gtk.Template(resource_path='/io/github/jfsen/Streamline/vod_page.ui')
 class VODPage(Adw.NavigationPage):
@@ -151,7 +150,7 @@ class VODPage(Adw.NavigationPage):
             row.add_suffix(play_button)
             
             # Update browser button icon name
-            browser_button = Gtk.Button(icon_name=IconNames.BROWSER)
+            browser_button = Gtk.Button(icon_name="web-browser-symbolic")
             browser_button.add_css_class("flat")
             browser_button.set_valign(Gtk.Align.CENTER)
             browser_button.set_tooltip_text("Open VOD in browser")

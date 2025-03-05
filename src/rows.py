@@ -1,5 +1,4 @@
 from gi.repository import Adw, Gtk, GLib, Gio
-from .icon_names import IconNames
 from html import unescape
 
 class StreamerRowManager:
@@ -74,16 +73,8 @@ class StreamerRowManager:
         play_button.connect("clicked", on_play_clicked)
         row.add_prefix(play_button)
 
-        # Create chat button
-        chat_button = Gtk.Button(icon_name=IconNames.CHAT)
-        chat_button.add_css_class("flat")
-        chat_button.set_valign(Gtk.Align.CENTER)
-        chat_button.set_tooltip_text("Open Chat")
-        chat_button.connect("clicked", lambda btn: self.window.show_chat_page(streamer))
-        row.add_suffix(chat_button)
-
         # Create browser button
-        browser_button = Gtk.Button(icon_name=IconNames.BROWSER)
+        browser_button = Gtk.Button(icon_name="web-browser-symbolic")
         browser_button.add_css_class("flat")
         browser_button.set_valign(Gtk.Align.CENTER)
         browser_button.set_tooltip_text("Open in browser")
@@ -102,6 +93,7 @@ class StreamerRowManager:
         
         # Add menu items - no icons needed
         menu_items = [
+            ("Open Chat", "open-chat", self.window.show_chat_page),
             ("Show VODs", "show-vods", self.window.show_vods_page),
             ("Unfollow", "unfollow", self.window.unfollow_streamer)
         ]

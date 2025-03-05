@@ -10,15 +10,6 @@ gnome.compile_resources('streamline',
   install_dir: pkgdatadir,
 )
 
-# Icons resources
-gnome.compile_resources('streamline-icons',
-  'icons/icons.gresource.xml',
-  source_dir: 'icons',
-  gresource_bundle: true,
-  install: true,
-  install_dir: pkgdatadir,
-)
-
 python = import('python')
 
 conf = configuration_data()
@@ -44,7 +35,6 @@ streamline_sources = [
   'twitch.py',
   'stream_player.py',
   'vod_page.py',
-  'icon_names.py',
   'dialogs.py',
   'config.py',
   'rows.py',

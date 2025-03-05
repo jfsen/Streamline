@@ -9,7 +9,6 @@ from .irc_client import TwitchIRCClient, ConnectionState
 from .emote_service import EmoteService
 from .emote_store import EmoteStore
 from .emote_renderer import EmoteRenderer
-from streamline.icon_names import IconNames
 
 class ChatPage(Adw.NavigationPage):
     def __init__(self, streamer: str):
@@ -73,7 +72,7 @@ class ChatPage(Adw.NavigationPage):
         self.header.pack_end(self.play_button)
 
         # Browser button (right side, before play button)
-        self.browser_button = Gtk.Button(icon_name=IconNames.BROWSER)
+        self.browser_button = Gtk.Button(icon_name="web-browser-symbolic")
         self.browser_button.add_css_class("flat")
         self.browser_button.set_tooltip_text("Open in browser")
         self.browser_button.connect("clicked", self._on_browser_clicked)
