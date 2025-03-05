@@ -32,8 +32,8 @@ class StreamerRowManager:
         """Create an ActionRow with buttons and additional info."""
         row = Adw.ActionRow.new()
         
-        # Set streamer name
-        display_name = self.window.twitch.display_name_cache.get(streamer) if self.window.twitch else None
+        # Set streamer name using combined cache
+        display_name = self.window.twitch.user_cache['names'].get(streamer) if self.window.twitch else None
         row.set_title(display_name or streamer)
         row.set_title_lines(1)
 

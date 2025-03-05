@@ -11,8 +11,7 @@ class TwitchAPI:
         self.access_token = None
         self.token_expires_at = None
         print(f"[Twitch] Initializing API (client_id: {client_id[:5]}...)")
-        self.user_id_cache = self._load_user_id_cache()
-        self.display_name_cache = self._load_display_name_cache()
+        self.user_cache = self._load_user_cache()  # Combined cache
         self._load_token_cache()
 
     def _get_access_token(self):
@@ -75,49 +74,27 @@ class TwitchAPI:
         except OSError:
             print("[Twitch] Failed to save token cache")
 
-    def _get_cache_path(self):
-        """Get path to user ID cache file."""
+    def _get_user_cache_path(self):
+        """Get path to user cache file."""
         cache_dir = Path.home() / ".cache" / "Streamline"
         cache_dir.mkdir(parents=True, exist_ok=True)
-        return cache_dir / "user_ids.json"
+        return cache_dir / "users.json"
 
-    def _load_user_id_cache(self):
-        """Load user IDs from cache file."""
+    def _load_user_cache(self):
+        """Load user data from cache file."""
         try:
-            with open(self._get_cache_path()) as f:
+            with open(self._get_user_cache_path()) as f:
                 return json.load(f)
         except (json.JSONDecodeError, OSError, FileNotFoundError):
-            return {}
+            return {'ids': {}, 'names': {}}  # Combined structure
 
-    def _save_user_id_cache(self):
-        """Save user IDs to cache file."""
+    def _save_user_cache(self):
+        """Save user data to cache file."""
         try:
-            with open(self._get_cache_path(), 'w') as f:
-                json.dump(self.user_id_cache, f, indent=4)
+            with open(self._get_user_cache_path(), 'w') as f:
+                json.dump(self.user_cache, f, indent=4)
         except OSError:
-            print("[Twitch] Failed to save user ID cache")
-
-    def _get_display_name_cache_path(self):
-        """Get path to display name cache file."""
-        cache_dir = Path.home() / ".cache" / "Streamline"
-        cache_dir.mkdir(parents=True, exist_ok=True)
-        return cache_dir / "display_names.json"
-
-    def _load_display_name_cache(self):
-        """Load display names from cache file."""
-        try:
-            with open(self._get_display_name_cache_path()) as f:
-                return json.load(f)
-        except (json.JSONDecodeError, OSError, FileNotFoundError):
-            return {}
-
-    def _save_display_name_cache(self):
-        """Save display names to cache file."""
-        try:
-            with open(self._get_display_name_cache_path(), 'w') as f:
-                json.dump(self.display_name_cache, f, indent=4)
-        except OSError:
-            print("[Twitch] Failed to save display name cache")
+            print("[Twitch] Failed to save user cache")
 
     def _get_streams_cache_path(self):
         """Get path to streams cache file."""
@@ -216,8 +193,8 @@ class TwitchAPI:
                     user_login = stream['user_login']
                     online_streamers.append(user_login)
                     # Cache the user ID and display name
-                    self.user_id_cache[user_login] = stream['user_id']
-                    self.display_name_cache[user_login] = stream['user_name']
+                    self.user_cache['ids'][user_login] = stream['user_id']
+                    self.user_cache['names'][user_login] = stream['user_name']
                     streamer_info[user_login] = {
                         "game": stream['game_name'],
                         "title": stream['title'],
@@ -232,8 +209,7 @@ class TwitchAPI:
                     print(f"[Twitch] Offline: {', '.join(offline_streamers_batch)}")
 
                 # Save both caches after updating
-                self._save_user_id_cache()
-                self._save_display_name_cache()
+                self._save_user_cache()
 
             except requests.exceptions.RequestException as e:
                 print(f"[Twitch] API request failed: {str(e)}")
@@ -265,7 +241,7 @@ class TwitchAPI:
         }
         
         # Try to get user ID from cache first
-        user_id = self.user_id_cache.get(username)
+        user_id = self.user_cache['ids'].get(username)
         
         if not user_id:
             # If not in cache, fetch it from API
@@ -279,8 +255,8 @@ class TwitchAPI:
                     
                 user_id = user_data[0]['id']
                 # Cache the user ID and save to file
-                self.user_id_cache[username] = user_id
-                self._save_user_id_cache()
+                self.user_cache['ids'][username] = user_id
+                self._save_user_cache()
                 
             except requests.exceptions.RequestException as e:
                 print(f"[Twitch] Failed to fetch user ID: {str(e)}")
