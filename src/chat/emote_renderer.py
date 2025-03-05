@@ -10,14 +10,54 @@ class EmoteState:
     current_texture: Gdk.Texture
     frame_textures: Dict[int, Gdk.Texture]  # Cache textures per frame
     images: Set[Gtk.Picture]
-    timer_id: Optional[int] = None
+    next_frame_time: int  # When to show next frame
 
 class EmoteRenderer:
     """Handles emote rendering and animations"""
     def __init__(self):
         self.animations: Dict[int, EmoteState] = {}
         self.texture_cache: Dict[int, Gdk.Texture] = {}
+        self.global_timer_id: Optional[int] = None
+        self.frame_time = 50  # 20fps, adjust based on performance needs
+        
+    def start_animations(self):
+        """Start global animation timer"""
+        if not self.global_timer_id:
+            self.global_timer_id = GLib.timeout_add(
+                self.frame_time, 
+                self._update_all_animations
+            )
     
+    def _update_all_animations(self) -> bool:
+        """Update all visible animated emotes in one pass"""
+        current_time = GLib.get_monotonic_time() // 1000  # ms
+        
+        for emote_id, state in list(self.animations.items()):
+            # Remove destroyed images
+            state.images = {img for img in state.images if img.get_parent()}
+            
+            if not state.images:
+                del self.animations[emote_id]
+                continue
+                
+            # Check if it's time to advance this animation
+            if current_time >= state.next_frame_time:
+                state.iter.advance(None)
+                frame_hash = hash(state.iter.get_pixbuf().get_pixels())
+                
+                if frame_hash not in state.frame_textures:
+                    state.frame_textures[frame_hash] = Gdk.Texture.new_for_pixbuf(
+                        state.iter.get_pixbuf()
+                    )
+                
+                state.current_texture = state.frame_textures[frame_hash]
+                state.next_frame_time = current_time + state.iter.get_delay_time()
+                
+                for image in state.images:
+                    image.set_paintable(state.current_texture)
+        
+        return bool(self.animations)  # Stop timer if no animations
+
     def create_emote_picture(self, emote: GdkPixbuf.Pixbuf, animate: bool = True) -> Gtk.Picture:
         """Create a new emote picture widget"""
         image = Gtk.Picture()
@@ -25,7 +65,12 @@ class EmoteRenderer:
         image.set_can_shrink(False)
         image.set_content_fit(Gtk.ContentFit.CONTAIN)
 
-        if isinstance(emote, GdkPixbuf.PixbufAnimation) and animate:
+        # If it's an animated emote but animations are disabled,
+        # get the static image instead
+        if isinstance(emote, GdkPixbuf.PixbufAnimation) and not animate:
+            emote = emote.get_static_image()
+            self._handle_static_emote(image, emote)
+        elif isinstance(emote, GdkPixbuf.PixbufAnimation) and animate:
             self._handle_animated_emote(image, emote)
         else:
             self._handle_static_emote(image, emote)
@@ -46,12 +91,11 @@ class EmoteRenderer:
                 current_texture=frame_textures[0],
                 frame_textures=frame_textures,
                 images=set(),
-                timer_id=GLib.timeout_add(
-                    anim_iter.get_delay_time(),
-                    self._advance_animation,
-                    emote_id
-                )
+                next_frame_time=GLib.get_monotonic_time() // 1000 + anim_iter.get_delay_time()
             )
+            
+            # Start global timer if needed
+            self.start_animations()
 
         anim_state = self.animations[emote_id]
         image.set_paintable(anim_state.current_texture)
@@ -63,37 +107,6 @@ class EmoteRenderer:
         if emote_id not in self.texture_cache:
             self.texture_cache[emote_id] = Gdk.Texture.new_for_pixbuf(emote)
         image.set_paintable(self.texture_cache[emote_id])
-
-    def _advance_animation(self, emote_id: int) -> bool:
-        """Advance animation frame for all instances of an emote"""
-        if emote_id not in self.animations:
-            return False
-            
-        anim_state = self.animations[emote_id]
-        anim_state.images = {img for img in anim_state.images if img.get_parent()}
-        
-        if not anim_state.images:
-            del self.animations[emote_id]
-            return False
-            
-        # Get next frame
-        anim_state.iter.advance(None)
-        frame_hash = hash(anim_state.iter.get_pixbuf().get_pixels())
-        
-        # Reuse texture if we've seen this frame before
-        if frame_hash not in anim_state.frame_textures:
-            anim_state.frame_textures[frame_hash] = Gdk.Texture.new_for_pixbuf(
-                anim_state.iter.get_pixbuf()
-            )
-        
-        anim_state.current_texture = anim_state.frame_textures[frame_hash]
-        
-        for image in anim_state.images:
-            image.set_paintable(anim_state.current_texture)
-        
-        delay = anim_state.iter.get_delay_time()
-        anim_state.timer_id = GLib.timeout_add(delay, self._advance_animation, emote_id)
-        return False
 
     def cleanup(self) -> None:
         """Clean up any active animations"""
