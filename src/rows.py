@@ -59,7 +59,7 @@ class StreamerRowManager:
         row.add_css_class("action-row")
         
         # Create play button as prefix
-        play_button = Gtk.Button(icon_name=IconNames.PLAY)
+        play_button = Gtk.Button(icon_name="media-playback-start-symbolic")
         play_button.add_css_class("flat")
         play_button.set_valign(Gtk.Align.CENTER)
         play_button.set_tooltip_text("Play stream")

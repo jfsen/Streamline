@@ -143,7 +143,7 @@ class VODPage(Adw.NavigationPage):
             )
             
             # Update play button icon name
-            play_button = Gtk.Button(icon_name=IconNames.PLAY)
+            play_button = Gtk.Button(icon_name="media-playback-start-symbolic")
             play_button.add_css_class("flat")
             play_button.set_valign(Gtk.Align.CENTER)
             play_button.set_tooltip_text("Play VOD")
