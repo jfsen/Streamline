@@ -37,7 +37,6 @@ from .preferences import StreamlinePreferences
 from .twitch import TwitchAPI
 from .stream_player import StreamPlayer
 from .vod_page import VODPage
-from .icon_names import IconNames
 from .config import ConfigManager
 from .dialogs import StreamlineDialogs
 from .rows import StreamerRowManager
