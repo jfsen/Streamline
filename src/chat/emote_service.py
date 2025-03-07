@@ -29,7 +29,8 @@ class EmoteService:
     def _fetch_global_twitch_emotes(self):
         """Fetch global Twitch emotes"""
         print("[DEBUG] Using hardcoded global Twitch emotes")
-        for name, url in GLOBAL_EMOTES.items():
+        for name, emote_id in GLOBAL_EMOTES.items():
+            url = f"https://static-cdn.jtvnw.net/emoticons/v2/{emote_id}/default/dark/1.0"
             self.emote_urls[name] = url
     
     def _fetch_global_bttv_emotes(self):
@@ -69,11 +70,11 @@ class EmoteService:
                 
                 # Channel emotes
                 for e in data.get('channelEmotes', []):
-                    emotes[e['code']] = f"https://cdn.betterttv.net/emote/{e['id']}/3x"
+                    emotes[e['code']] = f"https://cdn.betterttv.net/emote/{e['id']}/1x"
                     
                 # Shared emotes
                 for e in data.get('sharedEmotes', []):
-                    emotes[e['code']] = f"https://cdn.betterttv.net/emote/{e['id']}/3x"
+                    emotes[e['code']] = f"https://cdn.betterttv.net/emote/{e['id']}/1x"
                     
                 print(f"[DEBUG] Found {len(emotes)} channel BTTV emotes")
                 self.emote_urls.update(emotes)
@@ -83,13 +84,15 @@ class EmoteService:
             print(f"[DEBUG] Error fetching BTTV emotes for {channel}: {e}")
 
     def _load_user_id_cache(self):
-            """Load user IDs from cache file."""
-            cache_path = Path.home() / ".cache" / "Streamline" / "user_ids.json"
-            try:
-                with open(cache_path) as f:
-                    return json.load(f)
-            except (json.JSONDecodeError, OSError, FileNotFoundError):
-                return {}
+        """Load user IDs from cache file."""
+        cache_path = Path.home() / ".cache" / "Streamline" / "users.json"
+        try:
+            with open(cache_path) as f:
+                data = json.load(f)
+                # Convert from new combined cache format to simple user_id cache
+                return data.get('ids', {})
+        except (json.JSONDecodeError, OSError, FileNotFoundError):
+            return {}
 
     def _load_bttv_cache(self, channel: str) -> Optional[dict]:
         """Load BTTV emotes cache for a specific channel"""
