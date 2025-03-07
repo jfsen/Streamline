@@ -14,6 +14,7 @@ class StreamlinePreferences(Adw.PreferencesWindow):
     window_size_row = Gtk.Template.Child()
     theme_row = Gtk.Template.Child()
     animate_emotes_checkbox = Gtk.Template.Child()
+    low_latency_switch = Gtk.Template.Child()
 
     def __init__(self, parent, **kwargs):
         super().__init__(**kwargs)
@@ -65,6 +66,10 @@ class StreamlinePreferences(Adw.PreferencesWindow):
         
         # Connect theme change signal
         self.theme_row.connect('notify::selected', self.on_theme_changed)
+        
+        # Initialize low latency switch
+        self.low_latency_switch.set_active(parent.low_latency)
+        self.low_latency_switch.connect("notify::active", self.on_low_latency_toggled)
         
     def _setup_models(self):
         """Setup models for dropdowns with null checks."""
@@ -191,4 +196,9 @@ class StreamlinePreferences(Adw.PreferencesWindow):
 
     def on_theme_changed(self, row, *args):
         self.parent.theme = ["system", "light", "dark"][row.get_selected()]
+        self.parent.save_config()
+
+    def on_low_latency_toggled(self, switch_row, *args):
+        """Handle low latency toggle"""
+        self.parent.low_latency = switch_row.get_active()
         self.parent.save_config()

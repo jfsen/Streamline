@@ -173,6 +173,7 @@ class StreamlineWindow(Adw.ApplicationWindow):
         self.narrow_mode = config.get("narrow_mode", False)
         self.animate_emotes = config.get("animate_emotes", False)
         self.theme = config.get("theme", "system")
+        self.low_latency = config.get("low_latency", True)
 
     def on_refresh_button_clicked(self, button):
         """Refresh streamer data."""

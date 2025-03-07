@@ -78,6 +78,12 @@
                 <property name="subtitle" translatable="yes">Select preferred stream quality</property>
               </object>
             </child>
+            <child>
+              <object class="AdwSwitchRow" id="low_latency_switch">
+                <property name="title" translatable="yes">Low Latency Mode</property>
+                <property name="subtitle" translatable="yes">Reduces stream delay but may cause buffering on slower connections</property>
+              </object>
+            </child>
           </object>
         </child>
         <child>

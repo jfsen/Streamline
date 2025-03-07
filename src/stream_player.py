@@ -24,10 +24,12 @@ class StreamPlayer:
             if is_vod:
                 cmd.append('--player-passthrough=hls')
             else:
-                cmd.extend([
-                    '--twitch-disable-ads',
-                    '--player-no-close'
-                ])
+                cmd.extend(['--twitch-disable-ads'])
+                cmd.append('--player-no-close')
+                # Only add low latency if enabled in preferences
+                if self.window.low_latency:
+                    print("[DEBUG] Using --twitch-low-latency")
+                    cmd.append('--twitch-low-latency')
 
             # Start the process
             process = subprocess.Popen(

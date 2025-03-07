@@ -19,6 +19,7 @@ class ConfigManager:
             "narrow_mode": False,
             "theme": "system",
             "animate_emotes": False,
+            "low_latency": True,
         }
 
     def _get_config_path(self):
