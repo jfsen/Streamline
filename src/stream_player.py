@@ -22,8 +22,11 @@ class StreamPlayer:
             # Build streamlink command with flatpak-spawn
             cmd = ['flatpak-spawn', '--host', 'streamlink']
 
-            # Add streamlink options
-            if not is_vod:
+            # Add streamlink options based on content type
+            if is_vod:
+                # Enable HLS passthrough for proper seeking in VODs
+                cmd.append('--player-passthrough=hls')
+            else:
                 cmd.extend(['--twitch-disable-ads'])
                 if self.window.low_latency:
                     cmd.append('--twitch-low-latency')
