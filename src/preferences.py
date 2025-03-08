@@ -5,9 +5,6 @@ class StreamlinePreferences(Adw.PreferencesWindow):
     __gtype_name__ = 'StreamlinePreferences'
 
     # Template children
-    streamlink_entry = Gtk.Template.Child()
-    mpv_entry = Gtk.Template.Child()
-    vlc_entry = Gtk.Template.Child()
     player_row = Gtk.Template.Child()
     custom_player_row = Gtk.Template.Child()
     quality_row = Gtk.Template.Child()
@@ -100,9 +97,6 @@ class StreamlinePreferences(Adw.PreferencesWindow):
         
     def _setup_values(self):
         # Set current values
-        self.streamlink_entry.set_text(self.parent.streamlink_path)
-        self.mpv_entry.set_text(self.parent.mpv_path)
-        self.vlc_entry.set_text(self.parent.vlc_path)
         self.custom_player_row.set_text(self.parent.custom_player_path)
         self.custom_player_row.set_sensitive(self.parent.player_type == "custom")
         
@@ -115,9 +109,6 @@ class StreamlinePreferences(Adw.PreferencesWindow):
         
     def _connect_signals(self):
         """Connect signals to handlers."""
-        self.streamlink_entry.connect('changed', self._on_path_changed)
-        self.mpv_entry.connect('changed', self._on_path_changed)
-        self.vlc_entry.connect('changed', self._on_path_changed)
         self.player_row.connect('notify::selected', self._on_player_changed)
         self.custom_player_row.connect('notify::text', self._on_custom_path_changed)
         self.quality_row.connect('notify::selected', self._on_quality_changed)
@@ -126,13 +117,6 @@ class StreamlinePreferences(Adw.PreferencesWindow):
         
         # Connect to destroy signal instead of close-request
         self.connect('destroy', self._on_destroy)
-
-    def _on_path_changed(self, entry):
-        """Save changes when paths are modified."""
-        self.parent.streamlink_path = self.streamlink_entry.get_text()
-        self.parent.mpv_path = self.mpv_entry.get_text()
-        self.parent.vlc_path = self.vlc_entry.get_text()
-        self.parent.save_config()
 
     def _on_player_changed(self, row, *args):
         player_types = ["mpv", "vlc", "custom"]

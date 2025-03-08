@@ -8,9 +8,6 @@ class ConfigManager:
         self.config_path = self.get_config_path()
         self.default_config = {
             "streamers": [],
-            "streamlink_path": "/usr/bin/streamlink",
-            "mpv_path": "/usr/bin/mpv",
-            "vlc_path": "/usr/bin/vlc",
             "player_type": "mpv",
             "custom_player_path": "",
             "stream_quality": "best",

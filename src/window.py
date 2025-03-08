@@ -293,8 +293,7 @@ class StreamlineWindow(Adw.ApplicationWindow):
     def _handle_quick_play(self, username):
         """Handle quick play dialog callback."""
         try:
-            if self.player.play_content(f"twitch.tv/{username}", is_vod=False):
-                self.show_toast("Playback starting...", 2)
+            self.player.play_content(f"twitch.tv/{username}", is_vod=False)
         except Exception as e:
             self.show_toast(f"Error: {str(e)}", 4)
 

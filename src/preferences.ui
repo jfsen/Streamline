@@ -86,26 +86,6 @@
             </child>
           </object>
         </child>
-        <child>
-          <object class="AdwPreferencesGroup">
-            <property name="title" translatable="yes">Application Paths</property>
-            <child>
-              <object class="AdwEntryRow" id="streamlink_entry">
-                <property name="title" translatable="yes">Streamlink Path</property>
-              </object>
-            </child>
-            <child>
-              <object class="AdwEntryRow" id="mpv_entry">
-                <property name="title" translatable="yes">MPV Path</property>
-              </object>
-            </child>
-            <child>
-              <object class="AdwEntryRow" id="vlc_entry">
-                <property name="title" translatable="yes">VLC Path</property>
-              </object>
-            </child>
-          </object>
-        </child>
       </object>
     </child>
   </template>
