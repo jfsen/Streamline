@@ -19,6 +19,9 @@ class StreamerRowManager:
             .hide-on-leave:hover {
                 opacity: 1;
             }
+            .offline-stream-button {
+                opacity: 0.5;
+            }
         '''.encode())
         
         # Apply CSS to window
@@ -36,6 +39,9 @@ class StreamerRowManager:
         display_name = self.window.twitch.user_cache['names'].get(streamer) if self.window.twitch else None
         row.set_title(display_name or streamer)
         row.set_title_lines(1)
+
+        # Store whether streamer is online in the row data
+        row.is_online = bool(info)
 
         if info:  # Online streamer
             viewers = info.get('viewers', 'N/A')
@@ -60,17 +66,13 @@ class StreamerRowManager:
         # Create play button as prefix
         play_button = Gtk.Button(icon_name="media-playback-start-symbolic")
         play_button.add_css_class("flat")
+        if not row.is_online:
+            play_button.add_css_class("offline-stream-button")
         play_button.set_valign(Gtk.Align.CENTER)
         play_button.set_tooltip_text("Play stream")
-
-        def on_play_clicked(btn):
-            try:
-                if self.window.player.play_content(f"twitch.tv/{streamer}", is_vod=False):
-                    self.window.show_toast("Playback starting...", 2)
-            except Exception as e:
-                self.window.show_toast(f"Error: {str(e)}", 4)
-
-        play_button.connect("clicked", on_play_clicked)
+        play_button.connect("clicked", 
+            lambda btn: self.window.player.play_content(f"twitch.tv/{streamer}", is_vod=False)
+        )
         row.add_prefix(play_button)
 
         # Create browser button
