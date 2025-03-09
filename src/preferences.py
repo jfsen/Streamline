@@ -8,6 +8,7 @@ class StreamlinePreferences(Adw.PreferencesWindow):
     player_row = Gtk.Template.Child()
     custom_player_row = Gtk.Template.Child()
     quality_row = Gtk.Template.Child()
+    custom_quality_row = Gtk.Template.Child()
     window_size_row = Gtk.Template.Child()
     theme_row = Gtk.Template.Child()
     animate_emotes_checkbox = Gtk.Template.Child()
@@ -20,13 +21,17 @@ class StreamlinePreferences(Adw.PreferencesWindow):
         # Store parent reference directly since window lifecycle is managed by GTK
         self.parent = parent
 
-        # Define quality options first
-        self._qualities = ["best", "1080p60", "1080p", "720p60", 
-                         "720p", "480p", "360p", "worst"]
+        # Define quality presets with fallbacks
+        self._quality_presets = {
+            "High": "1080p60,1080p,720p60,720p,best",
+            "Medium": "720p60,720p,480p,best",
+            "Low": "480p,360p,best",
+            "Custom": parent.custom_quality if hasattr(parent, "custom_quality") else "best"
+        }
         
         # Setup models
         self._player_model = Gtk.StringList.new(["MPV", "VLC", "Custom"])
-        self._quality_model = Gtk.StringList.new(self._qualities)
+        self._quality_model = Gtk.StringList.new(list(self._quality_presets.keys()))
         
         # Setup UI
         self._setup_models()
@@ -94,20 +99,26 @@ class StreamlinePreferences(Adw.PreferencesWindow):
     def _setup_values(self):
         # Set current values
         self.custom_player_row.set_text(self.parent.custom_player_path)
-        self.custom_player_row.set_sensitive(self.parent.player_type == "custom")
+        self.custom_player_row.set_visible(self.parent.player_type == "custom")
         
-        # Set current quality
+        # Initialize quality selection
+        quality_presets = list(self._quality_presets.keys())
         try:
-            quality_index = self._qualities.index(self.parent.stream_quality)
-            self.quality_row.set_selected(quality_index)
+            preset_index = quality_presets.index(self.parent.stream_quality)
+            self.quality_row.set_selected(preset_index)
         except ValueError:
-            self.quality_row.set_selected(0)  # Default to "best"
+            self.quality_row.set_selected(0)  # Default to High
+        
+        # Initialize custom quality
+        self.custom_quality_row.set_text(self.parent.custom_quality)
+        self.custom_quality_row.set_visible(self.parent.stream_quality == "Custom")
         
     def _connect_signals(self):
         """Connect signals to handlers."""
         self.player_row.connect('notify::selected', self._on_player_changed)
         self.custom_player_row.connect('notify::text', self._on_custom_path_changed)
         self.quality_row.connect('notify::selected', self._on_quality_changed)
+        self.custom_quality_row.connect('notify::text', self._on_custom_quality_changed)
         self.window_size_row.connect('notify::selected', self._on_window_size_changed)
         self.theme_row.connect('notify::selected', self._on_theme_changed)
         
@@ -118,7 +129,10 @@ class StreamlinePreferences(Adw.PreferencesWindow):
         player_types = ["mpv", "vlc", "custom"]
         selected = player_types[row.get_selected()]
         self.parent.player_type = selected
-        self.custom_player_row.set_sensitive(selected == "custom")
+        
+        # Show/hide the custom player entry instead of just disabling it
+        self.custom_player_row.set_visible(selected == "custom")
+        
         self.parent.save_config()
 
     def _on_custom_path_changed(self, row, *args):
@@ -127,9 +141,21 @@ class StreamlinePreferences(Adw.PreferencesWindow):
 
     def _on_quality_changed(self, row, *args):
         """Handle stream quality change."""
-        qualities = ["best", "1080p60", "1080p", "720p60", "720p", "480p", "360p", "worst"]
-        selected = qualities[row.get_selected()]
+        quality_presets = list(self._quality_presets.keys())
+        selected = quality_presets[row.get_selected()]
         self.parent.stream_quality = selected
+        
+        # Show custom quality entry if "Custom" is selected
+        if selected == "Custom":
+            self.custom_quality_row.set_visible(True)
+        else:
+            self.custom_quality_row.set_visible(False)
+        
+        self.parent.save_config()
+
+    def _on_custom_quality_changed(self, entry, *args):
+        """Handle custom quality change."""
+        self.parent.custom_quality = entry.get_text()
         self.parent.save_config()
     
     def _on_window_size_changed(self, row, _):

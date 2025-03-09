@@ -10,7 +10,8 @@ class ConfigManager:
             "streamers": [],
             "player_type": "mpv",
             "custom_player_path": "",
-            "stream_quality": "best",
+            "stream_quality": "High",
+            "custom_quality": "best",
             "twitch_client_id": "",
             "twitch_client_secret": "",
             "narrow_mode": False,
@@ -18,17 +19,6 @@ class ConfigManager:
             "animate_emotes": False,
             "low_latency": True,
         }
-
-    def _get_config_path(self):
-        """Get the path to the config file."""
-        if os.path.exists('/.flatpak-info'):
-            config_dir = Path(os.environ.get('XDG_CONFIG_HOME', 
-                        Path.home() / '.var/app/io.github.jfsen.Streamline/config')) / "Streamline"
-        else:
-            config_dir = Path.home() / ".config" / "Streamline"
-        
-        config_dir.mkdir(parents=True, exist_ok=True)
-        return config_dir / "config.json"
 
     def get_config_path(self):
         """Get the path to the config file."""
@@ -50,9 +40,11 @@ class ConfigManager:
             "custom_player_path": window.custom_player_path,
             "streamers": window.all_streamers,
             "stream_quality": window.stream_quality,
+            "custom_quality": window.custom_quality,
             "narrow_mode": window.narrow_mode,
             "theme": window.theme,
             "animate_emotes": window.animate_emotes,
+            "low_latency": window.low_latency,
         }
         return config
 

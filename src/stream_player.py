@@ -31,12 +31,26 @@ class StreamPlayer:
                 if self.window.low_latency:
                     cmd.append('--twitch-low-latency')
 
+            # Get quality string from preset or use custom
+            quality_presets = {
+                "High": "1080p60,1080p,720p60,720p,best",
+                "Medium": "720p60,720p,480p,best", 
+                "Low": "480p,360p,best",
+                "Custom": self.window.custom_quality
+            }
+
+            quality = quality_presets.get(self.window.stream_quality, "best")
+
+            # Always ensure 'best' is available as a final fallback
+            if not quality.endswith("best") and ",best" not in quality:
+                quality += ",best"
+
             # Set title and final arguments
             cmd.extend([
                 '--title', f'Streamline - {url}',
                 '--player', player_cmd,
                 url,
-                self.window.stream_quality
+                quality
             ])
 
             def start_stream_thread():

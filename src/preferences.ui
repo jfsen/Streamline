@@ -75,7 +75,15 @@
             <child>
               <object class="AdwComboRow" id="quality_row">
                 <property name="title" translatable="yes">Stream Quality</property>
-                <property name="subtitle" translatable="yes">Select preferred stream quality</property>
+                <property name="subtitle" translatable="yes">Select stream quality preset</property>
+              </object>
+            </child>
+            <child>
+              <object class="AdwEntryRow" id="custom_quality_row">
+                <property name="title">Custom Quality</property>
+                <property name="visible">False</property>
+                <property name="tooltip-text">Format: quality1,quality2,quality3,best
+Example: 720p60,720p,480p,360p,best</property>
               </object>
             </child>
             <child>
