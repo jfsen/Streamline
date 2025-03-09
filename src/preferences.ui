@@ -18,8 +18,8 @@
                 <property name="model">
                   <object class="GtkStringList">
                     <items>
-                      <item>Regular</item>
-                      <item>Narrow</item>
+                      <item>System</item>
+                      <item>Force Narrow</item>
                     </items>
                   </object>
                 </property>

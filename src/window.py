@@ -77,7 +77,7 @@ class StreamlineWindow(Adw.ApplicationWindow):
         
         # Set initial window size based on preference
         if self.narrow_mode:
-            self.set_default_size(360, 600)
+            self.set_default_size(360, 700)
         
         # Initialize other managers
         self.dialogs = StreamlineDialogs(self)
@@ -127,11 +127,6 @@ class StreamlineWindow(Adw.ApplicationWindow):
         self.player_type = config.get("player_type", "mpv")
         self.custom_player_path = config.get("custom_player_path", "")
 
-        # Set paths from config
-        self.streamlink_path = config.get("streamlink_path", "/usr/bin/streamlink")
-        self.mpv_path = config.get("mpv_path", "/usr/bin/mpv")
-        self.vlc_path = config.get("vlc_path", "/usr/bin/vlc")
-
         # Add stream quality setting
         self.stream_quality = config.get("stream_quality", "best")
 
@@ -165,9 +160,6 @@ class StreamlineWindow(Adw.ApplicationWindow):
         self.client_secret = config.get("twitch_client_secret", "")
         self.player_type = config.get("player_type", "mpv")
         self.custom_player_path = config.get("custom_player_path", "")
-        self.streamlink_path = config.get("streamlink_path", "/usr/bin/streamlink")
-        self.mpv_path = config.get("mpv_path", "/usr/bin/mpv")
-        self.vlc_path = config.get("vlc_path", "/usr/bin/vlc")
         self.all_streamers = config.get("streamers", [])
         self.stream_quality = config.get("stream_quality", "best")
         self.narrow_mode = config.get("narrow_mode", False)
