@@ -20,7 +20,7 @@ class StreamPlayer:
                 return False
 
             # Show initial toast message
-            self.window.show_toast("Connecting to stream...", 2)
+            self.window.show_toast("Connecting...", 1)
 
             # Build streamlink command with flatpak-spawn
             cmd = ['flatpak-spawn', '--host', 'streamlink']
