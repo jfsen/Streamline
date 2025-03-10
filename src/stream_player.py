@@ -19,6 +19,9 @@ class StreamPlayer:
                 self._show_missing_deps_error()
                 return False
 
+            # Show initial toast message
+            self.window.show_toast("Connecting to stream...", 2)
+
             # Build streamlink command with flatpak-spawn
             cmd = ['flatpak-spawn', '--host', 'streamlink']
 
@@ -65,19 +68,23 @@ class StreamPlayer:
                         text=True,
                         bufsize=1
                     )
-
+                    
                     for line in self._current_process.stdout:
-                        if "Waiting for pre-roll ads to finish" in line:
-                            GLib.idle_add(self.window.show_toast, "Waiting for ads to finish...", 3)
-                        elif "Opening stream" in line:
-                            GLib.idle_add(self.window.show_toast, "Playback starting...", 2)
-                        elif "No playable streams found on this URL" in line:
+                        print(f"DEBUG: Streamlink output: {line.strip()}")
+                        
+                        # Only show the most important message
+                        if "No playable streams found on this URL" in line:
                             GLib.idle_add(self.window.show_toast, "Stream not available", 3)
                             return False
-
+                        elif "Waiting for pre-roll ads to finish" in line:
+                            GLib.idle_add(self.window.show_toast, "Waiting for ads to finish...", 3)
+                            
+                    # Check if process failed
                     if self._current_process.poll() is not None:
                         print(f"DEBUG: Process ended with return code: {self._current_process.returncode}")
-                        return False
+                        if self._current_process.returncode != 0:
+                            GLib.idle_add(self.window.show_toast, "Stream playback failed", 3)
+                            return False
 
                 except Exception as e:
                     print(f"DEBUG: Error in stream thread: {str(e)}")
@@ -95,6 +102,7 @@ class StreamPlayer:
 
         except Exception as e:
             print(f"DEBUG: Error in play_content: {str(e)}")
+            self.window.show_toast("Error starting playback", 3)
             return False
 
     def _get_player_executable(self):
