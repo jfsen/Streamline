@@ -197,24 +197,41 @@ class StreamlineWindow(Adw.ApplicationWindow):
         try:
             return self.twitch.get_streams(self.all_streamers)
         except requests.ConnectionError:
-            # Only show error dialog if it's a new connection error
+            # Use error dialog for connection errors as they prevent core functionality
             self._show_error_dialog(
                 "Connection Error",
                 "Could not fetch streamer data. Please check your internet connection."
             )
             return [], self.all_streamers, {}
+        except requests.HTTPError as e:
+            # Handle API rate limits and other HTTP errors
+            if e.response and e.response.status_code == 429:
+                self._show_error_dialog(
+                    "API Rate Limit",
+                    "Twitch API rate limit reached. Please wait a few minutes before refreshing again."
+                )
+            else:
+                status = e.response.status_code if e.response else "Unknown"
+                self._show_error_dialog(
+                    "API Error",
+                    f"HTTP error {status} occurred while fetching streamer data."
+                )
+            return [], self.all_streamers, {}
         except Exception as e:
-            # Only show error for unexpected errors
+            # Use error dialog for unexpected errors
             self._show_error_dialog(
                 "API Error",
-                "Failed to fetch streamer data. Please try again later."
+                f"Failed to fetch streamer data: {str(e)[:100]}"
             )
             return [], self.all_streamers, {}
 
     def update_action_rows(self, online_streamers, offline_streamers, streamer_info):
         """Update the online and offline streamer lists."""
         if not self.twitch:
-            self.show_toast("API not available - showing all streamers as offline", 4)
+            self._show_error_dialog(
+                "API Not Available",
+                "Twitch API is not available. Please check your credentials in preferences."
+            )
         
         self.row_manager.update_rows(online_streamers, offline_streamers, streamer_info)
 
