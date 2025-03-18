@@ -41,6 +41,7 @@ from .config import ConfigManager
 from .dialogs import StreamlineDialogs
 from .rows import StreamerRowManager
 from .chat import ChatPage
+from .chat.popout import ChatWindow
 
 
 @Gtk.Template(resource_path='/io/github/jfsen/Streamline/window.ui')
@@ -72,6 +73,9 @@ class StreamlineWindow(Adw.ApplicationWindow):
             "dark": Adw.ColorScheme.FORCE_DARK
         }[self.theme])
         
+        # Set minimum window size
+        self.set_size_request(300, 400)
+
         # Initialize window size attribute
         self.narrow_mode = self.config.get("narrow_mode", False)
         
@@ -382,3 +386,31 @@ class StreamlineWindow(Adw.ApplicationWindow):
         
         # Show the page
         self.navigation_view.push(page)
+
+    def pop_out_chat(self, streamer):
+        """Open chat in a separate window"""
+        # Check if we already have a chat window open for this streamer
+        if hasattr(self, '_chat_windows') and streamer in self._chat_windows:
+            # If window exists, just present it
+            self._chat_windows[streamer].present()
+            return
+        
+        # Initialize chat windows dictionary if it doesn't exist
+        if not hasattr(self, '_chat_windows'):
+            self._chat_windows = {}
+        
+        # Create a new chat window
+        chat_window = ChatWindow(streamer, self)
+        
+        # Store reference to the window
+        self._chat_windows[streamer] = chat_window
+        
+        # Connect to window close event to clean up reference
+        def on_window_close(window, *args):
+            if streamer in self._chat_windows:
+                del self._chat_windows[streamer]
+        
+        chat_window.connect("close-request", on_window_close)
+        
+        # Show the window
+        chat_window.present()
