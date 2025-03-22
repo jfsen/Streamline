@@ -43,8 +43,10 @@ class StreamlineApplication(Adw.Application):
         self.create_action('about', self.on_about_action)
         self.create_action('preferences', self.on_preferences_action, ['<primary>comma'])
         
-        # Add follow action
+        # Add follow, quick play and refresh actions
         self.create_action('follow', self.on_follow_action, ['<primary>n'])
+        self.create_action('quick-play', self.on_quick_play_action, ['<primary>p'])
+        self.create_action('refresh', self.on_refresh_action, ['<primary>r'])
 
     def do_activate(self):
         """Called when the application is activated."""
@@ -76,6 +78,18 @@ class StreamlineApplication(Adw.Application):
         win = self.props.active_window
         if win:
             win.follow_streamer()
+
+    def on_quick_play_action(self, *args):
+        """Show quick play dialog."""
+        win = self.props.active_window
+        if win:
+            win.quick_play()
+
+    def on_refresh_action(self, *args):
+        """Refresh streamer data."""
+        win = self.props.active_window
+        if win:
+            win.on_refresh_button_clicked(None)
 
     def create_action(self, name, callback, shortcuts=None):
         """Add an application action.
