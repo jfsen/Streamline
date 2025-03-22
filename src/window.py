@@ -270,22 +270,28 @@ class StreamlineWindow(Adw.ApplicationWindow):
     def _handle_follow(self, username):
         """Handle follow dialog callback with support for multiple streamers."""
         # Split input by commas and strip whitespace
-        usernames = [name.strip() for name in username.split(',')]
+        usernames = [name.strip().lower() for name in username.split(',')]
         
         # Track newly added streamers
         added = []
         already_following = []
         
+        # Convert all existing streamers to lowercase for comparison
+        existing_streamers_lower = [s.lower() for s in self.all_streamers]
+        
         for name in usernames:
             if not name:  # Skip empty names
                 continue
                 
-            if name not in self.all_streamers:
+            if name not in existing_streamers_lower:
+                # Always add as lowercase
                 self.all_streamers.append(name)
                 self.add_offline_streamer(name)
                 added.append(name)
             else:
-                already_following.append(name)
+                # Find the original case version for display in the message
+                original_index = existing_streamers_lower.index(name)
+                already_following.append(self.all_streamers[original_index])
         
         if added:
             self.save_config()
@@ -296,7 +302,7 @@ class StreamlineWindow(Adw.ApplicationWindow):
                 
         if already_following:
             if len(already_following) == 1:
-                self.dialogs.show_already_following_dialog(already_following[0])
+                self.show_toast(f"Already following {already_following[0]}")
             else:
                 self.show_toast(f"Already following: {', '.join(already_following)}")
 

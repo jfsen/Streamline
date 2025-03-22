@@ -45,7 +45,7 @@ class StreamlineDialogs:
     def show_unfollow_dialog(self, streamer, callback):
         """Show confirmation dialog for unfollowing a streamer."""
         dialog = Adw.MessageDialog.new(
-            self.parent,  # Fix: Changed from self.window to self.parent
+            self.parent,
             _("Unfollow Streamer?"),
             _("Are you sure you want to unfollow {}?").format(streamer)
         )
@@ -61,16 +61,6 @@ class StreamlineDialogs:
         if response == "unfollow":
             callback(dialog, response, streamer)
         dialog.close()
-
-    def show_already_following_dialog(self, username):
-        """Show error dialog for already following streamer."""
-        error = Adw.MessageDialog(
-            transient_for=self.parent,
-            heading="Already Following",
-            body=f"You are already following {username}"
-        )
-        error.add_response("ok", "OK")
-        error.present()
 
     def show_follow_dialog(self, callback):
         """Show dialog to follow new streamer(s)."""
