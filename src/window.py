@@ -17,19 +17,12 @@
 #
 # SPDX-License-Identifier: GPL-3.0-or-later
 
-import os
-import subprocess
-import json
-import requests
+import os, json, requests, sys
 import gi
 gi.require_version('Adw', '1')
 gi.require_version('Gtk', '4.0')
 gi.require_version('WebKit', '6.0')
-from gi.repository import Adw
-from gi.repository import Gtk
-from gi.repository import Pango
-from gi.repository import GLib
-from gi.repository import WebKit
+from gi.repository import Adw, Gtk, Pango, GLib, WebKit
 from pathlib import Path
 from datetime import datetime, timezone
 
