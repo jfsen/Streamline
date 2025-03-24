@@ -46,11 +46,10 @@ class StreamerRowManager:
         if info:  # Online streamer
             viewers = info.get('viewers', 'N/A')
             game = info.get('game', 'Unknown')
-            row.set_subtitle(f"{game}\n{viewers} viewers")
+            row.set_subtitle(GLib.markup_escape_text(f"{game}\n{viewers} viewers"))
 
-            # Get raw title and decode HTML entities without re-escaping
             raw_title = info.get('title', 'No title')
-            title = unescape(raw_title)  # This will convert &apos; to ' etc.
+            title = unescape(raw_title) # Unescape special characters
             uptime = info.get('uptime', 'N/A')
             tooltip = f"Title: {title}\nUptime: {uptime}"
             row.set_tooltip_text(tooltip)
