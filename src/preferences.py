@@ -13,6 +13,7 @@ class StreamlinePreferences(Adw.PreferencesWindow):
     theme_row = Gtk.Template.Child()
     animate_emotes_checkbox = Gtk.Template.Child()
     low_latency_switch = Gtk.Template.Child()
+    copy_streamers_button = Gtk.Template.Child()
 
     def __init__(self, parent, **kwargs):
         super().__init__(**kwargs)
@@ -69,6 +70,9 @@ class StreamlinePreferences(Adw.PreferencesWindow):
         self.low_latency_switch.set_active(parent.low_latency)
         self.low_latency_switch.connect("notify::active", self.on_low_latency_toggled)
         
+        # Connect the copy streamers button
+        self.copy_streamers_button.connect("clicked", self.on_copy_streamers_clicked)
+
     def _setup_models(self):
         """Setup models for dropdowns with null checks."""
         # Check if widgets are properly bound
@@ -208,3 +212,56 @@ class StreamlinePreferences(Adw.PreferencesWindow):
         """Handle low latency toggle"""
         self.parent.low_latency = switch_row.get_active()
         self.parent.save_config()
+
+    def on_copy_streamers_clicked(self, button):
+        """Save all streamers as a comma-separated list to a text file."""
+        if not self.parent or not hasattr(self.parent, 'all_streamers'):
+            return
+            
+        # Get comma-separated list of streamers
+        streamers_text = ", ".join(self.parent.all_streamers)
+        
+        # Create a file save dialog
+        dialog = Gtk.FileChooserNative.new(
+            title="Export Streamers List",
+            parent=self,
+            action=Gtk.FileChooserAction.SAVE,
+            accept_label="_Save",
+            cancel_label="_Cancel"
+        )
+        
+        # Set default file name
+        dialog.set_current_name("streamline-backup.txt")
+        
+        # Add filters to only show text files
+        filter_text = Gtk.FileFilter()
+        filter_text.set_name("Text files")
+        filter_text.add_mime_type("text/plain")
+        filter_text.add_pattern("*.txt")
+        dialog.add_filter(filter_text)
+        
+        # Show the dialog and wait for user response
+        dialog.connect("response", self._on_save_streamers_response, streamers_text)
+        dialog.show()
+        
+    def _on_save_streamers_response(self, dialog, response, streamers_text):
+        """Handle the file chooser dialog response."""
+        if response == Gtk.ResponseType.ACCEPT:
+            file_path = dialog.get_file().get_path()
+            
+            try:
+                with open(file_path, 'w') as file:
+                    file.write(streamers_text)
+                    
+                # Show success toast
+                toast = Adw.Toast.new(f"Streamers list saved to {file_path}")
+                toast.set_timeout(3)
+                self.add_toast(toast)
+            except Exception as e:
+                # Show error toast
+                toast = Adw.Toast.new(f"Error saving file: {str(e)}")
+                toast.set_timeout(4)
+                self.add_toast(toast)
+        
+        # Destroy the dialog
+        dialog.destroy()

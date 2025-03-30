@@ -94,6 +94,26 @@ Example: 720p60,720p,480p,360p,best</property>
             </child>
           </object>
         </child>
+        <child>
+          <object class="AdwPreferencesGroup">
+            <property name="title" translatable="yes">Streamer Management</property>
+            <child>
+              <object class="AdwActionRow" id="copy_streamers_row">
+                <property name="title" translatable="yes">Export Streamers List</property>
+                <property name="subtitle" translatable="yes">Save comma-separated list of streamers to a file</property>
+                <child>
+                  <object class="GtkButton" id="copy_streamers_button">
+                    <property name="valign">center</property>
+                    <property name="icon-name">document-save-symbolic</property>
+                    <style>
+                      <class name="flat"/>
+                    </style>
+                  </object>
+                </child>
+              </object>
+            </child>
+          </object>
+        </child>
       </object>
     </child>
   </template>
