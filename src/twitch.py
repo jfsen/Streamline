@@ -11,7 +11,7 @@ class TwitchAPI:
         self.access_token = None
         self.token_expires_at = None
         print(f"[Twitch] Initializing API (client_id: {client_id[:5]}...)")
-        self.user_cache = self._load_user_cache()  # Combined cache
+        self.user_cache = self._load_user_cache()  # Combined cache of user IDs and names
         self._load_token_cache()
 
     def _get_access_token(self):

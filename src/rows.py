@@ -36,8 +36,15 @@ class StreamerRowManager:
         row = Adw.ActionRow.new()
         
         # Set streamer name using combined cache
-        display_name = self.window.twitch.user_cache['names'].get(streamer) if self.window.twitch else None
-        row.set_title(display_name or streamer)
+        display_name = self.window.twitch.user_cache['names'].get(streamer)
+        
+        # Check if display name has non-ASCII characters
+        if display_name and any(ord(c) > 127 for c in display_name):
+            # For non-ASCII display names, include login name in parentheses
+            row.set_title(f"{display_name} ({streamer})")
+        else:
+            row.set_title(display_name or streamer)
+        
         row.set_title_lines(1)
 
         # Store whether streamer is online in the row data
