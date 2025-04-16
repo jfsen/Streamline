@@ -35,6 +35,9 @@ class StreamerRowManager:
         """Create an ActionRow with buttons and additional info."""
         row = Adw.ActionRow.new()
         
+        # Store the login name in the row data for sorting
+        row.login_name = streamer
+        
         # Set streamer name using combined cache
         display_name = self.window.twitch.user_cache['names'].get(streamer)
         
@@ -46,7 +49,7 @@ class StreamerRowManager:
             row.set_title(display_name or streamer)
         
         row.set_title_lines(1)
-
+        
         # Store whether streamer is online in the row data
         row.is_online = bool(info)
 
@@ -131,12 +134,12 @@ class StreamerRowManager:
         """New streamers are added to the offline list."""
         row = self.create_row(username, {})
         
-        # Find insertion point to maintain alphabetical order
+        # Find insertion point to maintain alphabetical order by login name
         index = 0
         child = self.offline_list.get_first_child()
         while child is not None:
-            title = child.get_title()
-            if title.lower() > username.lower():
+            # Compare using the stored login name
+            if child.login_name.lower() > username.lower():
                 break
             index += 1
             child = child.get_next_sibling()
