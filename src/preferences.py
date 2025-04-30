@@ -71,7 +71,7 @@ class StreamlinePreferences(Adw.PreferencesWindow):
         self.low_latency_switch.connect("notify::active", self.on_low_latency_toggled)
         
         # Connect the copy streamers button
-        self.copy_streamers_button.connect("clicked", self.on_copy_streamers_clicked)
+        self.copy_streamers_button.connect("clicked", self.on_save_streamers_clicked)
 
     def _setup_models(self):
         """Setup models for dropdowns with null checks."""
@@ -213,13 +213,13 @@ class StreamlinePreferences(Adw.PreferencesWindow):
         self.parent.low_latency = switch_row.get_active()
         self.parent.save_config()
 
-    def on_copy_streamers_clicked(self, button):
+    def on_save_streamers_clicked(self, button):
         """Save all streamers as a comma-separated list to a text file."""
         if not self.parent or not hasattr(self.parent, 'all_streamers'):
             return
             
         # Get comma-separated list of streamers
-        streamers_text = ", ".join(self.parent.all_streamers)
+        streamers_text = ", ".join(sorted(self.parent.all_streamers))
         
         # Create a file save dialog
         dialog = Gtk.FileChooserNative.new(
