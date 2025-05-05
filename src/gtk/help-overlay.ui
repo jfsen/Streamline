@@ -57,12 +57,11 @@
               <object class="GtkShortcutsShortcut">
                 <property name="title" translatable="yes" context="shortcut window">Refresh Streams</property>
                 <property name="action-name">app.refresh</property>
-                <property name="accelerator">&lt;primary&gt;r</property>
+                <property name="accelerator">&lt;primary&gt;r F5</property>
               </object>
             </child>
           </object>
         </child>
-        
       </object>
     </child>
   </object>

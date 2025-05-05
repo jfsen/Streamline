@@ -46,7 +46,7 @@ class StreamlineApplication(Adw.Application):
         # Add follow, quick play and refresh actions
         self.create_action('follow', self.on_follow_action, ['<primary>n'])
         self.create_action('quick-play', self.on_quick_play_action, ['<primary>p'])
-        self.create_action('refresh', self.on_refresh_action, ['<primary>r'])
+        self.create_action('refresh', self.on_refresh_action, ['<primary>r', 'F5'])
 
     def do_activate(self):
         """Called when the application is activated."""
