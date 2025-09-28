@@ -108,10 +108,10 @@ class TwitchAPI:
             with open(self._get_streams_cache_path()) as f:
                 cache_data = json.load(f)
             
-            # Check if cache is expired (3 minutes)
+            # Check if cache is expired (1 minute)
             cache_time = datetime.fromisoformat(cache_data['timestamp'])
             now = datetime.now(timezone.utc)
-            seconds_until_refresh = 180 - (now - cache_time).total_seconds() #TIMER
+            seconds_until_refresh = 60 - (now - cache_time).total_seconds() #TIMER
             
             if seconds_until_refresh > 0:
                 return cache_data['data'], int(seconds_until_refresh)
