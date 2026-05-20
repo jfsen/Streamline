@@ -1,25 +1,60 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg width="256" height="256" version="1.1"
-     xmlns="http://www.w3.org/2000/svg"
-     xmlns:xlink="http://www.w3.org/1999/xlink">
+<svg width="256" height="256" viewBox="0 0 256 256" version="1.1"
+     xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <linearGradient id="Gradient" x1="0" x2="0" y1="0" y2="1">
-      <stop offset="0%" style="stop-color:#F66151;stop-opacity:1" />
-      <stop offset="100%" style="stop-color:#A51D2D;stop-opacity:1" />
+    <linearGradient id="bg-grad" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0%"   style="stop-color:#b85a5a;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#7a3030;stop-opacity:1" />
     </linearGradient>
-    <filter id="alpha-to-white">
-      <feColorMatrix in="SourceGraphic" type="matrix"
-                     values="0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 1 0"/>
-    </filter>
-    <g id="child-svg"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M2 12c2 9 8 9 10 0s8-9 10 0" /></svg></g>
+    <linearGradient id="wave-fg" x1="0.1" x2="0.9" y1="0" y2="0">
+      <stop offset="0%"   style="stop-color:#ffffff;stop-opacity:0.95" />
+      <stop offset="50%"  style="stop-color:#ffffff;stop-opacity:0.60" />
+      <stop offset="100%" style="stop-color:#ffe8e8;stop-opacity:0.30" />
+    </linearGradient>
   </defs>
-  <rect
-      width="256"
-      height="256"
-      fill="url(#Gradient)"
-      ry="128"
-      x="0"
-      y="0" />
-  <use xlink:href="#child-svg" filter="url(#alpha-to-white)"
-       transform="matrix(5,0,0,5,64,64)" />
+
+  <!-- Squircle background -->
+  <path d="
+    M 128 8
+    C 52 8,  24 26, 12 46
+    C  4 58,  8 68,  8 128
+    C  8 188,  4 198, 12 210
+    C 24 230, 52 248, 128 248
+    C 204 248, 232 230, 244 210
+    C 252 198, 248 188, 248 128
+    C 248 68, 252 58, 244 46
+    C 232 26, 204 8,  128 8
+    Z"
+    fill="url(#bg-grad)" />
+
+  <!-- Wave-y S symbol: outer contour (clockwise) and inner contour (counter-clockwise) -->
+  <path d="
+    M 80  82
+    C 80  72, 128 70, 162 86
+    C 186 98, 196 118, 196 128
+    C 196 138, 186 158, 162 170
+    C 128 186, 80  184, 80 174
+    C 80  164, 128 162, 152 150
+    C 168 142, 172 132, 172 128
+    C 172 124, 168 114, 152 106
+    C 128 94,  80  92,  80  82
+    Z"
+    fill="url(#wave-fg)" />
+
+  <!-- Subtle inner shadow / depth ring -->
+  <path d="
+    M 128 8
+    C 52 8,  24 26, 12 46
+    C  4 58,  8 68,  8 128
+    C  8 188,  4 198, 12 210
+    C 24 230, 52 248, 128 248
+    C 204 248, 232 230, 244 210
+    C 252 198, 248 188, 248 128
+    C 248 68, 252 58, 244 46
+    C 232 26, 204 8,  128 8
+    Z"
+    fill="none"
+    stroke="#944040"
+    stroke-width="4"
+    opacity="0.35" />
 </svg>
