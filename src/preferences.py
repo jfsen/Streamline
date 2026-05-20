@@ -48,17 +48,12 @@ class StreamlinePreferences(Adw.PreferencesWindow):
         # Use hide-on-close to let GTK manage window lifecycle
         self.set_hide_on_close(True)
 
-        # Set up theme selection
-        theme_style = Adw.StyleManager.get_default().get_color_scheme()
-        if theme_style == Adw.ColorScheme.FORCE_LIGHT:
-            self.theme_row.set_selected(1)
-        elif theme_style == Adw.ColorScheme.FORCE_DARK:
-            self.theme_row.set_selected(2)
-        else:
-            self.theme_row.set_selected(0)
-
         # Set current theme
-        self.theme_row.set_selected(["system", "light", "dark"].index(parent.theme))
+        theme_list = ["system", "light", "dark", "bronze", "anthracite", "red"]
+        try:
+            self.theme_row.set_selected(theme_list.index(parent.theme))
+        except ValueError:
+            self.theme_row.set_selected(0)
 
         # Connect theme change signal
         self.theme_row.connect("notify::selected", self.on_theme_changed)
@@ -121,7 +116,6 @@ class StreamlinePreferences(Adw.PreferencesWindow):
         self.quality_row.connect("notify::selected", self._on_quality_changed)
         self.custom_quality_row.connect("notify::text", self._on_custom_quality_changed)
         self.window_size_row.connect("notify::selected", self._on_window_size_changed)
-        self.theme_row.connect("notify::selected", self._on_theme_changed)
 
         # Connect to destroy signal instead of close-request
         self.connect("destroy", self._on_destroy)
@@ -168,17 +162,6 @@ class StreamlinePreferences(Adw.PreferencesWindow):
             self.set_default_size(360, 500)
         self.parent.save_config()
 
-    def _on_theme_changed(self, row, _):
-        style_manager = Adw.StyleManager.get_default()
-        selected = row.get_selected()
-        if selected == 0:
-            style_manager.set_color_scheme(Adw.ColorScheme.DEFAULT)
-        elif selected == 1:
-            style_manager.set_color_scheme(Adw.ColorScheme.FORCE_LIGHT)
-        else:
-            style_manager.set_color_scheme(Adw.ColorScheme.FORCE_DARK)
-        self.parent.save_config()
-
     def _on_destroy(self, window):
         """Clean up resources when window is destroyed."""
         # Disconnect signals
@@ -198,7 +181,9 @@ class StreamlinePreferences(Adw.PreferencesWindow):
         self.parent = None
 
     def on_theme_changed(self, row, *args):
-        self.parent.theme = ["system", "light", "dark"][row.get_selected()]
+        theme_list = ["system", "light", "dark", "bronze", "anthracite", "red"]
+        self.parent.theme = theme_list[row.get_selected()]
+        self.parent._apply_theme()
         self.parent.save_config()
 
     def on_low_latency_toggled(self, switch_row, *args):

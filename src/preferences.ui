@@ -31,10 +31,13 @@
                 <property name="model">
                   <object class="GtkStringList">
                     <items>
-                      <item>System</item>
-                      <item>Light</item>
-                      <item>Dark</item>
-                    </items>
+                          <item>System</item>
+                          <item>Light</item>
+                          <item>Dark</item>
+                          <item>Bronze</item>
+                          <item>Anthracite</item>
+                          <item>Red</item>
+                        </items>
                   </object>
                 </property>
               </object>

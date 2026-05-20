@@ -62,15 +62,14 @@ class StreamlineWindow(Adw.ApplicationWindow):
         # Initialize all attributes from config
         self._initialize_from_config(self.config)
 
+        # Store CSS provider for theme overrides
+        self._theme_css_provider = None
+
         # Get and store style manager reference
         self.style_manager = Adw.StyleManager.get_default()
-        self.style_manager.set_color_scheme(
-            {
-                "system": Adw.ColorScheme.DEFAULT,
-                "light": Adw.ColorScheme.FORCE_LIGHT,
-                "dark": Adw.ColorScheme.FORCE_DARK,
-            }[self.theme]
-        )
+
+        # Apply the current theme (handles bronze via CSS, otherwise normal Adw)
+        self._apply_theme()
 
         # Set minimum window size
         self.set_size_request(300, 400)
@@ -243,6 +242,148 @@ class StreamlineWindow(Adw.ApplicationWindow):
         """Open the Twitch stream page in default browser."""
         url = f"https://twitch.tv/{streamer}"
         Gtk.show_uri(parent=self, uri=url, timestamp=0)
+
+    def _load_theme_css(self, css):
+        """Load a custom CSS string as a theme provider."""
+        provider = Gtk.CssProvider()
+        provider.load_from_data(css.encode())
+        Gtk.StyleContext.add_provider_for_display(
+            self.get_display(), provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
+        )
+        self._theme_css_provider = provider
+
+    def _bronze_css(self):
+        """CSS for the bronze theme."""
+        return """
+            @define-color accent_bg_color #cd7f32;
+            @define-color accent_fg_color #f5ebe0;
+            @define-color accent_color #d4943a;
+            @define-color window_bg_color #1a1510;
+            @define-color window_fg_color #e8dcc8;
+            @define-color headerbar_bg_color #221b14;
+            @define-color headerbar_fg_color #e8dcc8;
+            @define-color popover_bg_color #2a221b;
+            @define-color popover_fg_color #e8dcc8;
+            @define-color view_bg_color #1a1510;
+            @define-color view_fg_color #e8dcc8;
+            @define-color card_bg_color #2a221b;
+            @define-color card_fg_color #e8dcc8;
+            @define-color sidebar_bg_color #1e1812;
+            @define-color sidebar_fg_color #e8dcc8;
+            @define-color sidebar_backdrop_color #1a1510;
+            @define-color button_bg_color #2e251d;
+            @define-color button_fg_color #e8dcc8;
+            @define-color button_hover_bg_color #3a2f25;
+            @define-color destructive_bg_color #a33a2e;
+            @define-color destructive_fg_color #f5ebe0;
+            @define-color success_bg_color #4a7a3a;
+            @define-color warning_bg_color #b0742e;
+            @define-color error_bg_color #a33a2e;
+            @define-color border_color #3a2f25;
+            textview text selection {
+                background-color: rgba(205, 127, 50, 0.4);
+            }
+            entry selection {
+                background-color: rgba(205, 127, 50, 0.4);
+            }
+        """
+
+    def _anthracite_css(self):
+        """CSS for the anthracite (metallic dark grey) theme."""
+        return """
+            @define-color accent_bg_color #6b7b8d;
+            @define-color accent_fg_color #f0f0f0;
+            @define-color accent_color #7a8a9c;
+            @define-color window_bg_color #121416;
+            @define-color window_fg_color #d0d4d8;
+            @define-color headerbar_bg_color #181a1c;
+            @define-color headerbar_fg_color #d0d4d8;
+            @define-color popover_bg_color #1e2022;
+            @define-color popover_fg_color #d0d4d8;
+            @define-color view_bg_color #121416;
+            @define-color view_fg_color #d0d4d8;
+            @define-color card_bg_color #1e2022;
+            @define-color card_fg_color #d0d4d8;
+            @define-color sidebar_bg_color #16181a;
+            @define-color sidebar_fg_color #d0d4d8;
+            @define-color sidebar_backdrop_color #121416;
+            @define-color button_bg_color #242628;
+            @define-color button_fg_color #d0d4d8;
+            @define-color button_hover_bg_color #2e3033;
+            @define-color destructive_bg_color #8a3a3a;
+            @define-color destructive_fg_color #f0f0f0;
+            @define-color success_bg_color #3a6a3a;
+            @define-color warning_bg_color #8a7a2e;
+            @define-color error_bg_color #8a3a3a;
+            @define-color border_color #2e3033;
+            textview text selection {
+                background-color: rgba(107, 123, 141, 0.4);
+            }
+            entry selection {
+                background-color: rgba(107, 123, 141, 0.4);
+            }
+        """
+
+    def _red_css(self):
+        """CSS for the red theme."""
+        return """
+            @define-color accent_bg_color #d43a3a;
+            @define-color accent_fg_color #f5e8e8;
+            @define-color accent_color #e05050;
+            @define-color window_bg_color #1a0e0e;
+            @define-color window_fg_color #e0d0d0;
+            @define-color headerbar_bg_color #221414;
+            @define-color headerbar_fg_color #e0d0d0;
+            @define-color popover_bg_color #2a1818;
+            @define-color popover_fg_color #e0d0d0;
+            @define-color view_bg_color #1a0e0e;
+            @define-color view_fg_color #e0d0d0;
+            @define-color card_bg_color #2a1818;
+            @define-color card_fg_color #e0d0d0;
+            @define-color sidebar_bg_color #1e1212;
+            @define-color sidebar_fg_color #e0d0d0;
+            @define-color sidebar_backdrop_color #1a0e0e;
+            @define-color button_bg_color #2e1c1c;
+            @define-color button_fg_color #e0d0d0;
+            @define-color button_hover_bg_color #3a2424;
+            @define-color destructive_bg_color #b33a2e;
+            @define-color destructive_fg_color #f5e8e8;
+            @define-color success_bg_color #4a6a3a;
+            @define-color warning_bg_color #a06a2e;
+            @define-color error_bg_color #b33a2e;
+            @define-color border_color #3a2424;
+            textview text selection {
+                background-color: rgba(212, 58, 58, 0.4);
+            }
+            entry selection {
+                background-color: rgba(212, 58, 58, 0.4);
+            }
+        """
+
+    def _apply_theme(self):
+        """Apply the current theme, including custom CSS themes if selected."""
+        # Remove any previously applied custom theme CSS
+        if self._theme_css_provider is not None:
+            Gtk.StyleContext.remove_provider_for_display(
+                self.get_display(), self._theme_css_provider
+            )
+            self._theme_css_provider = None
+
+        if self.theme == "bronze":
+            self.style_manager.set_color_scheme(Adw.ColorScheme.FORCE_DARK)
+            self._load_theme_css(self._bronze_css())
+        elif self.theme == "anthracite":
+            self.style_manager.set_color_scheme(Adw.ColorScheme.FORCE_DARK)
+            self._load_theme_css(self._anthracite_css())
+        elif self.theme == "red":
+            self.style_manager.set_color_scheme(Adw.ColorScheme.FORCE_DARK)
+            self._load_theme_css(self._red_css())
+        elif self.theme == "light":
+            self.style_manager.set_color_scheme(Adw.ColorScheme.FORCE_LIGHT)
+        elif self.theme == "dark":
+            self.style_manager.set_color_scheme(Adw.ColorScheme.FORCE_DARK)
+        else:
+            self.style_manager.set_color_scheme(Adw.ColorScheme.DEFAULT)
 
     def _show_error_dialog(self, heading, message):
         """Show error dialog with the given heading and message."""
