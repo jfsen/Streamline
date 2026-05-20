@@ -20,6 +20,7 @@
 import json
 import os
 import sys
+import threading
 
 import gi
 import requests
@@ -143,13 +144,14 @@ class StreamlineWindow(Adw.ApplicationWindow):
         self.low_latency = config.get("low_latency", True)
 
     def _init_twitch_api(self):
-        """Initialize the Twitch API with current credentials."""
+        """Initialize the Twitch API with current credentials.
+
+        Shows cached streamer data immediately so the window opens fast,
+        then fetches fresh data in a background thread.
+        """
         self.twitch = None
         try:
             self.twitch = TwitchAPI(self.client_id, self.client_secret)
-            # Fetch initial stream data now that API is available
-            online_streamers, offline_streamers, streamer_info = self.get_streamers()
-            self.update_action_rows(online_streamers, offline_streamers, streamer_info)
         except Exception as e:
             error_msg = str(e)
             # Show prompt to re-enter credentials on auth failure
@@ -161,6 +163,57 @@ class StreamlineWindow(Adw.ApplicationWindow):
                 self._prompt_for_credentials()
             else:
                 self.dialogs.show_credentials_dialog(self._handle_credentials)
+            return
+
+        # Show cached data immediately so the window opens fast
+        cached_data, _ = self.twitch._load_streams_cache()
+        if cached_data:
+            self.update_action_rows(
+                cached_data["online"], cached_data["offline"], cached_data["info"]
+            )
+        else:
+            self.update_action_rows([], self.all_streamers, {})
+
+        # Fetch fresh stream data in a background thread
+        threading.Thread(target=self._background_fetch_streams, daemon=True).start()
+
+    def _background_fetch_streams(self):
+        """Fetch stream data in a background thread, then update UI on main thread."""
+        try:
+            online, offline, info = self.twitch.get_streams(self.all_streamers)
+            GLib.idle_add(self._on_streams_fetched, online, offline, info)
+        except requests.ConnectionError:
+            GLib.idle_add(
+                self._show_error_dialog,
+                "Connection Error",
+                "Could not fetch streamer data. Please check your internet connection.",
+            )
+        except requests.HTTPError as e:
+            status = e.response.status_code if e.response else None
+            if status == 401:
+                GLib.idle_add(self._prompt_for_credentials)
+            elif status == 429:
+                GLib.idle_add(
+                    self._show_error_dialog,
+                    "API Rate Limit",
+                    "Twitch API rate limit reached. Please wait a few minutes before refreshing again.",
+                )
+            else:
+                GLib.idle_add(
+                    self._show_error_dialog,
+                    "API Error",
+                    f"HTTP error {status} occurred while fetching streamer data.",
+                )
+        except Exception as e:
+            GLib.idle_add(
+                self._show_error_dialog,
+                "API Error",
+                f"Failed to fetch streamer data: {str(e)[:100]}",
+            )
+
+    def _on_streams_fetched(self, online, offline, info):
+        """Callback from background thread: update UI with fresh stream data."""
+        self.update_action_rows(online, offline, info)
 
     def _prompt_for_credentials(self):
         """Show dialog to prompt user for Twitch API credentials."""
