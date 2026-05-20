@@ -17,9 +17,6 @@
 #
 # SPDX-License-Identifier: GPL-3.0-or-later
 
-import json
-import os
-import sys
 import threading
 
 import gi
@@ -27,8 +24,6 @@ import requests
 
 gi.require_version("Adw", "1")
 gi.require_version("Gtk", "4.0")
-from datetime import datetime, timezone
-from pathlib import Path
 
 from gi.repository import Adw, GLib, Gtk
 
