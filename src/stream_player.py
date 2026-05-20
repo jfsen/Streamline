@@ -38,13 +38,18 @@ class StreamPlayer:
 
             # Get quality string from preset or use custom
             quality_presets = {
-                "High": "1080p60,1080p,720p60,720p,best",
-                "Medium": "720p60,720p,480p,best",
-                "Low": "480p,360p,best",
+                "High": "1080p60,1080p,best,720p60,720p",
+                "Medium": "720p,480p,720p60,best",
+                "Low": "360p,480p,worst",
                 "Custom": self.window.custom_quality,
             }
 
             quality = quality_presets.get(self.window.stream_quality, "best")
+
+            print(
+                f"[StreamPlayer] Quality setting: {self.window.stream_quality}"
+                f" -> {quality}"
+            )
 
             # Always ensure 'best' is available as a final fallback
             if not quality.endswith("best") and ",best" not in quality:

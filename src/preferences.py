@@ -45,6 +45,10 @@ class StreamlinePreferences(Adw.PreferencesWindow):
         # Initialize window size preference using narrow_mode
         self.window_size_row.set_selected(1 if parent.narrow_mode else 0)
 
+        # Hide on close instead of destroying (standard GNOME pattern)
+        self.set_hide_on_close(True)
+        self.connect("close-request", self._on_close_request)
+
         # Set current theme
         theme_list = ["system", "light", "dark", "bronze", "anthracite", "red"]
         try:
@@ -116,7 +120,10 @@ class StreamlinePreferences(Adw.PreferencesWindow):
 
     def _on_player_changed(self, row, *args):
         player_types = ["mpv", "vlc", "custom"]
-        selected = player_types[row.get_selected()]
+        idx = row.get_selected()
+        if idx < 0 or idx >= len(player_types):
+            return
+        selected = player_types[idx]
         self.parent.player_type = selected
 
         # Show/hide the custom player entry instead of just disabling it
@@ -130,15 +137,15 @@ class StreamlinePreferences(Adw.PreferencesWindow):
 
     def _on_quality_changed(self, row, *args):
         """Handle stream quality change."""
-        quality_presets = list(self._quality_presets.keys())
-        selected = quality_presets[row.get_selected()]
+        keys = list(self._quality_presets.keys())
+        idx = row.get_selected()
+        if idx < 0 or idx >= len(keys):
+            return
+        selected = keys[idx]
         self.parent.stream_quality = selected
 
         # Show custom quality entry if "Custom" is selected
-        if selected == "Custom":
-            self.custom_quality_row.set_visible(True)
-        else:
-            self.custom_quality_row.set_visible(False)
+        self.custom_quality_row.set_visible(selected == "Custom")
 
         self.parent.save_config()
 
@@ -166,6 +173,10 @@ class StreamlinePreferences(Adw.PreferencesWindow):
         """Handle low latency toggle"""
         self.parent.low_latency = switch_row.get_active()
         self.parent.save_config()
+
+    def _on_close_request(self, window):
+        """Handle close request by hiding the window (hide_on_close handles this)."""
+        return False  # Let default hide-on-close behavior take over
 
     def on_save_streamers_clicked(self, button):
         """Save all streamers as a comma-separated list to a text file."""
