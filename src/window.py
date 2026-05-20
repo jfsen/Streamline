@@ -17,29 +17,33 @@
 #
 # SPDX-License-Identifier: GPL-3.0-or-later
 
-import os, json, requests, sys
-import gi
-gi.require_version('Adw', '1')
-gi.require_version('Gtk', '4.0')
-gi.require_version('WebKit', '6.0')
-from gi.repository import Adw, Gtk, Pango, GLib, WebKit
-from pathlib import Path
-from datetime import datetime, timezone
+import json
+import os
+import sys
 
-from .preferences import StreamlinePreferences
-from .twitch import TwitchAPI
-from .stream_player import StreamPlayer
-from .vod_page import VODPage
+import gi
+import requests
+
+gi.require_version("Adw", "1")
+gi.require_version("Gtk", "4.0")
+gi.require_version("WebKit", "6.0")
+from datetime import datetime, timezone
+from pathlib import Path
+
+from gi.repository import Adw, GLib, Gtk, Pango, WebKit
+
 from .config import ConfigManager
 from .dialogs import StreamlineDialogs
+from .preferences import StreamlinePreferences
 from .rows import StreamerRowManager
-from .chat import ChatPage
-from .chat.popout import ChatWindow
+from .stream_player import StreamPlayer
+from .twitch import TwitchAPI
+from .vod_page import VODPage
 
 
-@Gtk.Template(resource_path='/io/github/jfsen/Streamline/window.ui')
+@Gtk.Template(resource_path="/io/github/jfsen/Streamline/window.ui")
 class StreamlineWindow(Adw.ApplicationWindow):
-    __gtype_name__ = 'StreamlineWindow'
+    __gtype_name__ = "StreamlineWindow"
 
     preferences_page = Gtk.Template.Child()
     refresh_button = Gtk.Template.Child()
@@ -50,41 +54,43 @@ class StreamlineWindow(Adw.ApplicationWindow):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        
+
         # Initialize config manager first
         self.config_manager = ConfigManager()
         self.config = self.config_manager.load()
-        
+
         # Initialize all attributes from config
         self._initialize_from_config(self.config)
-        
+
         # Get and store style manager reference
         self.style_manager = Adw.StyleManager.get_default()
-        self.style_manager.set_color_scheme({
-            "system": Adw.ColorScheme.DEFAULT,
-            "light": Adw.ColorScheme.FORCE_LIGHT,
-            "dark": Adw.ColorScheme.FORCE_DARK
-        }[self.theme])
-        
+        self.style_manager.set_color_scheme(
+            {
+                "system": Adw.ColorScheme.DEFAULT,
+                "light": Adw.ColorScheme.FORCE_LIGHT,
+                "dark": Adw.ColorScheme.FORCE_DARK,
+            }[self.theme]
+        )
+
         # Set minimum window size
         self.set_size_request(300, 400)
 
         # Initialize window size attribute
         self.narrow_mode = self.config.get("narrow_mode", False)
-        
+
         # Set initial window size based on preference
         if self.narrow_mode:
             self.set_default_size(360, 700)
-        
+
         # Initialize other managers
         self.dialogs = StreamlineDialogs(self)
-        
+
         # Create ListBoxes for online and offline streamers
         self.online_list = Gtk.ListBox()
         self.online_list.add_css_class("boxed-list")
         self.online_list.set_selection_mode(Gtk.SelectionMode.NONE)
         self.online_group.add(self.online_list)
-        
+
         self.offline_list = Gtk.ListBox()
         self.offline_list.add_css_class("boxed-list")
         self.offline_list.set_selection_mode(Gtk.SelectionMode.NONE)
@@ -92,15 +98,15 @@ class StreamlineWindow(Adw.ApplicationWindow):
 
         # Now initialize row manager after lists are created
         self.row_manager = StreamerRowManager(self)
-        
+
         # Initialize API-related attributes
         self.twitch = None
-        
+
         # Check credentials and initialize API
         if not self.client_id or not self.client_secret:
             self._show_error_dialog(
                 "Missing Credentials",
-                "Twitch API credentials not found. Please add them in preferences."
+                "Twitch API credentials not found. Please add them in preferences.",
             )
         else:
             try:
@@ -108,15 +114,15 @@ class StreamlineWindow(Adw.ApplicationWindow):
             except Exception as e:
                 self._show_error_dialog(
                     "API Error",
-                    "Failed to initialize Twitch API. Please check your credentials."
+                    "Failed to initialize Twitch API. Please check your credentials.",
                 )
-        
+
         # Initialize StreamPlayer
         self.player = StreamPlayer(self)
-        
+
         # Dictionary to store row references
         self.streamer_rows = {}
-        
+
         # Load config
         config = self.load_config()
 
@@ -144,10 +150,7 @@ class StreamlineWindow(Adw.ApplicationWindow):
         self.set_content(self.navigation_view)
 
         # Add main page
-        self.main_page = Adw.NavigationPage(
-            title="Streamline",
-            child=self.main_content
-        )
+        self.main_page = Adw.NavigationPage(title="Streamline", child=self.main_content)
         self.navigation_view.add(self.main_page)
         self._preferences = None
 
@@ -161,7 +164,6 @@ class StreamlineWindow(Adw.ApplicationWindow):
         self.stream_quality = config.get("stream_quality", "High")
         self.custom_quality = config.get("custom_quality", "best")
         self.narrow_mode = config.get("narrow_mode", False)
-        self.animate_emotes = config.get("animate_emotes", False)
         self.theme = config.get("theme", "system")
         self.low_latency = config.get("low_latency", True)
 
@@ -173,12 +175,14 @@ class StreamlineWindow(Adw.ApplicationWindow):
 
         # Check cache status
         cached_data, seconds_until_refresh = self.twitch._load_streams_cache()
-        
+
         if cached_data is not None:
             # Data is still cached, inform user how long until refresh is available
-            self.show_toast(f"Please wait {seconds_until_refresh}s before refreshing again")
+            self.show_toast(
+                f"Please wait {seconds_until_refresh}s before refreshing again"
+            )
             return
-            
+
         # Cache is expired, do refresh
         self.show_toast("Stream data refreshed")
         online_streamers, offline_streamers, streamer_info = self.get_streamers()
@@ -190,14 +194,14 @@ class StreamlineWindow(Adw.ApplicationWindow):
             # Don't show error dialog here - just return empty results
             # The update_action_rows method will show a toast instead
             return [], self.all_streamers, {}
-            
+
         try:
             return self.twitch.get_streams(self.all_streamers)
         except requests.ConnectionError:
             # Use error dialog for connection errors as they prevent core functionality
             self._show_error_dialog(
                 "Connection Error",
-                "Could not fetch streamer data. Please check your internet connection."
+                "Could not fetch streamer data. Please check your internet connection.",
             )
             return [], self.all_streamers, {}
         except requests.HTTPError as e:
@@ -205,20 +209,19 @@ class StreamlineWindow(Adw.ApplicationWindow):
             if e.response and e.response.status_code == 429:
                 self._show_error_dialog(
                     "API Rate Limit",
-                    "Twitch API rate limit reached. Please wait a few minutes before refreshing again."
+                    "Twitch API rate limit reached. Please wait a few minutes before refreshing again.",
                 )
             else:
                 status = e.response.status_code if e.response else "Unknown"
                 self._show_error_dialog(
                     "API Error",
-                    f"HTTP error {status} occurred while fetching streamer data."
+                    f"HTTP error {status} occurred while fetching streamer data.",
                 )
             return [], self.all_streamers, {}
         except Exception as e:
             # Use error dialog for unexpected errors
             self._show_error_dialog(
-                "API Error",
-                f"Failed to fetch streamer data: {str(e)[:100]}"
+                "API Error", f"Failed to fetch streamer data: {str(e)[:100]}"
             )
             return [], self.all_streamers, {}
 
@@ -227,9 +230,9 @@ class StreamlineWindow(Adw.ApplicationWindow):
         if not self.twitch:
             self._show_error_dialog(
                 "API Not Available",
-                "Twitch API is not available. Please check your credentials in preferences."
+                "Twitch API is not available. Please check your credentials in preferences.",
             )
-        
+
         self.row_manager.update_rows(online_streamers, offline_streamers, streamer_info)
 
     def create_row(self, streamer, info):
@@ -263,19 +266,19 @@ class StreamlineWindow(Adw.ApplicationWindow):
     def _handle_follow(self, username):
         """Handle follow dialog callback with support for multiple streamers."""
         # Split input by commas and strip whitespace
-        usernames = [name.strip().lower() for name in username.split(',')]
-        
+        usernames = [name.strip().lower() for name in username.split(",")]
+
         # Track newly added streamers
         added = []
         already_following = []
-        
+
         # Convert all existing streamers to lowercase for comparison
         existing_streamers_lower = [s.lower() for s in self.all_streamers]
-        
+
         for name in usernames:
             if not name:  # Skip empty names
                 continue
-                
+
             if name not in existing_streamers_lower:
                 # Always add as lowercase
                 self.all_streamers.append(name)
@@ -285,14 +288,14 @@ class StreamlineWindow(Adw.ApplicationWindow):
                 # Find the original case version for display in the message
                 original_index = existing_streamers_lower.index(name)
                 already_following.append(self.all_streamers[original_index])
-        
+
         if added:
             self.save_config()
             if len(added) == 1:
                 self.show_toast(f"Now following {added[0]}")
             else:
                 self.show_toast(f"Added {len(added)} new streamers")
-                
+
         if already_following:
             if len(already_following) == 1:
                 self.show_toast(f"Already following {already_following[0]}")
@@ -319,17 +322,16 @@ class StreamlineWindow(Adw.ApplicationWindow):
         config = self.config_manager.create_config_dict(self)
         if not self.config_manager.save(config):
             self.dialogs.show_error_dialog(
-                "Error Saving Config",
-                "Could not save configuration"
+                "Error Saving Config", "Could not save configuration"
             )
 
     def show_preferences(self, *args):
         """Show preferences window."""
         if not self._preferences:
             prefs = StreamlinePreferences(self)
-            prefs.connect('destroy', lambda w: setattr(self, '_preferences', None))
+            prefs.connect("destroy", lambda w: setattr(self, "_preferences", None))
             self._preferences = prefs
-            
+
         self._preferences.present()
 
     def show_toast(self, text, timeout=2):
@@ -356,60 +358,15 @@ class StreamlineWindow(Adw.ApplicationWindow):
         page = VODPage(self, streamer, self.twitch, self.player)
         # Store weak reference to track the current VOD page
         from weakref import proxy
+
         self._current_vod_page = proxy(page)
         self.navigation_view.push(page)
 
     def _cleanup_vod_page(self, page):
         """Clean up VOD page references"""
-        if hasattr(self, '_current_vod_page'):
-            delattr(self, '_current_vod_page')
+        if hasattr(self, "_current_vod_page"):
+            delattr(self, "_current_vod_page")
 
     def _create_input_dialog(self, heading, body, default_response="ok"):
         """Create reusable input dialog"""
         return self.dialogs.create_input_dialog(heading, body, default_response)
-
-    def show_chat_page(self, streamer):
-        """Show chat page for the given streamer."""
-        # Cleanup any existing chat page
-        if hasattr(self, '_current_chat_page'):
-            old_page = self._current_chat_page
-            self._current_chat_page = None  # Clear reference first
-            self.navigation_view.pop()  # Remove from navigation stack
-            # Let the chat page clean itself up
-            if hasattr(old_page, '_on_destroy'):
-                old_page._on_destroy()
-        
-        page = ChatPage(streamer)
-        # Store reference to track the current chat page
-        self._current_chat_page = page
-        
-        # Show the page
-        self.navigation_view.push(page)
-
-    def pop_out_chat(self, streamer):
-        """Open chat in a separate window"""
-        # Check if we already have a chat window open for this streamer
-        if hasattr(self, '_chat_windows') and streamer in self._chat_windows:
-            # If window exists, just present it
-            self._chat_windows[streamer].present()
-            return
-        
-        # Initialize chat windows dictionary if it doesn't exist
-        if not hasattr(self, '_chat_windows'):
-            self._chat_windows = {}
-        
-        # Create a new chat window
-        chat_window = ChatWindow(streamer, self)
-        
-        # Store reference to the window
-        self._chat_windows[streamer] = chat_window
-        
-        # Connect to window close event to clean up reference
-        def on_window_close(window, *args):
-            if streamer in self._chat_windows:
-                del self._chat_windows[streamer]
-        
-        chat_window.connect("close-request", on_window_close)
-        
-        # Show the window
-        chat_window.present()

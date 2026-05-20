@@ -1,7 +1,9 @@
-import os
 import json
+import os
 from pathlib import Path
+
 from gi.repository import Adw
+
 
 class ConfigManager:
     def __init__(self):
@@ -16,19 +18,25 @@ class ConfigManager:
             "twitch_client_secret": "",
             "narrow_mode": False,
             "theme": "system",
-            "animate_emotes": False,
             "low_latency": True,
         }
 
     def get_config_path(self):
         """Get the path to the config file."""
         # Check if running in Flatpak
-        if os.path.exists('/.flatpak-info'):
-            config_dir = Path(os.environ.get('XDG_CONFIG_HOME', 
-                        Path.home() / '.var/app/io.github.jfsen.Streamline/config')) / "Streamline"
+        if os.path.exists("/.flatpak-info"):
+            config_dir = (
+                Path(
+                    os.environ.get(
+                        "XDG_CONFIG_HOME",
+                        Path.home() / ".var/app/io.github.jfsen.Streamline/config",
+                    )
+                )
+                / "Streamline"
+            )
         else:
             config_dir = Path.home() / ".config" / "Streamline"
-        
+
         config_dir.mkdir(parents=True, exist_ok=True)
         return config_dir / "config.json"
 
@@ -43,26 +51,24 @@ class ConfigManager:
             "custom_quality": window.custom_quality,
             "narrow_mode": window.narrow_mode,
             "theme": window.theme,
-            "animate_emotes": window.animate_emotes,
             "low_latency": window.low_latency,
         }
         return config
 
     def load(self):
         config = self._load_from_file()
-        config.setdefault("animate_emotes", False)
         config.setdefault("theme", "system")
-        
+
         return config
 
     def _load_from_file(self):
         """Load configuration from file."""
         try:
             if self.config_path.exists():
-                with open(self.config_path, 'r') as f:
+                with open(self.config_path, "r") as f:
                     return json.load(f)
             else:
-                with open(self.config_path, 'w') as f:
+                with open(self.config_path, "w") as f:
                     json.dump(self.default_config, f, indent=4)
                 return self.default_config
         except (json.JSONDecodeError, OSError):
@@ -71,7 +77,7 @@ class ConfigManager:
     def save(self, config):
         """Save configuration to file."""
         try:
-            with open(self.config_path, 'w') as f:
+            with open(self.config_path, "w") as f:
                 json.dump(config, f, indent=4)
             return True
         except OSError:

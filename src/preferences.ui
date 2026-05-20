@@ -41,17 +41,7 @@
             </child>
           </object>
         </child>
-        <child>
-          <object class="AdwPreferencesGroup">
-            <property name="title">Experimental Features</property>
-            <child>
-              <object class="AdwSwitchRow" id="animate_emotes_checkbox">
-                <property name="title">Animated Emotes</property>
-                <property name="subtitle">Enable GIF animations in chat (may affect performance)</property>
-              </object>
-            </child>
-          </object>
-        </child>
+
       </object>
     </child>
     <child>
