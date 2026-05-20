@@ -38,8 +38,8 @@
       "sources": [
         {
           "type": "git",
-          "url": "file:///home/user/Projects",
-          "branch": "main"
+          "url": "https://github.com/jfsen/Streamline.git",
+          "tag": "v2.0.0"
         },
         {
           "type": "file",

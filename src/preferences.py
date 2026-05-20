@@ -45,9 +45,6 @@ class StreamlinePreferences(Adw.PreferencesWindow):
         # Initialize window size preference using narrow_mode
         self.window_size_row.set_selected(1 if parent.narrow_mode else 0)
 
-        # Use hide-on-close to let GTK manage window lifecycle
-        self.set_hide_on_close(True)
-
         # Set current theme
         theme_list = ["system", "light", "dark", "bronze", "anthracite", "red"]
         try:
@@ -117,9 +114,6 @@ class StreamlinePreferences(Adw.PreferencesWindow):
         self.custom_quality_row.connect("notify::text", self._on_custom_quality_changed)
         self.window_size_row.connect("notify::selected", self._on_window_size_changed)
 
-        # Connect to destroy signal instead of close-request
-        self.connect("destroy", self._on_destroy)
-
     def _on_player_changed(self, row, *args):
         player_types = ["mpv", "vlc", "custom"]
         selected = player_types[row.get_selected()]
@@ -161,24 +155,6 @@ class StreamlinePreferences(Adw.PreferencesWindow):
             self.parent.set_default_size(360, 700)
             self.set_default_size(360, 500)
         self.parent.save_config()
-
-    def _on_destroy(self, window):
-        """Clean up resources when window is destroyed."""
-        # Disconnect signals
-        for handler_id in self._signal_handlers:
-            source = self.get_object_for_signal_handler(handler_id)
-            if source:
-                source.disconnect(handler_id)
-
-        # Clear models
-        self.player_row.set_model(None)
-        self.quality_row.set_model(None)
-
-        # Clear references
-        self._player_model = None
-        self._quality_model = None
-        self._signal_handlers = None
-        self.parent = None
 
     def on_theme_changed(self, row, *args):
         theme_list = ["system", "light", "dark", "bronze", "anthracite", "red"]

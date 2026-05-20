@@ -26,11 +26,10 @@ import requests
 
 gi.require_version("Adw", "1")
 gi.require_version("Gtk", "4.0")
-gi.require_version("WebKit", "6.0")
 from datetime import datetime, timezone
 from pathlib import Path
 
-from gi.repository import Adw, GLib, Gtk, Pango, WebKit
+from gi.repository import Adw, GLib, Gtk
 
 from .config import ConfigManager
 from .dialogs import StreamlineDialogs
@@ -100,44 +99,21 @@ class StreamlineWindow(Adw.ApplicationWindow):
 
         # Initialize API-related attributes
         self.twitch = None
+        self._credentials_prompt_shown = False
 
         # Check credentials and initialize API
         if not self.client_id or not self.client_secret:
-            self._show_error_dialog(
-                "Missing Credentials",
-                "Twitch API credentials not found. Please add them in preferences.",
-            )
+            self._prompt_for_credentials()
         else:
-            try:
-                self.twitch = TwitchAPI(self.client_id, self.client_secret)
-            except Exception as e:
-                self._show_error_dialog(
-                    "API Error",
-                    "Failed to initialize Twitch API. Please check your credentials.",
-                )
+            self._init_twitch_api()
 
         # Initialize StreamPlayer
         self.player = StreamPlayer(self)
 
-        # Dictionary to store row references
-        self.streamer_rows = {}
-
-        # Load config
-        config = self.load_config()
-
-        # Set player config
-        self.player_type = config.get("player_type", "mpv")
-        self.custom_player_path = config.get("custom_player_path", "")
-
-        # Add stream quality setting
-        self.stream_quality = config.get("stream_quality", "best")
-
-        # Fetch streamer list from config
-        self.all_streamers = config.get("streamers", [])
-
-        # Get initial streamer data
-        online_streamers, offline_streamers, streamer_info = self.get_streamers()
-        self.update_action_rows(online_streamers, offline_streamers, streamer_info)
+        # Initial streamer data display - if API is available, _init_twitch_api
+        # already populated the lists; if not, show all streamers as offline
+        if not self.twitch:
+            self.update_action_rows([], self.all_streamers, {})
 
         # Connect headerbar buttons
         self.refresh_button.connect("clicked", self.on_refresh_button_clicked)
@@ -165,6 +141,41 @@ class StreamlineWindow(Adw.ApplicationWindow):
         self.narrow_mode = config.get("narrow_mode", False)
         self.theme = config.get("theme", "system")
         self.low_latency = config.get("low_latency", True)
+
+    def _init_twitch_api(self):
+        """Initialize the Twitch API with current credentials."""
+        self.twitch = None
+        try:
+            self.twitch = TwitchAPI(self.client_id, self.client_secret)
+            # Fetch initial stream data now that API is available
+            online_streamers, offline_streamers, streamer_info = self.get_streamers()
+            self.update_action_rows(online_streamers, offline_streamers, streamer_info)
+        except Exception as e:
+            error_msg = str(e)
+            # Show prompt to re-enter credentials on auth failure
+            if (
+                "401" in error_msg
+                or "Unauthorized" in error_msg
+                or "access_token" in error_msg
+            ):
+                self._prompt_for_credentials()
+            else:
+                self.dialogs.show_credentials_dialog(self._handle_credentials)
+
+    def _prompt_for_credentials(self):
+        """Show dialog to prompt user for Twitch API credentials."""
+        if self._credentials_prompt_shown:
+            return
+        self._credentials_prompt_shown = True
+        self.dialogs.show_credentials_dialog(self._handle_credentials)
+
+    def _handle_credentials(self, client_id, client_secret):
+        """Handle credentials submitted by user."""
+        self.client_id = client_id
+        self.client_secret = client_secret
+        self.save_config()
+        self._credentials_prompt_shown = False
+        self._init_twitch_api()
 
     def on_refresh_button_clicked(self, button):
         """Refresh streamer data."""
@@ -205,13 +216,16 @@ class StreamlineWindow(Adw.ApplicationWindow):
             return [], self.all_streamers, {}
         except requests.HTTPError as e:
             # Handle API rate limits and other HTTP errors
-            if e.response and e.response.status_code == 429:
+            status = e.response.status_code if e.response else None
+            if status == 401:
+                # Unauthorized - credentials are likely invalid, prompt user
+                self._prompt_for_credentials()
+            elif status == 429:
                 self._show_error_dialog(
                     "API Rate Limit",
                     "Twitch API rate limit reached. Please wait a few minutes before refreshing again.",
                 )
             else:
-                status = e.response.status_code if e.response else "Unknown"
                 self._show_error_dialog(
                     "API Error",
                     f"HTTP error {status} occurred while fetching streamer data.",
@@ -226,12 +240,6 @@ class StreamlineWindow(Adw.ApplicationWindow):
 
     def update_action_rows(self, online_streamers, offline_streamers, streamer_info):
         """Update the online and offline streamer lists."""
-        if not self.twitch:
-            self._show_error_dialog(
-                "API Not Available",
-                "Twitch API is not available. Please check your credentials in preferences.",
-            )
-
         self.row_manager.update_rows(online_streamers, offline_streamers, streamer_info)
 
     def create_row(self, streamer, info):
@@ -453,10 +461,6 @@ class StreamlineWindow(Adw.ApplicationWindow):
             self.player.play_content(f"twitch.tv/{username}", is_vod=False)
         except Exception as e:
             self.show_toast(f"Error: {str(e)}", 4)
-
-    def load_config(self):
-        """Load configuration from file."""
-        return self.config_manager.load()
 
     def save_config(self):
         """Save current configuration to file."""

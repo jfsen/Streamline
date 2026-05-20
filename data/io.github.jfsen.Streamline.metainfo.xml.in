@@ -7,64 +7,59 @@
   <name>Streamline</name>
   <summary>Watch Twitch streams in your local media player</summary>
   <description>
-    <p>Follow your favorite Twitch streams, check their online status, and enjoy them in your preferred media player such as mpv or VLC. Display the Twitch chat and explore the stream's VODs.</p>
+    <p>Follow your favorite Twitch streamers, check their online status, and watch them in your preferred media player — mpv, VLC, or any custom player. Browse and play channel VODs, all without a web browser.</p>
   </description>
 
-  <developer id="tld.vendor">
+  <developer id="io.github.jfsen">
     <name>jfsen</name>
   </developer>
 
-  <!-- Requered: Should be a link to the upstream homepage for the component -->
-  <url type="homepage">https://jfsen.github.io/</url>
-  <!-- Recommended: It is highly recommended for open-source projects to display the source code repository -->
+  <url type="homepage">https://github.com/jfsen/Streamline</url>
   <url type="vcs-browser">https://github.com/jfsen/Streamline</url>
-  <!-- Should point to the software's bug tracking system, for users to report new bugs -->
   <url type="bugtracker">https://github.com/jfsen/Streamline/issues</url>
-  <!-- Should link a FAQ page for this software, to answer some of the most-asked questions in detail -->
-  <!-- URLs of this type should point to a webpage where users can submit or modify translations of the upstream project -->
-  <url type="translate">https://example.org/translate</url>
-  <url type="faq">https://example.org/faq</url>
-  <!--Sould provide a web link to an online user's reference, a software manual or help page -->
-  <url type="help">https://example.org/help</url>
-  <!-- URLs of this type should point to a webpage showing information on how to donate to the described software project -->
-  <url type="donation">https://example.org/donate</url>
-  <!--This could for example be an HTTPS URL to an online form or a page describing how to contact the developer -->
-  <url type="contact">https://example.org/contact</url>
-  <!--URLs of this type should point to a webpage showing information on how to contribute to the described software project -->
-  <url type="contribute">https://example.org/contribute</url>
 
   <translation type="gettext">streamline</translation>
-  <!-- All graphical applications having a desktop file must have this tag in the MetaInfo.
-     If this is present, appstreamcli compose will pull icons, keywords and categories from the desktop file. -->
   <launchable type="desktop-id">io.github.jfsen.Streamline.desktop</launchable>
-  <!-- Use the OARS website (https://hughsie.github.io/oars/generate.html) to generate these and make sure to use oars-1.1 -->
-  <content_rating type="oars-1.1" />
 
-  <!-- Applications should set a brand color in both light and dark variants like so -->
+  <content_rating type="oars-1.1">
+    <content_attribute id="social-chat">intense</content_attribute>
+    <content_attribute id="social-info">intense</content_attribute>
+    <content_attribute id="social-audio">intense</content_attribute>
+  </content_rating>
+
   <branding>
     <color type="primary" scheme_preference="light">#B75656</color>
     <color type="primary" scheme_preference="dark">#993d3d</color>
   </branding>
 
-  <screenshots>
-    <screenshot type="default">
-      <image>https://example.org/example1.png</image>
-      <caption>A caption</caption>
-    </screenshot>
-    <screenshot>
-      <image>https://example.org/example2.png</image>
-      <caption>A caption</caption>
-    </screenshot>
-  </screenshots>
-
   <releases>
-    <release version="1.0.1" date="2024-01-18">
-      <url type="details">https://example.org/changelog.html#version_1.0.1</url>
+    <release version="2.0.0" date="2026-05-20">
+      <url type="details">https://github.com/jfsen/Streamline/releases/tag/v2.0.0</url>
       <description translate="no">
-        <p>Release description</p>
+        <p>Streamline 2.0 — a major rewrite with new features and polish.</p>
         <ul>
-          <li>List of changes</li>
-          <li>List of changes</li>
+          <li>Migrated settings from JSON file to GSettings backend</li>
+          <li>Interactive credential prompt when Twitch API keys are missing or invalid</li>
+          <li>Custom theme support: Dark, Light, Bronze, Anthracite, and Red</li>
+          <li>VOD browsing and playback via streamlink</li>
+          <li>Quick Play for one-off streams without following</li>
+          <li>Export streamer list to a text file</li>
+          <li>Stream cache with configurable refresh timer</li>
+          <li>Low-latency streaming option</li>
+          <li>Support for custom player executable paths</li>
+          <li>Stream quality presets: High, Medium, Low, and Custom</li>
+        </ul>
+      </description>
+    </release>
+    <release version="0.1.0" date="2025-01-01">
+      <url type="details">https://github.com/jfsen/Streamline/releases/tag/v0.1.0</url>
+      <description translate="no">
+        <p>Initial prototype release.</p>
+        <ul>
+          <li>Follow and unfollow streamers</li>
+          <li>Online/offline status display</li>
+          <li>Stream playback via streamlink with mpv or VLC</li>
+          <li>Configurable stream quality</li>
         </ul>
       </description>
     </release>

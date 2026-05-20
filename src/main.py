@@ -18,35 +18,42 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 
 import sys
+
 import gi
 
-gi.require_version('Gtk', '4.0')
-gi.require_version('Adw', '1')
+gi.require_version("Gtk", "4.0")
+gi.require_version("Adw", "1")
 
-from gi.repository import Gtk, Gio, Adw
+from gi.repository import Adw, Gio, Gtk
+
 from .window import StreamlineWindow
+
 
 class StreamlineApplication(Adw.Application):
     """The main application singleton class."""
 
     def __init__(self):
-        super().__init__(application_id='io.github.jfsen.Streamline',
-                         flags=Gio.ApplicationFlags.FLAGS_NONE)
+        super().__init__(
+            application_id="io.github.jfsen.Streamline",
+            flags=Gio.ApplicationFlags.FLAGS_NONE,
+        )
 
     def do_startup(self):
         """Called when application is starting up."""
         Adw.Application.do_startup(self)
         Adw.init()
-        
+
         # Add actions with accelerators
-        self.create_action('quit', lambda *_: self.quit(), ['<primary>q'])
-        self.create_action('about', self.on_about_action)
-        self.create_action('preferences', self.on_preferences_action, ['<primary>comma'])
-        
+        self.create_action("quit", lambda *_: self.quit(), ["<primary>q"])
+        self.create_action("about", self.on_about_action)
+        self.create_action(
+            "preferences", self.on_preferences_action, ["<primary>comma"]
+        )
+
         # Add follow, quick play and refresh actions
-        self.create_action('follow', self.on_follow_action, ['<primary>n'])
-        self.create_action('quick-play', self.on_quick_play_action, ['<primary>p'])
-        self.create_action('refresh', self.on_refresh_action, ['<primary>r', 'F5'])
+        self.create_action("follow", self.on_follow_action, ["<primary>n"])
+        self.create_action("quick-play", self.on_quick_play_action, ["<primary>p"])
+        self.create_action("refresh", self.on_refresh_action, ["<primary>r", "F5"])
 
     def do_activate(self):
         """Called when the application is activated."""
@@ -57,14 +64,16 @@ class StreamlineApplication(Adw.Application):
 
     def on_about_action(self, *args):
         """Callback for the app.about action."""
-        about = Adw.AboutDialog(application_name='Streamline',
-                                application_icon='io.github.jfsen.Streamline',
-                                developer_name='jfsen',
-                                version='0.1.0',
-                                developers=['jfsen'],
-                                copyright='© 2025 jfsen')
+        about = Adw.AboutDialog(
+            application_name="Streamline",
+            application_icon="io.github.jfsen.Streamline",
+            developer_name="jfsen",
+            version="2.0.0",
+            developers=["jfsen"],
+            copyright="© 2025 jfsen",
+        )
         # Translators: Replace "translator-credits" with your name/username, and optionally an email or URL.
-        about.set_translator_credits(_('translator-credits'))
+        about.set_translator_credits(_("translator-credits"))
         about.present(self.props.active_window)
 
     def on_preferences_action(self, *args):

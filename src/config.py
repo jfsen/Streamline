@@ -1,47 +1,52 @@
-import json
-import os
-from pathlib import Path
+import gi
 
-from gi.repository import Adw
+gi.require_version("Gio", "2.0")
+from gi.repository import Gio, GLib
 
 
 class ConfigManager:
     def __init__(self):
-        self.config_path = self.get_config_path()
-        self.default_config = {
-            "streamers": [],
-            "player_type": "mpv",
-            "custom_player_path": "",
-            "stream_quality": "High",
-            "custom_quality": "best",
-            "twitch_client_id": "",
-            "twitch_client_secret": "",
-            "narrow_mode": False,
-            "theme": "system",
-            "low_latency": True,
+        self.settings = Gio.Settings.new("io.github.jfsen.Streamline")
+
+    def load(self):
+        """Load config as a dict (compatible with old interface)."""
+        return {
+            "streamers": list(self.settings.get_value("streamers")),
+            "player_type": self.settings.get_string("player-type"),
+            "custom_player_path": self.settings.get_string("custom-player-path"),
+            "stream_quality": self.settings.get_string("stream-quality"),
+            "custom_quality": self.settings.get_string("custom-quality"),
+            "twitch_client_id": self.settings.get_string("twitch-client-id"),
+            "twitch_client_secret": self.settings.get_string("twitch-client-secret"),
+            "narrow_mode": self.settings.get_boolean("narrow-mode"),
+            "theme": self.settings.get_string("theme"),
+            "low_latency": self.settings.get_boolean("low-latency"),
         }
 
-    def get_config_path(self):
-        """Get the path to the config file."""
-        # Check if running in Flatpak
-        if os.path.exists("/.flatpak-info"):
-            config_dir = (
-                Path(
-                    os.environ.get(
-                        "XDG_CONFIG_HOME",
-                        Path.home() / ".var/app/io.github.jfsen.Streamline/config",
-                    )
-                )
-                / "Streamline"
-            )
-        else:
-            config_dir = Path.home() / ".config" / "Streamline"
-
-        config_dir.mkdir(parents=True, exist_ok=True)
-        return config_dir / "config.json"
+    def save(self, config):
+        """Save config from a dict into GSettings."""
+        self.settings.set_value(
+            "streamers", GLib.Variant("as", config.get("streamers", []))
+        )
+        self.settings.set_string("player-type", config.get("player_type", "mpv"))
+        self.settings.set_string(
+            "custom-player-path", config.get("custom_player_path", "")
+        )
+        self.settings.set_string("stream-quality", config.get("stream_quality", "High"))
+        self.settings.set_string("custom-quality", config.get("custom_quality", "best"))
+        self.settings.set_string("twitch-client-id", config.get("twitch_client_id", ""))
+        self.settings.set_string(
+            "twitch-client-secret", config.get("twitch_client_secret", "")
+        )
+        self.settings.set_boolean("narrow-mode", config.get("narrow_mode", False))
+        self.settings.set_string("theme", config.get("theme", "system"))
+        self.settings.set_boolean("low-latency", config.get("low_latency", True))
+        self.settings.apply()
+        return True
 
     def create_config_dict(self, window):
-        config = {
+        """Create config dict from window attributes."""
+        return {
             "twitch_client_id": window.client_id,
             "twitch_client_secret": window.client_secret,
             "player_type": window.player_type,
@@ -53,32 +58,3 @@ class ConfigManager:
             "theme": window.theme,
             "low_latency": window.low_latency,
         }
-        return config
-
-    def load(self):
-        config = self._load_from_file()
-        config.setdefault("theme", "system")
-
-        return config
-
-    def _load_from_file(self):
-        """Load configuration from file."""
-        try:
-            if self.config_path.exists():
-                with open(self.config_path, "r") as f:
-                    return json.load(f)
-            else:
-                with open(self.config_path, "w") as f:
-                    json.dump(self.default_config, f, indent=4)
-                return self.default_config
-        except (json.JSONDecodeError, OSError):
-            return self.default_config
-
-    def save(self, config):
-        """Save configuration to file."""
-        try:
-            with open(self.config_path, "w") as f:
-                json.dump(config, f, indent=4)
-            return True
-        except OSError:
-            return False

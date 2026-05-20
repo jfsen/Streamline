@@ -3,6 +3,7 @@
 data/io.github.jfsen.Streamline.desktop.in
 data/io.github.jfsen.Streamline.metainfo.xml.in
 data/io.github.jfsen.Streamline.gschema.xml
+src/dialogs.py
 src/main.py
 src/window.py
 src/window.ui

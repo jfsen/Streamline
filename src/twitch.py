@@ -153,6 +153,7 @@ class TwitchAPI:
                     cache_data["data"]["online"] = [
                         s for s in cache_data["data"]["online"] if s != username
                     ]
+                    cache_data["data"]["online"].sort(key=str.lower)
                     cache_data["data"]["offline"] = [
                         s for s in cache_data["data"]["offline"] if s != username
                     ]
