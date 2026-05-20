@@ -1,192 +1,181 @@
-from gi.repository import Adw, Gdk, Gtk
+from gi.repository import Adw, Gtk
 
 
 @Gtk.Template(resource_path="/io/github/jfsen/Streamline/preferences.ui")
 class StreamlinePreferences(Adw.PreferencesWindow):
     __gtype_name__ = "StreamlinePreferences"
 
-    # Template children
+    # Template children — Appearance page
+    window_size_row = Gtk.Template.Child()
+    theme_row = Gtk.Template.Child()
+
+    # Template children — Playback page
     player_row = Gtk.Template.Child()
     custom_player_row = Gtk.Template.Child()
     quality_row = Gtk.Template.Child()
     custom_quality_row = Gtk.Template.Child()
-    window_size_row = Gtk.Template.Child()
-    theme_row = Gtk.Template.Child()
-
     low_latency_switch = Gtk.Template.Child()
-    copy_streamers_button = Gtk.Template.Child()
+    export_button = Gtk.Template.Child()
+
+    # Template children — Account page
+    client_id_row = Gtk.Template.Child()
+    client_secret_row = Gtk.Template.Child()
+
+    # Mapping of preset names to their stream quality strings
+    _DEFAULT_QUALITY = "1080p60,1080p,720p60,720p,best"
+
+    _QUALITY_KEYS = ("High", "Medium", "Low", "Custom")
+    _QUALITY_PRESETS = {
+        "High": "1080p60,1080p,720p60,720p,best",
+        "Medium": "720p60,720p,480p,best",
+        "Low": "480p,360p,best",
+        # "Custom" is resolved dynamically from the parent's custom_quality
+    }
+
+    _THEME_KEYS = ("system", "light", "dark", "bronze", "anthracite", "red")
 
     def __init__(self, parent, **kwargs):
         super().__init__(**kwargs)
         self.set_transient_for(parent)
-
-        # Store parent reference directly since window lifecycle is managed by GTK
         self.parent = parent
-
-        # Define quality presets with fallbacks
-        self._quality_presets = {
-            "High": "1080p60,1080p,720p60,720p,best",
-            "Medium": "720p60,720p,480p,best",
-            "Low": "480p,360p,best",
-            "Custom": parent.custom_quality
-            if hasattr(parent, "custom_quality")
-            else "best",
-        }
-
-        # Setup models
-        self._player_model = Gtk.StringList.new(["MPV", "VLC", "Custom"])
-        self._quality_model = Gtk.StringList.new(list(self._quality_presets.keys()))
-
-        # Setup UI
-        self._setup_models()
-        self._setup_values()
-        self._connect_signals()
-
-        # Initialize window size preference using narrow_mode
-        self.window_size_row.set_selected(1 if parent.narrow_mode else 0)
 
         # Hide on close instead of destroying (standard GNOME pattern)
         self.set_hide_on_close(True)
         self.connect("close-request", self._on_close_request)
 
-        # Set current theme
-        theme_list = ["system", "light", "dark", "bronze", "anthracite", "red"]
-        try:
-            self.theme_row.set_selected(theme_list.index(parent.theme))
-        except ValueError:
-            self.theme_row.set_selected(0)
+        # Build models
+        player_model = Gtk.StringList.new(["MPV", "VLC", "Custom"])
+        quality_model = Gtk.StringList.new(list(self._QUALITY_KEYS))
 
-        # Connect theme change signal
-        self.theme_row.connect("notify::selected", self.on_theme_changed)
+        # ── Set up all rows in one pass ──
 
-        # Initialize low latency switch
-        self.low_latency_switch.set_active(parent.low_latency)
-        self.low_latency_switch.connect("notify::active", self.on_low_latency_toggled)
-
-        # Connect the copy streamers button
-        self.copy_streamers_button.connect("clicked", self.on_save_streamers_clicked)
-
-    def _setup_models(self):
-        """Setup models for dropdowns with null checks."""
-        # Check if widgets are properly bound
-        if not self.player_row:
-            print("Warning: player_row not bound from template")
-            return
-
-        if not self._player_model:
-            print("Warning: player_model not initialized")
-            return
-
-        # Setup player selection
-        try:
-            self.player_row.set_model(self._player_model)
-            if self.parent.player_type == "mpv":
-                self.player_row.set_selected(0)
-            elif self.parent.player_type == "vlc":
-                self.player_row.set_selected(1)
-            else:
-                self.player_row.set_selected(2)
-        except Exception as e:
-            print(f"Error setting up player model: {e}")
-
-        # Setup quality selection
-        if self.quality_row and self._quality_model:
-            self.quality_row.set_model(self._quality_model)
-
-    def _setup_values(self):
-        # Set current values
-        self.custom_player_row.set_text(self.parent.custom_player_path)
-        self.custom_player_row.set_visible(self.parent.player_type == "custom")
-
-        # Initialize quality selection
-        quality_presets = list(self._quality_presets.keys())
-        try:
-            preset_index = quality_presets.index(self.parent.stream_quality)
-            self.quality_row.set_selected(preset_index)
-        except ValueError:
-            self.quality_row.set_selected(0)  # Default to High
-
-        # Initialize custom quality
-        self.custom_quality_row.set_text(self.parent.custom_quality)
-        self.custom_quality_row.set_visible(self.parent.stream_quality == "Custom")
-
-    def _connect_signals(self):
-        """Connect signals to handlers."""
+        # Player
+        self.player_row.set_model(player_model)
+        self._select_by_value(
+            self.player_row, ("mpv", "vlc", "custom"), parent.player_type
+        )
         self.player_row.connect("notify::selected", self._on_player_changed)
+
+        self.custom_player_row.set_text(parent.custom_player_path)
+        self.custom_player_row.set_visible(parent.player_type == "custom")
         self.custom_player_row.connect("notify::text", self._on_custom_path_changed)
+
+        # Quality
+        self.quality_row.set_model(quality_model)
+        self._select_by_value(
+            self.quality_row, self._QUALITY_KEYS, parent.stream_quality
+        )
         self.quality_row.connect("notify::selected", self._on_quality_changed)
+
+        self.custom_quality_row.set_text(parent.custom_quality)
+        self.custom_quality_row.set_visible(parent.stream_quality == "Custom")
         self.custom_quality_row.connect("notify::text", self._on_custom_quality_changed)
+
+        # Low latency
+        self.low_latency_switch.set_active(parent.low_latency)
+        self.low_latency_switch.connect("notify::active", self._on_low_latency_toggled)
+
+        # Export
+        self.export_button.connect("clicked", self._on_export_clicked)
+
+        # Window size
+        self.window_size_row.set_selected(1 if parent.narrow_mode else 0)
         self.window_size_row.connect("notify::selected", self._on_window_size_changed)
 
-    def _on_player_changed(self, row, *args):
-        player_types = ["mpv", "vlc", "custom"]
+        # Theme
+        self._select_by_value(self.theme_row, self._THEME_KEYS, parent.theme)
+        self.theme_row.connect("notify::selected", self._on_theme_changed)
+
+        # Account — credentials
+        self.client_id_row.set_text(parent.client_id)
+        self.client_id_row.connect("notify::text", self._on_client_id_changed)
+        self.client_secret_row.set_text(parent.client_secret)
+        self.client_secret_row.connect("notify::text", self._on_client_secret_changed)
+
+    # ── Helpers ──────────────────────────────────────────────
+
+    @staticmethod
+    def _select_by_value(combo_row, values, current):
+        """Set combo row selection by matching a value string, defaulting to 0."""
+        try:
+            combo_row.set_selected(values.index(current))
+        except ValueError:
+            combo_row.set_selected(0)
+
+    def _resolve_custom_quality(self):
+        """Get the custom quality string, with a sane fallback."""
+        return getattr(self.parent, "custom_quality", None) or "best"
+
+    # ── Signal handlers ──────────────────────────────────────
+
+    def _on_player_changed(self, row, *_):
+        types = ("mpv", "vlc", "custom")
         idx = row.get_selected()
-        if idx < 0 or idx >= len(player_types):
+        if idx < 0 or idx >= len(types):
             return
-        selected = player_types[idx]
+        selected = types[idx]
         self.parent.player_type = selected
-
-        # Show/hide the custom player entry instead of just disabling it
         self.custom_player_row.set_visible(selected == "custom")
-
         self.parent.save_config()
 
-    def _on_custom_path_changed(self, row, *args):
+    def _on_custom_path_changed(self, row, *_):
         self.parent.custom_player_path = row.get_text()
         self.parent.save_config()
 
-    def _on_quality_changed(self, row, *args):
-        """Handle stream quality change."""
-        keys = list(self._quality_presets.keys())
+    def _on_quality_changed(self, row, *_):
         idx = row.get_selected()
-        if idx < 0 or idx >= len(keys):
+        if idx < 0 or idx >= len(self._QUALITY_KEYS):
             return
-        selected = keys[idx]
+        selected = self._QUALITY_KEYS[idx]
         self.parent.stream_quality = selected
-
-        # Show custom quality entry if "Custom" is selected
         self.custom_quality_row.set_visible(selected == "Custom")
-
         self.parent.save_config()
 
-    def _on_custom_quality_changed(self, entry, *args):
-        """Handle custom quality change."""
+    def _on_custom_quality_changed(self, entry, *_):
         self.parent.custom_quality = entry.get_text()
         self.parent.save_config()
 
-    def _on_window_size_changed(self, row, _):
-        """Handle window size preference change"""
-        narrow_mode = row.get_selected() == 1
-        self.parent.narrow_mode = narrow_mode
-        if narrow_mode:
+    def _on_low_latency_toggled(self, switch_row, *_):
+        self.parent.low_latency = switch_row.get_active()
+        self.parent.save_config()
+
+    def _on_window_size_changed(self, row, *_):
+        narrow = row.get_selected() == 1
+        self.parent.narrow_mode = narrow
+        if narrow:
             self.parent.set_default_size(360, 700)
             self.set_default_size(360, 500)
         self.parent.save_config()
 
-    def on_theme_changed(self, row, *args):
-        theme_list = ["system", "light", "dark", "bronze", "anthracite", "red"]
-        self.parent.theme = theme_list[row.get_selected()]
+    def _on_theme_changed(self, row, *_):
+        idx = row.get_selected()
+        if idx < 0 or idx >= len(self._THEME_KEYS):
+            return
+        self.parent.theme = self._THEME_KEYS[idx]
         self.parent._apply_theme()
         self.parent.save_config()
 
-    def on_low_latency_toggled(self, switch_row, *args):
-        """Handle low latency toggle"""
-        self.parent.low_latency = switch_row.get_active()
+    def _on_client_id_changed(self, entry, *_):
+        self.parent.client_id = entry.get_text()
+        self.parent.save_config()
+
+    def _on_client_secret_changed(self, entry, *_):
+        self.parent.client_secret = entry.get_text()
         self.parent.save_config()
 
     def _on_close_request(self, window):
-        """Handle close request by hiding the window (hide_on_close handles this)."""
-        return False  # Let default hide-on-close behavior take over
+        """Let the default hide-on-close behavior take over."""
+        return False
 
-    def on_save_streamers_clicked(self, button):
+    # ── Export streamers ─────────────────────────────────────
+
+    def _on_export_clicked(self, button):
         """Save all streamers as a comma-separated list to a text file."""
         if not self.parent or not hasattr(self.parent, "all_streamers"):
             return
 
-        # Get comma-separated list of streamers
         streamers_text = ", ".join(sorted(self.parent.all_streamers))
 
-        # Create a file save dialog
         dialog = Gtk.FileChooserNative.new(
             title="Export Streamers List",
             parent=self,
@@ -194,39 +183,25 @@ class StreamlinePreferences(Adw.PreferencesWindow):
             accept_label="_Save",
             cancel_label="_Cancel",
         )
-
-        # Set default file name
         dialog.set_current_name("streamline-backup.txt")
 
-        # Add filters to only show text files
         filter_text = Gtk.FileFilter()
         filter_text.set_name("Text files")
         filter_text.add_mime_type("text/plain")
         filter_text.add_pattern("*.txt")
         dialog.add_filter(filter_text)
 
-        # Show the dialog and wait for user response
-        dialog.connect("response", self._on_save_streamers_response, streamers_text)
+        dialog.connect("response", self._on_export_response, streamers_text)
         dialog.show()
 
-    def _on_save_streamers_response(self, dialog, response, streamers_text):
+    def _on_export_response(self, dialog, response, streamers_text):
         """Handle the file chooser dialog response."""
         if response == Gtk.ResponseType.ACCEPT:
             file_path = dialog.get_file().get_path()
-
             try:
                 with open(file_path, "w") as file:
                     file.write(streamers_text)
-
-                # Show success toast
-                toast = Adw.Toast.new(f"Streamers list saved to {file_path}")
-                toast.set_timeout(3)
-                self.add_toast(toast)
+                self.add_toast(Adw.Toast.new(f"Streamers list saved to {file_path}"))
             except Exception as e:
-                # Show error toast
-                toast = Adw.Toast.new(f"Error saving file: {str(e)}")
-                toast.set_timeout(4)
-                self.add_toast(toast)
-
-        # Destroy the dialog
+                self.add_toast(Adw.Toast.new(f"Error saving file: {str(e)}"))
         dialog.destroy()
