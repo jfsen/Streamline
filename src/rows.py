@@ -49,7 +49,9 @@ class StreamerRowManager:
         # Store whether streamer is online in the row data
         row.is_online = bool(info)
 
+        # Apply online/offline visual indicator
         if info:  # Online streamer
+            row.add_css_class("online-row")
             viewers = info.get("viewers", "N/A")
             game = info.get("game", "Unknown")
             row.set_subtitle(GLib.markup_escape_text(f"{game}\n{viewers} viewers"))
@@ -59,6 +61,8 @@ class StreamerRowManager:
             uptime = info.get("uptime", "N/A")
             tooltip = f"Title: {title}\nUptime: {uptime}"
             row.set_tooltip_text(tooltip)
+        else:  # Offline streamer
+            row.add_css_class("offline-row")
 
         # Add buttons
         self._add_row_buttons(row, streamer)

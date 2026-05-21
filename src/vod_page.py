@@ -29,6 +29,7 @@ class VODPage(Adw.NavigationPage):
         # Setup list box properties
         self.list_box.set_selection_mode(Gtk.SelectionMode.NONE)
         self.list_box.add_css_class("boxed-list")
+        self.list_box.add_css_class("streamer-list")
 
         # Connect cleanup signal
         self.connect("hidden", self._on_hidden)

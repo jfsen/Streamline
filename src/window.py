@@ -81,11 +81,13 @@ class StreamlineWindow(Adw.ApplicationWindow):
         # Create ListBoxes for online and offline streamers
         self.online_list = Gtk.ListBox()
         self.online_list.add_css_class("boxed-list")
+        self.online_list.add_css_class("streamer-list")
         self.online_list.set_selection_mode(Gtk.SelectionMode.NONE)
         self.online_group.add(self.online_list)
 
         self.offline_list = Gtk.ListBox()
         self.offline_list.add_css_class("boxed-list")
+        self.offline_list.add_css_class("streamer-list")
         self.offline_list.set_selection_mode(Gtk.SelectionMode.NONE)
         self.offline_group.add(self.offline_list)
 

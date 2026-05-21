@@ -1,3 +1,56 @@
+/* ── Boxed list polish (streamer lists only) ── */
+list.boxed-list.streamer-list {
+    border-radius: 10px;
+    margin: 4px 8px 12px 8px;
+}
+
+list.boxed-list.streamer-list > row {
+    margin: 0;
+    border-radius: 0;
+    border-left-width: 4px;
+    border-left-style: solid;
+    border-left-color: mix(@card_bg_color, @window_fg_color, 0.08);
+    transition:
+        background-color 200ms ease,
+        border-color 200ms ease;
+}
+
+list.boxed-list.streamer-list > row:hover {
+    background-color: mix(@card_bg_color, @accent_bg_color, 0.06);
+}
+
+list.boxed-list.streamer-list > row:first-child {
+    border-radius: 10px 10px 0 0;
+}
+
+list.boxed-list.streamer-list > row:last-child {
+    border-radius: 0 0 10px 10px;
+}
+
+list.boxed-list.streamer-list > row:only-child {
+    border-radius: 10px;
+}
+
+/* ── Online / offline indicator borders ── */
+list.boxed-list.streamer-list > row.online-row {
+    border-left-color: @success_bg_color;
+}
+
+list.boxed-list.streamer-list > row.offline-row {
+    border-left-color: mix(@card_bg_color, @window_fg_color, 0.15);
+}
+
+/* ── Button hover effects ── */
+list.boxed-list.streamer-list > row button.flat {
+    transition:
+        opacity 200ms ease,
+        background-color 200ms ease;
+}
+
+list.boxed-list.streamer-list > row button.flat:hover {
+    background-color: alpha(@accent_bg_color, 0.15);
+}
+
 /* Streamline common styles */
 .hide-on-leave {
     opacity: 0;
@@ -11,4 +64,9 @@
 
 .offline-stream-button {
     opacity: 0.5;
+    transition: opacity 200ms ease;
+}
+
+list.boxed-list.streamer-list > row:hover .offline-stream-button {
+    opacity: 0.85;
 }
