@@ -1,0 +1,34 @@
+/* Bronze theme for Streamline */
+@define-color accent_bg_color #cd7f32;
+@define-color accent_fg_color #f5ebe0;
+@define-color accent_color #d4943a;
+@define-color window_bg_color #1a1510;
+@define-color window_fg_color #e8dcc8;
+@define-color headerbar_bg_color #221b14;
+@define-color headerbar_fg_color #e8dcc8;
+@define-color popover_bg_color #2a221b;
+@define-color popover_fg_color #e8dcc8;
+@define-color view_bg_color #1a1510;
+@define-color view_fg_color #e8dcc8;
+@define-color card_bg_color #2a221b;
+@define-color card_fg_color #e8dcc8;
+@define-color sidebar_bg_color #1e1812;
+@define-color sidebar_fg_color #e8dcc8;
+@define-color sidebar_backdrop_color #1a1510;
+@define-color button_bg_color #2e251d;
+@define-color button_fg_color #e8dcc8;
+@define-color button_hover_bg_color #3a2f25;
+@define-color destructive_bg_color #a33a2e;
+@define-color destructive_fg_color #f5ebe0;
+@define-color success_bg_color #4a7a3a;
+@define-color warning_bg_color #b0742e;
+@define-color error_bg_color #a33a2e;
+@define-color border_color #3a2f25;
+
+textview text selection {
+    background-color: rgba(205, 127, 50, 0.4);
+}
+
+entry selection {
+    background-color: rgba(205, 127, 50, 0.4);
+}

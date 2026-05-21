@@ -10,22 +10,10 @@ class StreamerRowManager:
         self.online_list = window.online_list
         self.offline_list = window.offline_list
 
-        # Add CSS provider for hover effects
+        # Load common CSS from GResource for row hover effects
         css_provider = Gtk.CssProvider()
-        css_provider.load_from_data(
-            """
-            .hide-on-leave {
-                opacity: 0;
-                transition: opacity 200ms ease;
-            }
-            .action-row:hover .hide-on-leave,
-            .hide-on-leave:hover {
-                opacity: 1;
-            }
-            .offline-stream-button {
-                opacity: 0.5;
-            }
-        """.encode()
+        css_provider.load_from_resource(
+            "/io/github/jfsen/Streamline/css/streamline.css"
         )
 
         # Apply CSS to window

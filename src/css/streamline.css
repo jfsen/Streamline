@@ -1,0 +1,14 @@
+/* Streamline common styles */
+.hide-on-leave {
+    opacity: 0;
+    transition: opacity 200ms ease;
+}
+
+.action-row:hover .hide-on-leave,
+.hide-on-leave:hover {
+    opacity: 1;
+}
+
+.offline-stream-button {
+    opacity: 0.5;
+}
