@@ -50,6 +50,8 @@ class StreamlineWindow(Adw.ApplicationWindow):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
+        # ── Phase 1: fast setup so the window presents immediately ──
+
         # Initialize config manager first
         self.config_manager = ConfigManager()
         self.config = self.config_manager.load()
@@ -69,14 +71,11 @@ class StreamlineWindow(Adw.ApplicationWindow):
         # Set minimum window size
         self.set_size_request(300, 400)
 
-        # Initialize window size attribute
-        self.narrow_mode = self.config.get("narrow_mode", False)
-
         # Set initial window size based on preference
         if self.narrow_mode:
             self.set_default_size(360, 700)
 
-        # Initialize other managers
+        # Initialize dialogs manager (lightweight)
         self.dialogs = StreamlineDialogs(self)
 
         # Create ListBoxes for online and offline streamers
@@ -90,26 +89,16 @@ class StreamlineWindow(Adw.ApplicationWindow):
         self.offline_list.set_selection_mode(Gtk.SelectionMode.NONE)
         self.offline_group.add(self.offline_list)
 
-        # Now initialize row manager after lists are created
+        # Row manager (CSS loading deferred until first row is created)
         self.row_manager = StreamerRowManager(self)
 
         # Initialize API-related attributes
         self.twitch = None
         self._credentials_prompt_shown = False
+        self._startup_complete = False
 
-        # Check credentials and initialize API
-        if not self.client_id or not self.client_secret:
-            self._prompt_for_credentials()
-        else:
-            self._init_twitch_api()
-
-        # Initialize StreamPlayer
+        # Initialize StreamPlayer (lightweight)
         self.player = StreamPlayer(self)
-
-        # Initial streamer data display - if API is available, _init_twitch_api
-        # already populated the lists; if not, show all streamers as offline
-        if not self.twitch:
-            self.update_action_rows([], self.all_streamers, {})
 
         # Connect headerbar buttons
         self.refresh_button.connect("clicked", self.on_refresh_button_clicked)
@@ -124,6 +113,27 @@ class StreamlineWindow(Adw.ApplicationWindow):
         self.main_page = Adw.NavigationPage(title="Streamline", child=self.main_content)
         self.navigation_view.add(self.main_page)
         self._preferences = None
+
+        # ── Phase 2: deferred heavy work — runs after the first frame paints ──
+        GLib.idle_add(self._complete_startup, priority=GLib.PRIORITY_LOW)
+
+    def _complete_startup(self):
+        """Finish initialization that can wait until the window is on screen."""
+        if self._startup_complete:
+            return GLib.SOURCE_REMOVE
+        self._startup_complete = True
+
+        # Check credentials and initialize API
+        if not self.client_id or not self.client_secret:
+            self._prompt_for_credentials()
+        else:
+            self._init_twitch_api()
+
+        # If neither API nor credentials are available, show streamers as offline
+        if not self.twitch and not self._credentials_prompt_shown:
+            self.update_action_rows([], self.all_streamers, {})
+
+        return GLib.SOURCE_REMOVE
 
     def _initialize_from_config(self, config):
         """Initialize all attributes from config in one pass"""

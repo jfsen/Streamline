@@ -4,25 +4,31 @@ from gi.repository import Adw, Gio, GLib, Gtk
 
 
 class StreamerRowManager:
+    _CSS_LOADED = False  # class-level flag — only load once ever
+
     def __init__(self, window):
         self.window = window
         self.streamer_rows = {}
         self.online_list = window.online_list
         self.offline_list = window.offline_list
 
-        # Load common CSS from GResource for row hover effects
+    @classmethod
+    def _ensure_css(cls, display):
+        """Load common CSS from GResource — only once per process."""
+        if cls._CSS_LOADED:
+            return
+        cls._CSS_LOADED = True
         css_provider = Gtk.CssProvider()
         css_provider.load_from_resource(
             "/io/github/jfsen/Streamline/css/streamline.css"
         )
-
-        # Apply CSS to window
         Gtk.StyleContext.add_provider_for_display(
-            window.get_display(), css_provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
+            display, css_provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
         )
 
     def create_row(self, streamer, info):
         """Create an ActionRow with buttons and additional info."""
+        self._ensure_css(self.window.get_display())
         row = Adw.ActionRow.new()
 
         # Store the login name in the row data for sorting

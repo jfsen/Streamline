@@ -7,16 +7,20 @@ import requests
 
 
 class TwitchAPI:
+    # Single cache directory, computed once per process
+    _CACHE_DIR = Path.home() / ".cache" / "Streamline"
+
     def __init__(self, client_id, client_secret):
         self.client_id = client_id
         self.client_secret = client_secret
         self.access_token = None
         self.token_expires_at = None
         print(f"[Twitch] Initializing API (client_id: {client_id[:5]}...)")
-        self.user_cache = (
-            self._load_user_cache()
-        )  # Combined cache of user IDs and names
-        self._load_token_cache()
+
+        # Lazy-loaded caches — nothing read from disk yet
+        self._user_cache = {"ids": {}, "names": {}}
+        self._user_cache_loaded = False
+        self._token_loaded = False
 
     def _get_access_token(self):
         url = "https://id.twitch.tv/oauth2/token"  # test commit
@@ -42,6 +46,7 @@ class TwitchAPI:
 
     def _ensure_access_token(self):
         """Ensure we have a valid access token before making API calls."""
+        self._load_token_cache()
         if (
             self.access_token is None
             or self.token_expires_at is None
@@ -49,14 +54,27 @@ class TwitchAPI:
         ):
             self._get_access_token()
 
+    @property
+    def user_cache(self):
+        """Lazy-loaded combined cache of user IDs and names."""
+        if not self._user_cache_loaded:
+            self._user_cache = self._load_user_cache()
+            self._user_cache_loaded = True
+        return self._user_cache
+
+    def _ensure_cache_dir(self):
+        """Create the cache directory once (only when actually writing)."""
+        self._CACHE_DIR.mkdir(parents=True, exist_ok=True)
+
     def _get_token_cache_path(self):
         """Get path to token cache file."""
-        cache_dir = Path.home() / ".cache" / "Streamline"
-        cache_dir.mkdir(parents=True, exist_ok=True)
-        return cache_dir / "token.json"
+        return self._CACHE_DIR / "token.json"
 
     def _load_token_cache(self):
         """Load access token from cache if available and not expired."""
+        if self._token_loaded:
+            return
+        self._token_loaded = True
         try:
             with open(self._get_token_cache_path()) as f:
                 cache_data = json.load(f)
@@ -71,6 +89,7 @@ class TwitchAPI:
     def _save_token_cache(self):
         """Save access token to cache with expiration."""
         try:
+            self._ensure_cache_dir()
             cache_data = {
                 "access_token": self.access_token,
                 "expires_at": self.token_expires_at.isoformat(),
@@ -82,9 +101,7 @@ class TwitchAPI:
 
     def _get_user_cache_path(self):
         """Get path to user cache file."""
-        cache_dir = Path.home() / ".cache" / "Streamline"
-        cache_dir.mkdir(parents=True, exist_ok=True)
-        return cache_dir / "users.json"
+        return self._CACHE_DIR / "users.json"
 
     def _load_user_cache(self):
         """Load user data from cache file."""
@@ -97,6 +114,7 @@ class TwitchAPI:
     def _save_user_cache(self):
         """Save user data to cache file."""
         try:
+            self._ensure_cache_dir()
             with open(self._get_user_cache_path(), "w") as f:
                 json.dump(self.user_cache, f, indent=4)
         except OSError:
@@ -104,9 +122,7 @@ class TwitchAPI:
 
     def _get_streams_cache_path(self):
         """Get path to streams cache file."""
-        cache_dir = Path.home() / ".cache" / "Streamline"
-        cache_dir.mkdir(parents=True, exist_ok=True)
-        return cache_dir / "streams.json"
+        return self._CACHE_DIR / "streams.json"
 
     def _load_streams_cache(self):
         """Load streams data from cache if available and not expired."""
@@ -129,6 +145,7 @@ class TwitchAPI:
     def _save_streams_cache(self, data):
         """Save streams data to cache with timestamp."""
         try:
+            self._ensure_cache_dir()
             cache_data = {
                 "timestamp": datetime.now(timezone.utc).isoformat(),
                 "data": data,
