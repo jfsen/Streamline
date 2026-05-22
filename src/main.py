@@ -50,6 +50,9 @@ class StreamlineApplication(Adw.Application):
             "preferences", self.on_preferences_action, ["<primary>comma"]
         )
 
+        # Add shortcuts action
+        self.create_action("shortcuts", self.on_shortcuts_action, ["<primary>question"])
+
         # Add follow, quick play and refresh actions
         self.create_action("follow", self.on_follow_action, ["<primary>n"])
         self.create_action("quick-play", self.on_quick_play_action, ["<primary>p"])
@@ -77,10 +80,16 @@ class StreamlineApplication(Adw.Application):
         about.present(self.props.active_window)
 
     def on_preferences_action(self, *args):
-        """Show preferences window."""
+        """Show preferences dialog."""
         win = self.props.active_window
         if win:
             win.show_preferences()
+
+    def on_shortcuts_action(self, *args):
+        """Show keyboard shortcuts dialog."""
+        win = self.props.active_window
+        if win:
+            win.show_shortcuts()
 
     def on_follow_action(self, *args):
         """Show follow dialog."""

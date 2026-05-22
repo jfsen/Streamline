@@ -69,7 +69,7 @@ class StreamlineWindow(Adw.ApplicationWindow):
         self._apply_theme()
 
         # Set minimum window size
-        self.set_size_request(300, 400)
+        self.set_size_request(320, 400)
 
         # Default to a compact window
         self.set_default_size(360, 700)
@@ -427,13 +427,34 @@ class StreamlineWindow(Adw.ApplicationWindow):
             )
 
     def show_preferences(self, *args):
-        """Show preferences window."""
+        """Show preferences dialog."""
         if not self._preferences:
             prefs = StreamlinePreferences(self)
-            prefs.connect("destroy", lambda w: setattr(self, "_preferences", None))
+            prefs.connect("closed", lambda w: setattr(self, "_preferences", None))
             self._preferences = prefs
 
-        self._preferences.present()
+        self._preferences.present(self)
+
+    def show_shortcuts(self, *args):
+        """Show keyboard shortcuts dialog."""
+        dialog = Adw.ShortcutsDialog()
+
+        # Application section
+        app_section = Adw.ShortcutsSection(title="Application")
+        app_section.add(Adw.ShortcutsItem.new("Preferences", "<primary>comma"))
+        app_section.add(Adw.ShortcutsItem.new("Show Shortcuts", "<primary>question"))
+        app_section.add(Adw.ShortcutsItem.new("Quit", "<primary>q"))
+        dialog.add(app_section)
+
+        # Stream Management section
+        stream_section = Adw.ShortcutsSection(title="Stream Management")
+        stream_section.add(Adw.ShortcutsItem.new("Follow New Streamer", "<primary>n"))
+        stream_section.add(Adw.ShortcutsItem.new("Quick Play Stream", "<primary>p"))
+        stream_section.add(Adw.ShortcutsItem.new("Refresh Streams", "<primary>r"))
+        stream_section.add(Adw.ShortcutsItem.new("Refresh Streams", "F5"))
+        dialog.add(stream_section)
+
+        dialog.present(self)
 
     def show_toast(self, text, timeout=2):
         """Show a toast notification."""

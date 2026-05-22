@@ -2,7 +2,7 @@ from gi.repository import Adw, Gtk
 
 
 @Gtk.Template(resource_path="/io/github/jfsen/Streamline/preferences.ui")
-class StreamlinePreferences(Adw.PreferencesWindow):
+class StreamlinePreferences(Adw.PreferencesDialog):
     __gtype_name__ = "StreamlinePreferences"
 
     # Template children — Appearance page
@@ -15,6 +15,7 @@ class StreamlinePreferences(Adw.PreferencesWindow):
     custom_quality_row = Gtk.Template.Child()
     low_latency_switch = Gtk.Template.Child()
     export_button = Gtk.Template.Child()
+    import_button = Gtk.Template.Child()
 
     # Template children — Account page
     client_id_row = Gtk.Template.Child()
@@ -35,12 +36,7 @@ class StreamlinePreferences(Adw.PreferencesWindow):
 
     def __init__(self, parent, **kwargs):
         super().__init__(**kwargs)
-        self.set_transient_for(parent)
         self.parent = parent
-
-        # Hide on close instead of destroying (standard GNOME pattern)
-        self.set_hide_on_close(True)
-        self.connect("close-request", self._on_close_request)
 
         # Build models
         player_model = Gtk.StringList.new(["MPV", "VLC", "Custom"])
@@ -74,8 +70,9 @@ class StreamlinePreferences(Adw.PreferencesWindow):
         self.low_latency_switch.set_active(parent.low_latency)
         self.low_latency_switch.connect("notify::active", self._on_low_latency_toggled)
 
-        # Export
+        # Export / Import
         self.export_button.connect("clicked", self._on_export_clicked)
+        self.import_button.connect("clicked", self._on_import_clicked)
 
         # Theme
         self._select_by_value(self.theme_row, self._THEME_KEYS, parent.theme)
@@ -150,10 +147,6 @@ class StreamlinePreferences(Adw.PreferencesWindow):
         self.parent.client_secret = entry.get_text()
         self.parent.save_config()
 
-    def _on_close_request(self, window):
-        """Let the default hide-on-close behavior take over."""
-        return False
-
     # ── Export streamers ─────────────────────────────────────
 
     def _on_export_clicked(self, button):
@@ -165,7 +158,7 @@ class StreamlinePreferences(Adw.PreferencesWindow):
 
         dialog = Gtk.FileChooserNative.new(
             title="Export Streamers List",
-            parent=self,
+            parent=self.parent,
             action=Gtk.FileChooserAction.SAVE,
             accept_label="_Save",
             cancel_label="_Cancel",
@@ -191,4 +184,67 @@ class StreamlinePreferences(Adw.PreferencesWindow):
                 self.add_toast(Adw.Toast.new(f"Streamers list saved to {file_path}"))
             except Exception as e:
                 self.add_toast(Adw.Toast.new(f"Error saving file: {str(e)}"))
+        dialog.destroy()
+
+    def _on_import_clicked(self, button):
+        """Open a file chooser to import streamers list."""
+        dialog = Gtk.FileChooserNative.new(
+            title="Import Streamers List",
+            parent=self.parent,
+            action=Gtk.FileChooserAction.OPEN,
+            accept_label="_Import",
+            cancel_label="_Cancel",
+        )
+
+        filter_text = Gtk.FileFilter()
+        filter_text.set_name("Text files")
+        filter_text.add_mime_type("text/plain")
+        filter_text.add_pattern("*.txt")
+        dialog.add_filter(filter_text)
+
+        dialog.connect("response", self._on_import_response)
+        dialog.show()
+
+    def _on_import_response(self, dialog, response):
+        """Handle the file chooser response and follow imported streamers."""
+        if response == Gtk.ResponseType.ACCEPT:
+            file_path = dialog.get_file().get_path()
+            try:
+                with open(file_path) as file:
+                    content = file.read()
+
+                # Parse comma- and newline-separated names
+                names = []
+                for part in content.split(","):
+                    for line in part.split("\n"):
+                        name = line.strip()
+                        if name:
+                            names.append(name)
+
+                if not names:
+                    self.add_toast(Adw.Toast.new("No streamer names found in file"))
+                    dialog.destroy()
+                    return
+
+                # Compute how many are new vs duplicates for the toast
+                existing = [s.lower() for s in self.parent.all_streamers]
+                new_count = sum(1 for n in names if n.lower() not in existing)
+                dup_count = len(names) - new_count
+
+                # Reuse the follow logic (adds new streamers, skips duplicates)
+                self.parent._handle_follow(", ".join(names))
+
+                # Show feedback on the dialog since main window may be covered
+                if new_count > 0 and dup_count > 0:
+                    self.add_toast(
+                        Adw.Toast.new(
+                            f"Added {new_count} streamer(s) ({dup_count} already followed)"
+                        )
+                    )
+                elif new_count > 0:
+                    self.add_toast(Adw.Toast.new(f"Added {new_count} streamer(s)"))
+                else:
+                    self.add_toast(Adw.Toast.new("All streamers already followed"))
+            except Exception as e:
+                self.add_toast(Adw.Toast.new(f"Error importing file: {str(e)}"))
         dialog.destroy()

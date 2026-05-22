@@ -3,9 +3,8 @@
   <requires lib="gtk" version="4.0"/>
   <requires lib="libadwaita" version="1.0"/>
 
-  <template class="StreamlinePreferences" parent="AdwPreferencesWindow">
+  <template class="StreamlinePreferences" parent="AdwPreferencesDialog">
     <property name="title" translatable="yes">Preferences</property>
-    <property name="modal">True</property>
 
     <!-- Single page -->
     <child>
@@ -83,11 +82,26 @@
             <child>
               <object class="AdwActionRow">
                 <property name="title" translatable="yes">Export List</property>
-                <property name="subtitle" translatable="yes">Save a comma-separated text file</property>
+                <property name="subtitle" translatable="yes">Save your followed streamers for backup</property>
                 <child>
                   <object class="GtkButton" id="export_button">
                     <property name="valign">center</property>
                     <property name="icon-name">document-save-symbolic</property>
+                    <style>
+                      <class name="flat"/>
+                    </style>
+                  </object>
+                </child>
+              </object>
+            </child>
+            <child>
+              <object class="AdwActionRow">
+                <property name="title" translatable="yes">Import List</property>
+                <property name="subtitle" translatable="yes">Load a backup file to follow streamers</property>
+                <child>
+                  <object class="GtkButton" id="import_button">
+                    <property name="valign">center</property>
+                    <property name="icon-name">document-open-symbolic</property>
                     <style>
                       <class name="flat"/>
                     </style>
