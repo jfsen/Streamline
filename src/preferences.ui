@@ -7,32 +7,9 @@
     <property name="title" translatable="yes">Preferences</property>
     <property name="modal">True</property>
 
-    <!-- Page 1: Appearance -->
+    <!-- Single page -->
     <child>
       <object class="AdwPreferencesPage">
-        <property name="title" translatable="yes">Appearance</property>
-        <property name="icon-name">preferences-desktop-appearance-symbolic</property>
-
-        <child>
-          <object class="AdwPreferencesGroup">
-            <property name="title" translatable="yes">Window</property>
-            <child>
-              <object class="AdwComboRow" id="window_size_row">
-                <property name="title" translatable="yes">Default Size</property>
-                <property name="subtitle" translatable="yes">Choose between the system default or a narrow layout</property>
-                <property name="model">
-                  <object class="GtkStringList">
-                    <items>
-                      <item translatable="yes">System</item>
-                      <item translatable="yes">Narrow</item>
-                    </items>
-                  </object>
-                </property>
-              </object>
-            </child>
-          </object>
-        </child>
-
         <child>
           <object class="AdwPreferencesGroup">
             <property name="title" translatable="yes">Theme</property>
@@ -56,14 +33,6 @@
             </child>
           </object>
         </child>
-      </object>
-    </child>
-
-    <!-- Page 2: Playback -->
-    <child>
-      <object class="AdwPreferencesPage">
-        <property name="title" translatable="yes">Playback</property>
-        <property name="icon-name">media-playback-start-symbolic</property>
 
         <child>
           <object class="AdwPreferencesGroup">
@@ -128,14 +97,6 @@
             </child>
           </object>
         </child>
-      </object>
-    </child>
-
-    <!-- Page 3: Account -->
-    <child>
-      <object class="AdwPreferencesPage">
-        <property name="title" translatable="yes">Account</property>
-        <property name="icon-name">user-identification-symbolic</property>
 
         <child>
           <object class="AdwPreferencesGroup">

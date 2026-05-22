@@ -71,9 +71,8 @@ class StreamlineWindow(Adw.ApplicationWindow):
         # Set minimum window size
         self.set_size_request(300, 400)
 
-        # Set initial window size based on preference
-        if self.narrow_mode:
-            self.set_default_size(360, 700)
+        # Default to a compact window
+        self.set_default_size(360, 700)
 
         # Initialize dialogs manager (lightweight)
         self.dialogs = StreamlineDialogs(self)
@@ -146,7 +145,6 @@ class StreamlineWindow(Adw.ApplicationWindow):
         self.all_streamers = config.get("streamers", [])
         self.stream_quality = config.get("stream_quality", "High")
         self.custom_quality = config.get("custom_quality", "best")
-        self.narrow_mode = config.get("narrow_mode", False)
         self.theme = config.get("theme", "system")
         self.low_latency = config.get("low_latency", True)
 

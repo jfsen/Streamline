@@ -21,11 +21,6 @@
 			<summary>Custom quality string</summary>
 			<description>Custom stream quality string for streamlink</description>
 		</key>
-		<key name="narrow-mode" type="b">
-			<default>false</default>
-			<summary>Narrow mode</summary>
-			<description>Use narrow window mode</description>
-		</key>
 		<key name="theme" type="s">
 			<default>'system'</default>
 			<summary>Theme</summary>

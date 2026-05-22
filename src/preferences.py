@@ -6,7 +6,6 @@ class StreamlinePreferences(Adw.PreferencesWindow):
     __gtype_name__ = "StreamlinePreferences"
 
     # Template children — Appearance page
-    window_size_row = Gtk.Template.Child()
     theme_row = Gtk.Template.Child()
 
     # Template children — Playback page
@@ -78,10 +77,6 @@ class StreamlinePreferences(Adw.PreferencesWindow):
         # Export
         self.export_button.connect("clicked", self._on_export_clicked)
 
-        # Window size
-        self.window_size_row.set_selected(1 if parent.narrow_mode else 0)
-        self.window_size_row.connect("notify::selected", self._on_window_size_changed)
-
         # Theme
         self._select_by_value(self.theme_row, self._THEME_KEYS, parent.theme)
         self.theme_row.connect("notify::selected", self._on_theme_changed)
@@ -137,14 +132,6 @@ class StreamlinePreferences(Adw.PreferencesWindow):
 
     def _on_low_latency_toggled(self, switch_row, *_):
         self.parent.low_latency = switch_row.get_active()
-        self.parent.save_config()
-
-    def _on_window_size_changed(self, row, *_):
-        narrow = row.get_selected() == 1
-        self.parent.narrow_mode = narrow
-        if narrow:
-            self.parent.set_default_size(360, 700)
-            self.set_default_size(360, 500)
         self.parent.save_config()
 
     def _on_theme_changed(self, row, *_):

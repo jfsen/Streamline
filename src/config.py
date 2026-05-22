@@ -18,7 +18,6 @@ class ConfigManager:
             "custom_quality": self.settings.get_string("custom-quality"),
             "twitch_client_id": self.settings.get_string("twitch-client-id"),
             "twitch_client_secret": self.settings.get_string("twitch-client-secret"),
-            "narrow_mode": self.settings.get_boolean("narrow-mode"),
             "theme": self.settings.get_string("theme"),
             "low_latency": self.settings.get_boolean("low-latency"),
         }
@@ -38,7 +37,6 @@ class ConfigManager:
         self.settings.set_string(
             "twitch-client-secret", config.get("twitch_client_secret", "")
         )
-        self.settings.set_boolean("narrow-mode", config.get("narrow_mode", False))
         self.settings.set_string("theme", config.get("theme", "system"))
         self.settings.set_boolean("low-latency", config.get("low_latency", True))
         self.settings.apply()
@@ -54,7 +52,6 @@ class ConfigManager:
             "streamers": window.all_streamers,
             "stream_quality": window.stream_quality,
             "custom_quality": window.custom_quality,
-            "narrow_mode": window.narrow_mode,
             "theme": window.theme,
             "low_latency": window.low_latency,
         }
