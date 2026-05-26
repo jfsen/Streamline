@@ -7,12 +7,15 @@ list.boxed-list.streamer-list {
 list.boxed-list.streamer-list > row {
     margin: 0;
     border-radius: 0;
-    border-left-width: 4px;
-    border-left-style: solid;
-    border-left-color: mix(@card_bg_color, @window_fg_color, 0.08);
-    transition:
-        background-color 200ms ease,
-        border-color 200ms ease;
+    background-color: transparent;
+    background-image: linear-gradient(
+        to right,
+        mix(@card_bg_color, @window_fg_color, 0.08) 0px,
+        mix(@card_bg_color, @window_fg_color, 0.08) 4px,
+        transparent 4px
+    );
+    background-repeat: no-repeat;
+    transition: background-color 200ms ease;
 }
 
 list.boxed-list.streamer-list > row:hover {
@@ -33,11 +36,21 @@ list.boxed-list.streamer-list > row:only-child {
 
 /* ── Online / offline indicator borders ── */
 list.boxed-list.streamer-list > row.online-row {
-    border-left-color: @success_bg_color;
+    background-image: linear-gradient(
+        to right,
+        @success_bg_color 0px,
+        @success_bg_color 4px,
+        transparent 4px
+    );
 }
 
 list.boxed-list.streamer-list > row.offline-row {
-    border-left-color: mix(@card_bg_color, @window_fg_color, 0.15);
+    background-image: linear-gradient(
+        to right,
+        mix(@card_bg_color, @window_fg_color, 0.15) 0px,
+        mix(@card_bg_color, @window_fg_color, 0.15) 4px,
+        transparent 4px
+    );
 }
 
 /* ── Button hover effects ── */
