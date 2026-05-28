@@ -1,60 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg width="256" height="256" viewBox="0 0 256 256" version="1.1"
-     xmlns="http://www.w3.org/2000/svg">
-  <defs>
-    <linearGradient id="bg-grad" x1="0" x2="0" y1="0" y2="1">
-      <stop offset="0%"   style="stop-color:#b85a5a;stop-opacity:1" />
-      <stop offset="100%" style="stop-color:#7a3030;stop-opacity:1" />
+<svg height="128px" viewBox="0 0 128 128" width="128px" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <linearGradient id="a" gradientUnits="userSpaceOnUse" x1="8.263473" x2="119.98632" y1="65.670823" y2="65.670823">
+        <stop offset="0" stop-color="#911c2b"/>
+        <stop offset="0.5" stop-color="#ee3b43"/>
+        <stop offset="1" stop-color="#931923"/>
     </linearGradient>
-    <linearGradient id="wave-fg" x1="0.1" x2="0.9" y1="0" y2="0">
-      <stop offset="0%"   style="stop-color:#ffffff;stop-opacity:0.95" />
-      <stop offset="50%"  style="stop-color:#ffffff;stop-opacity:0.60" />
-      <stop offset="100%" style="stop-color:#ffe8e8;stop-opacity:0.30" />
-    </linearGradient>
-  </defs>
-
-  <!-- Squircle background -->
-  <path d="
-    M 128 8
-    C 52 8,  24 26, 12 46
-    C  4 58,  8 68,  8 128
-    C  8 188,  4 198, 12 210
-    C 24 230, 52 248, 128 248
-    C 204 248, 232 230, 244 210
-    C 252 198, 248 188, 248 128
-    C 248 68, 252 58, 244 46
-    C 232 26, 204 8,  128 8
-    Z"
-    fill="url(#bg-grad)" />
-
-  <!-- Wave-y S symbol: outer contour (clockwise) and inner contour (counter-clockwise) -->
-  <path d="
-    M 80  82
-    C 80  72, 128 70, 162 86
-    C 186 98, 196 118, 196 128
-    C 196 138, 186 158, 162 170
-    C 128 186, 80  184, 80 174
-    C 80  164, 128 162, 152 150
-    C 168 142, 172 132, 172 128
-    C 172 124, 168 114, 152 106
-    C 128 94,  80  92,  80  82
-    Z"
-    fill="url(#wave-fg)" />
-
-  <!-- Subtle inner shadow / depth ring -->
-  <path d="
-    M 128 8
-    C 52 8,  24 26, 12 46
-    C  4 58,  8 68,  8 128
-    C  8 188,  4 198, 12 210
-    C 24 230, 52 248, 128 248
-    C 204 248, 232 230, 244 210
-    C 252 198, 248 188, 248 128
-    C 248 68, 252 58, 244 46
-    C 232 26, 204 8,  128 8
-    Z"
-    fill="none"
-    stroke="#944040"
-    stroke-width="4"
-    opacity="0.35" />
+    <radialGradient id="b" cx="64.124893" cy="233.945969" gradientTransform="matrix(1 0 0 0.957278 0 -160.502871)" gradientUnits="userSpaceOnUse" r="55.861435">
+        <stop offset="0" stop-color="#a51d2d"/>
+        <stop offset="0.545731" stop-color="#ed333b"/>
+        <stop offset="0.85681" stop-color="#c01c28"/>
+    </radialGradient>
+    <path d="m 119.984375 65.671875 c 0 30.851563 -25.007813 55.859375 -55.859375 55.859375 s -55.863281 -25.007812 -55.863281 -55.859375 s 25.011719 -55.863281 55.863281 -55.863281 s 55.859375 25.011718 55.859375 55.863281 z m 0 0" fill="url(#a)"/>
+    <path d="m 119.984375 63.449219 c 0 29.53125 -25.007813 53.472656 -55.859375 53.472656 s -55.863281 -23.941406 -55.863281 -53.472656 c 0 -29.535157 25.011719 -53.476563 55.863281 -53.476563 s 55.859375 23.941406 55.859375 53.476563 z m 0 0" fill="url(#b)"/>
+    <path d="m 90.546875 68.511719 l -40.972656 23.65625 c -1.429688 0.824219 -3.1875 0.824219 -4.617188 0 c -1.429687 -0.828125 -2.308593 -2.351563 -2.308593 -4 v -47.3125 c 0 -1.652344 0.878906 -3.175781 2.308593 -4 c 1.429688 -0.824219 3.1875 -0.824219 4.617188 0 l 40.972656 23.65625 c 1.429687 0.824219 2.3125 2.347656 2.3125 4 c 0 1.648437 -0.882813 3.171875 -2.3125 4 z m 0 0" fill="#9a9996"/>
+    <path d="m 90.558594 66.835938 l -40.972656 23.65625 c -1.429688 0.824218 -3.191407 0.824218 -4.617188 0 c -1.429688 -0.824219 -2.3125 -2.351563 -2.3125 -4 v -47.3125 c 0 -1.648438 0.882812 -3.175782 2.3125 -4 c 1.425781 -0.824219 3.1875 -0.824219 4.617188 0 l 40.972656 23.65625 c 1.429687 0.824218 2.308594 2.347656 2.308594 4 c 0 1.648437 -0.878907 3.175781 -2.308594 4 z m 0 0" fill="#f6f5f4"/>
 </svg>
