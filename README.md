@@ -36,7 +36,7 @@ Streamline is a GTK4/libadwaita application that lets you follow your favorite T
 ## Screenshots
 
 <p align="center">
-  <img src="streamline.png" alt="Streamline main window"/>
+  <img src="streamline-screenshot.png" alt="Streamline main window"/>
 </p>
 
 ## Installation
