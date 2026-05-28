@@ -2,6 +2,7 @@ import json
 from datetime import datetime, timezone
 from pathlib import Path
 
+import requests
 from gi.repository import Adw, GLib, Gtk
 
 
@@ -13,6 +14,7 @@ class VODPage(Adw.NavigationPage):
     list_box = Gtk.Template.Child()
     scroll = Gtk.Template.Child()
     toast_overlay = Gtk.Template.Child()
+    refresh_button = Gtk.Template.Child()
 
     def __init__(self, parent, streamer, twitch, player):
         # Create navigation page with proper title
@@ -33,6 +35,9 @@ class VODPage(Adw.NavigationPage):
 
         # Connect cleanup signal
         self.connect("hidden", self._on_hidden)
+
+        # Connect refresh button
+        self.refresh_button.connect("clicked", self._on_refresh_clicked)
 
         # Load VODs
         self._load_vods()
@@ -104,10 +109,59 @@ class VODPage(Adw.NavigationPage):
             self.save_vods_cache(vods)
             self.display_vods(vods)
 
+        except requests.ConnectionError:
+            self._invalidate_vods_cache()
+            self._show_error_row(
+                "Error Loading VODs",
+                "No internet connection. Check your network and try again.",
+            )
         except Exception as e:
-            self.show_toast(f"Error: {str(e)}", 4)
-            row = Adw.ActionRow(title="Error loading VODs", subtitle=str(e))
-            self.list_box.append(row)
+            error_text = GLib.markup_escape_text(str(e))
+            self._invalidate_vods_cache()
+            self._show_error_row(
+                "Error Loading VODs",
+                error_text,
+            )
+
+    def _show_error_row(self, title, subtitle):
+        """Display an error row that can be clicked to retry."""
+        row = Adw.ActionRow(title=title, subtitle=subtitle)
+        row.set_activatable(True)
+        row.add_prefix(Gtk.Image.new_from_icon_name("network-error-symbolic"))
+        row.connect("activated", lambda r: self._retry_load_vods())
+        self.list_box.append(row)
+
+    def _invalidate_vods_cache(self):
+        """Delete VOD cache for this streamer so retry fetches from network."""
+        try:
+            self.get_cache_path().unlink(missing_ok=True)
+        except OSError:
+            pass
+
+    def _retry_load_vods(self):
+        """Clear the error row and retry loading VODs."""
+        while row := self.list_box.get_first_child():
+            self.list_box.remove(row)
+        self._load_vods()
+
+    def _on_refresh_clicked(self, button):
+        """Refresh VODs from network, with a 60s cooldown."""
+        cache_path = self.get_cache_path()
+        if cache_path.exists():
+            mtime = datetime.fromtimestamp(cache_path.stat().st_mtime, tz=timezone.utc)
+            now = datetime.now(timezone.utc)
+            remaining = 60 - (now - mtime).total_seconds()
+            if remaining > 0:
+                self.show_toast(
+                    f"Please wait {int(remaining)}s before refreshing again"
+                )
+                return
+
+        # Expired or no cache — force a fresh fetch
+        self._invalidate_vods_cache()
+        while row := self.list_box.get_first_child():
+            self.list_box.remove(row)
+        self._load_vods()
 
     def display_vods(self, vods):
         """Display VODs in the list box."""
@@ -120,14 +174,17 @@ class VODPage(Adw.NavigationPage):
                 title="No VODs found",
                 subtitle="This channel has no recent VODs available",
             )
+            row.add_prefix(Gtk.Image.new_from_icon_name("video-x-generic-symbolic"))
             self.list_box.append(row)
             return
 
         for vod in vods:
             row = Adw.ActionRow(
                 title=GLib.markup_escape_text(vod["title"]),
-                subtitle=f"{vod['created_at']} • {vod['duration']} • {vod['view_count']} views",
+                subtitle=f"{vod['created_at']} • {vod['duration']}",
             )
+            row.set_title_lines(1)
+            row.set_tooltip_text(vod["title"])
 
             # Update play button icon name
             play_button = Gtk.Button(icon_name="media-playback-start-symbolic")
@@ -154,8 +211,8 @@ class VODPage(Adw.NavigationPage):
         try:
             self.player.play_content(vod["url"], is_vod=True)
             self.show_toast(f"Starting VOD: {vod['title']}")
-        except Exception as e:
-            self.show_toast(f"Error playing VOD: {str(e)}", 4)
+        except Exception:
+            self.show_toast("Error playing VOD: player failed to start", 4)
 
     def open_in_browser(self, vod):
         """Open VOD in web browser."""

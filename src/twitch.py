@@ -31,7 +31,7 @@ class TwitchAPI:
             "grant_type": "client_credentials",
         }
         try:
-            response = requests.post(url, params=params)
+            response = requests.post(url, params=params, timeout=10)
             response.raise_for_status()
             data = response.json()
             self.access_token = data["access_token"]
@@ -155,6 +155,13 @@ class TwitchAPI:
         except OSError:
             print("[Twitch] Failed to save streams cache")
 
+    def _invalidate_streams_cache(self):
+        """Delete streams cache so the next refresh is not blocked by cooldown."""
+        try:
+            self._get_streams_cache_path().unlink(missing_ok=True)
+        except OSError:
+            pass
+
     def update_streams_cache(self, username, add=True):
         """Update streams cache without modifying timestamp."""
         try:
@@ -215,7 +222,7 @@ class TwitchAPI:
             url = f"https://api.twitch.tv/helix/streams?user_login={user_logins}"
 
             try:
-                response = requests.get(url, headers=headers)
+                response = requests.get(url, headers=headers, timeout=30)
                 response.raise_for_status()
                 data = response.json()
 
@@ -283,7 +290,7 @@ class TwitchAPI:
             # If not in cache, fetch it from API
             user_url = f"https://api.twitch.tv/helix/users?login={username}"
             try:
-                response = requests.get(user_url, headers=headers)
+                response = requests.get(user_url, headers=headers, timeout=10)
                 response.raise_for_status()
                 user_data = response.json()["data"]
                 if not user_data:
@@ -301,7 +308,7 @@ class TwitchAPI:
         # Now get VODs
         vods_url = f"https://api.twitch.tv/helix/videos?user_id={user_id}&first={limit}&type=archive"
         try:
-            response = requests.get(vods_url, headers=headers)
+            response = requests.get(vods_url, headers=headers, timeout=15)
             response.raise_for_status()
             vods = response.json()["data"]
 
@@ -312,7 +319,7 @@ class TwitchAPI:
                         "id": vod["id"],
                         "title": vod["title"],
                         "url": vod["url"],
-                        "duration": vod["duration"],
+                        "duration": self._format_duration(vod["duration"]),
                         "created_at": self._format_date(vod["created_at"]),
                         "view_count": vod["view_count"],
                     }
@@ -326,9 +333,49 @@ class TwitchAPI:
             raise
 
     def _format_date(self, date_str):
-        """Format date string to readable format."""
+        """Format ISO date string to a human-friendly relative time."""
         date = datetime.fromisoformat(date_str.replace("Z", "+00:00"))
-        return date.strftime("%Y-%m-%d %H:%M")
+        now = datetime.now(timezone.utc)
+        delta = now - date
+
+        if delta.total_seconds() < 0:
+            return date.strftime("%b %d")
+
+        minutes = int(delta.total_seconds() // 60)
+        if minutes < 1:
+            return "Just now"
+        if minutes < 60:
+            return f"{minutes}m ago"
+
+        hours = minutes // 60
+        if hours < 24:
+            return f"{hours}h ago"
+
+        days = hours // 24
+        if days < 7:
+            return f"{days}d ago"
+        if days < 30:
+            weeks = days // 7
+            return f"{weeks}w ago"
+
+        return date.strftime("%b %d")
+
+    def _format_duration(self, duration_str):
+        """Convert Twitch duration string (e.g. '1h23m45s') to '1h 23m'."""
+        import re
+
+        h = re.search(r"(\d+)h", duration_str)
+        m = re.search(r"(\d+)m", duration_str)
+        parts = []
+        if h:
+            parts.append(f"{h.group(1)}h")
+        if m:
+            parts.append(f"{m.group(1)}m")
+        if not parts:
+            s = re.search(r"(\d+)s", duration_str)
+            if s:
+                parts.append(f"{s.group(1)}s")
+        return " ".join(parts) if parts else duration_str
 
     def _calculate_uptime(self, start_time):
         """Calculate stream uptime."""

@@ -236,7 +236,7 @@ class StreamlineWindow(Adw.ApplicationWindow):
         self._init_twitch_api()
 
     def on_refresh_button_clicked(self, button):
-        """Refresh streamer data."""
+        """Refresh streamer data in a background thread."""
         if not self.twitch:
             self.show_toast("API not available")
             return
@@ -251,50 +251,56 @@ class StreamlineWindow(Adw.ApplicationWindow):
             )
             return
 
-        # Cache is expired, do refresh
-        self.show_toast("Stream data refreshed")
-        online_streamers, offline_streamers, streamer_info = self.get_streamers()
-        self.update_action_rows(online_streamers, offline_streamers, streamer_info)
+        # Cache is expired, do refresh in background thread
+        self.refresh_button.set_sensitive(False)
+        threading.Thread(target=self._background_refresh, daemon=True).start()
 
-    def get_streamers(self):
-        """Get streamer information with error handling."""
-        if not self.twitch:
-            # Don't show error dialog here - just return empty results
-            # The update_action_rows method will show a toast instead
-            return [], self.all_streamers, {}
-
+    def _background_refresh(self):
+        """Perform refresh in background thread, then update UI on main thread."""
         try:
-            return self.twitch.get_streams(self.all_streamers)
+            online, offline, info = self.twitch.get_streams(self.all_streamers)
+            GLib.idle_add(self._on_refresh_complete, online, offline, info)
         except requests.ConnectionError:
-            # Use error dialog for connection errors as they prevent core functionality
-            self._show_error_dialog(
+            GLib.idle_add(
+                self._on_refresh_error,
                 "Connection Error",
                 "Could not fetch streamer data. Please check your internet connection.",
             )
-            return [], self.all_streamers, {}
         except requests.HTTPError as e:
-            # Handle API rate limits and other HTTP errors
             status = e.response.status_code if e.response else None
             if status == 401:
-                # Unauthorized - credentials are likely invalid, prompt user
-                self._prompt_for_credentials()
+                GLib.idle_add(self._prompt_for_credentials)
             elif status == 429:
-                self._show_error_dialog(
+                GLib.idle_add(
+                    self._on_refresh_error,
                     "API Rate Limit",
                     "Twitch API rate limit reached. Please wait a few minutes before refreshing again.",
                 )
             else:
-                self._show_error_dialog(
+                GLib.idle_add(
+                    self._on_refresh_error,
                     "API Error",
                     f"HTTP error {status} occurred while fetching streamer data.",
                 )
-            return [], self.all_streamers, {}
         except Exception as e:
-            # Use error dialog for unexpected errors
-            self._show_error_dialog(
-                "API Error", f"Failed to fetch streamer data: {str(e)[:100]}"
+            GLib.idle_add(
+                self._on_refresh_error,
+                "API Error",
+                f"Failed to fetch streamer data: {str(e)[:100]}",
             )
-            return [], self.all_streamers, {}
+
+    def _on_refresh_complete(self, online, offline, info):
+        """Callback from background thread: update UI with fresh stream data."""
+        self.refresh_button.set_sensitive(True)
+        self.show_toast("Stream data refreshed")
+        self.update_action_rows(online, offline, info)
+
+    def _on_refresh_error(self, heading, message):
+        """Callback from background thread: show error and re-enable refresh."""
+        self.refresh_button.set_sensitive(True)
+        # Expire cache cooldown so next manual refresh attempt is not blocked
+        self.twitch._invalidate_streams_cache()
+        self._show_error_dialog(heading, message)
 
     def update_action_rows(self, online_streamers, offline_streamers, streamer_info):
         """Update the online and offline streamer lists."""
