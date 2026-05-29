@@ -46,8 +46,10 @@ class StreamerRowManager:
         # Store the login name in the row data for sorting
         row.login_name = streamer
 
-        # Set streamer name using combined cache
-        display_name = self.window.twitch.user_cache["names"].get(streamer)
+        # Set streamer name using combined cache (if API is available)
+        display_name = None
+        if self.window.twitch is not None:
+            display_name = self.window.twitch.user_cache["names"].get(streamer)
 
         # Check if display name has non-ASCII characters
         if display_name and any(ord(c) > 127 for c in display_name):
