@@ -49,9 +49,14 @@ class StreamPlayer:
                 f" -> {quality}"
             )
 
-            # Always ensure 'best' is available as a final fallback
-            if not quality.endswith("best") and ",best" not in quality:
-                quality += ",best"
+            # Always ensure 'best' is available as a final fallback, unless
+            # the user set a Custom quality — they know what they want.
+            if (
+                quality_presets.get(self.window.stream_quality)
+                != self.window.custom_quality
+            ):
+                if not quality.endswith("best") and ",best" not in quality:
+                    quality += ",best"
 
             # Set title and final arguments
             cmd.extend(
@@ -74,12 +79,10 @@ class StreamPlayer:
                     for line in self._current_process.stdout:
                         print(f"DEBUG: Streamlink output: {line.strip()}")
 
-                        # Only show the most important message
                         if "No playable streams found on this URL" in line:
                             GLib.idle_add(
                                 self.window.show_toast, "Stream not available", 3
                             )
-                            return False
                         elif "Waiting for pre-roll ads to finish" in line:
                             GLib.idle_add(
                                 self.window.show_toast,
@@ -87,7 +90,6 @@ class StreamPlayer:
                                 3,
                             )
 
-                    # Check if process failed
                     if self._current_process.poll() is not None:
                         print(
                             f"DEBUG: Process ended with return code: {self._current_process.returncode}"
@@ -96,13 +98,9 @@ class StreamPlayer:
                             GLib.idle_add(
                                 self.window.show_toast, "Stream playback failed", 3
                             )
-                            return False
 
                 except Exception as e:
                     print(f"DEBUG: Error in stream thread: {str(e)}")
-                    return False
-
-                return True
 
             # Start in background thread
             thread = threading.Thread(target=start_stream_thread, daemon=True)
@@ -145,11 +143,17 @@ class StreamPlayer:
     def _show_missing_deps_error(self):
         """Show error dialog for missing dependencies."""
         player = self.window.player_type
-        message = (
-            f"Could not find {player} on your system.\n"
-            "Please install it using your distribution's package manager:\n\n"
-            f"• Arch: sudo pacman -S {player}\n"
-            f"• Ubuntu/Debian: sudo apt install {player}\n"
-            f"• Fedora: sudo dnf install {player}"
-        )
+        if player == "custom":
+            message = (
+                "No custom player executable configured.\n"
+                "Set the path to your player in Preferences → Player → Custom player executable."
+            )
+        else:
+            message = (
+                f"Could not find {player} on your system.\n"
+                "Please install it using your distribution's package manager:\n\n"
+                f"• Arch: sudo pacman -S {player}\n"
+                f"• Ubuntu/Debian: sudo apt install {player}\n"
+                f"• Fedora: sudo dnf install {player}"
+            )
         self.window._show_error_dialog("Missing Player", message)
