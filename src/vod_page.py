@@ -140,6 +140,8 @@ class VODPage(Adw.NavigationPage):
 
     def _show_error_row(self, title, subtitle):
         """Display an error row that can be clicked to retry."""
+        while row := self.list_box.get_first_child():
+            self.list_box.remove(row)
         row = Adw.ActionRow(title=title, subtitle=subtitle)
         row.set_activatable(True)
         row.add_prefix(Gtk.Image.new_from_icon_name("network-error-symbolic"))
