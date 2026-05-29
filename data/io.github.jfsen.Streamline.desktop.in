@@ -1,5 +1,6 @@
 [Desktop Entry]
 Name=Streamline
+Comment=Watch Twitch streams in your local media player
 Exec=streamline
 Icon=io.github.jfsen.Streamline
 Terminal=false
