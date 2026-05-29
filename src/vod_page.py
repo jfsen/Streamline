@@ -1,4 +1,5 @@
 import json
+import threading
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -39,7 +40,7 @@ class VODPage(Adw.NavigationPage):
         # Connect refresh button
         self.refresh_button.connect("clicked", self._on_refresh_clicked)
 
-        # Load VODs
+        # Load VODs (show spinner immediately, fetch in background)
         self._load_vods()
 
     def show_toast(self, message, timeout=2):
@@ -95,32 +96,46 @@ class VODPage(Adw.NavigationPage):
         except OSError as e:
             print(f"[DEBUG] Failed to write VOD cache: {e}")
 
-    def _load_vods(self):
-        """Load and display VODs."""
-        try:
-            # Try to load from cache first
-            cached_vods = self.load_cached_vods()
-            if cached_vods is not None:
-                self.display_vods(cached_vods)
-                return
+    def _show_spinner(self):
+        """Show a loading spinner in the list."""
+        while row := self.list_box.get_first_child():
+            self.list_box.remove(row)
+        row = Adw.ActionRow(title="Loading VODs…")
+        spinner = Gtk.Spinner(spinning=True)
+        row.add_prefix(spinner)
+        self.list_box.append(row)
 
-            # Fetch fresh data
+    def _load_vods(self):
+        """Load and display VODs — cache check is instant, network is async."""
+        # Try cache first (fast, no spinner needed if hit)
+        cached_vods = self.load_cached_vods()
+        if cached_vods is not None:
+            self.display_vods(cached_vods)
+            return
+
+        # Show spinner while fetching from network in background
+        self._show_spinner()
+        threading.Thread(target=self._fetch_vods_thread, daemon=True).start()
+
+    def _fetch_vods_thread(self):
+        """Fetch VODs from the Twitch API in a background thread."""
+        try:
             vods = self.twitch.get_user_vods(self.streamer)
             self.save_vods_cache(vods)
-            self.display_vods(vods)
-
+            GLib.idle_add(self.display_vods, vods)
         except requests.ConnectionError:
             self._invalidate_vods_cache()
-            self._show_error_row(
+            GLib.idle_add(
+                self._show_error_row,
                 "Error Loading VODs",
                 "No internet connection. Check your network and try again.",
             )
         except Exception as e:
-            error_text = GLib.markup_escape_text(str(e))
             self._invalidate_vods_cache()
-            self._show_error_row(
+            GLib.idle_add(
+                self._show_error_row,
                 "Error Loading VODs",
-                error_text,
+                GLib.markup_escape_text(str(e)),
             )
 
     def _show_error_row(self, title, subtitle):
@@ -140,8 +155,6 @@ class VODPage(Adw.NavigationPage):
 
     def _retry_load_vods(self):
         """Clear the error row and retry loading VODs."""
-        while row := self.list_box.get_first_child():
-            self.list_box.remove(row)
         self._load_vods()
 
     def _on_refresh_clicked(self, button):
@@ -159,8 +172,6 @@ class VODPage(Adw.NavigationPage):
 
         # Expired or no cache — force a fresh fetch
         self._invalidate_vods_cache()
-        while row := self.list_box.get_first_child():
-            self.list_box.remove(row)
         self._load_vods()
 
     def display_vods(self, vods):
