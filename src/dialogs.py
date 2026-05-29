@@ -133,6 +133,7 @@ class StreamlineDialogs:
             placeholder_text="Client Secret",
             width_chars=30,
             hexpand=True,
+            visibility=False,
         )
 
         content_box.append(client_id_entry)
