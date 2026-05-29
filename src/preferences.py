@@ -1,4 +1,4 @@
-from gi.repository import Adw, Gtk
+from gi.repository import Adw, GLib, Gtk
 
 
 @Gtk.Template(resource_path="/io/github/jfsen/Streamline/preferences.ui")
@@ -28,6 +28,7 @@ class StreamlinePreferences(Adw.PreferencesDialog):
     def __init__(self, parent, **kwargs):
         super().__init__(**kwargs)
         self.parent = parent
+        self._save_debounce_id = None
 
         # Build models
         player_model = Gtk.StringList.new(["MPV", "VLC", "Custom"])
@@ -85,6 +86,18 @@ class StreamlinePreferences(Adw.PreferencesDialog):
         except ValueError:
             combo_row.set_selected(0)
 
+    def _debounced_save(self):
+        """Schedule a save after 300ms of inactivity on text fields."""
+        if self._save_debounce_id:
+            GLib.source_remove(self._save_debounce_id)
+        self._save_debounce_id = GLib.timeout_add(300, self._do_save)
+
+    def _do_save(self):
+        """Actually persist the config."""
+        self.parent.save_config()
+        self._save_debounce_id = None
+        return GLib.SOURCE_REMOVE
+
     def _on_player_changed(self, row, *_):
         types = ("mpv", "vlc", "custom")
         idx = row.get_selected()
@@ -97,7 +110,7 @@ class StreamlinePreferences(Adw.PreferencesDialog):
 
     def _on_custom_path_changed(self, row, *_):
         self.parent.custom_player_path = row.get_text()
-        self.parent.save_config()
+        self._debounced_save()
 
     def _on_quality_changed(self, row, *_):
         idx = row.get_selected()
@@ -110,7 +123,7 @@ class StreamlinePreferences(Adw.PreferencesDialog):
 
     def _on_custom_quality_changed(self, entry, *_):
         self.parent.custom_quality = entry.get_text()
-        self.parent.save_config()
+        self._debounced_save()
 
     def _on_low_latency_toggled(self, switch_row, *_):
         self.parent.low_latency = switch_row.get_active()
@@ -126,11 +139,11 @@ class StreamlinePreferences(Adw.PreferencesDialog):
 
     def _on_client_id_changed(self, entry, *_):
         self.parent.client_id = entry.get_text()
-        self.parent.save_config()
+        self._debounced_save()
 
     def _on_client_secret_changed(self, entry, *_):
         self.parent.client_secret = entry.get_text()
-        self.parent.save_config()
+        self._debounced_save()
 
     # ── Export streamers ─────────────────────────────────────
 
