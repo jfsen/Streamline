@@ -13,9 +13,9 @@
             <rect fill-opacity="0.649512" height="153.6" width="153.6" x="-12.8" y="-12.8"/>
         </g>
     </mask>
-    <linearGradient id="d" gradientUnits="userSpaceOnUse" x1="88.31564798152" x2="63.21028524912" y1="100.5772710253" y2="57.09351059173">
+    <linearGradient id="d" gradientUnits="userSpaceOnUse" x1="75.76295695311" x2="75.76295695311" y1="103.94077264063" y2="53.73004987227">
         <stop offset="0" stop-color="#b4b3af"/>
-        <stop offset="0.562919" stop-color="#f6f5f4"/>
+        <stop offset="0.480688" stop-color="#f6f5f4"/>
         <stop offset="0.749887" stop-color="#e2e1df"/>
         <stop offset="1" stop-color="#b5b4b0"/>
     </linearGradient>
