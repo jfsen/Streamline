@@ -113,9 +113,12 @@ class StreamPlayer:
             return False
 
     def _get_player_executable(self):
-        """Get path for selected player."""
+        """Get path for selected player, validating it exists on the host."""
         if self.window.player_type == "custom":
-            return self.window.custom_player_path
+            path = self.window.custom_player_path
+            if not path:
+                return None
+            return self._find_executable(path)
         return self._find_executable(self.window.player_type)
 
     def _find_executable(self, name):
@@ -144,10 +147,17 @@ class StreamPlayer:
         """Show error dialog for missing dependencies."""
         player = self.window.player_type
         if player == "custom":
-            message = (
-                "No custom player executable configured.\n"
-                "Set the path to your player in Preferences → Player → Custom player executable."
-            )
+            path = self.window.custom_player_path
+            if path:
+                message = (
+                    f"Could not find {path} on your system.\n"
+                    "Check the path in Preferences → Player → Custom player executable."
+                )
+            else:
+                message = (
+                    "No custom player executable configured.\n"
+                    "Set the path to your player in Preferences → Player → Custom player executable."
+                )
         else:
             message = (
                 f"Could not find {player} on your system.\n"
