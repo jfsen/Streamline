@@ -22,19 +22,33 @@
   <launchable type="desktop-id">io.github.jfsen.Streamline.desktop</launchable>
 
   <content_rating type="oars-1.1">
-    <content_attribute id="social-chat">intense</content_attribute>
-    <content_attribute id="social-info">intense</content_attribute>
-    <content_attribute id="social-audio">intense</content_attribute>
+    <content_attribute id="social-info">mild</content_attribute>
   </content_rating>
 
   <branding>
-    <color type="primary" scheme_preference="light">#B75656</color>
-    <color type="primary" scheme_preference="dark">#993d3d</color>
+    <color type="primary" scheme_preference="light">#813d9c</color>
+    <color type="primary" scheme_preference="dark">#a669c0</color>
   </branding>
 
   <releases>
+    <release version="3.0.0" date="2026-05-30">
+      <description translate="no">
+        <p>Streamline 3.0 — visual polish, responsiveness, and fixes.</p>
+        <ul>
+          <li>Newly-online streamers get a subtle green glow when they come online after a refresh</li>
+          <li>"+N | −N" pill badge on the Online group header shows how many went online or offline</li>
+          <li>VOD page loads instantly — spinner appears while VODs fetch in the background</li>
+          <li>Custom player paths are now validated before launching; missing players show a clear error</li>
+          <li>Custom stream quality no longer forces a "best" fallback, so "audio_only" works as intended</li>
+          <li>Fixed separator lines clipping into the left border of streamer rows</li>
+          <li>Fixed credentials dialog showing Client Secret in plain text</li>
+          <li>Fixed crash on startup when Twitch API credentials are missing</li>
+          <li>Debounced config saves in Preferences — no more disk writes on every keystroke</li>
+          <li>README now documents Custom stream quality with examples</li>
+        </ul>
+      </description>
+    </release>
     <release version="2.0.0" date="2026-05-20">
-      <url type="details">https://github.com/jfsen/Streamline/releases/tag/v2.0.0</url>
       <description translate="no">
         <p>Streamline 2.0 — a major rewrite with new features and polish.</p>
         <ul>
@@ -52,7 +66,6 @@
       </description>
     </release>
     <release version="0.1.0" date="2025-01-01">
-      <url type="details">https://github.com/jfsen/Streamline/releases/tag/v0.1.0</url>
       <description translate="no">
         <p>Initial prototype release.</p>
         <ul>
@@ -64,5 +77,4 @@
       </description>
     </release>
   </releases>
-
 </component>
