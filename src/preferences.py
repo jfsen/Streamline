@@ -22,16 +22,7 @@ class StreamlinePreferences(Adw.PreferencesDialog):
     client_secret_row = Gtk.Template.Child()
 
     # Mapping of preset names to their stream quality strings
-    _DEFAULT_QUALITY = "1080p60,1080p,720p60,720p,best"
-
     _QUALITY_KEYS = ("High", "Medium", "Low", "Custom")
-    _QUALITY_PRESETS = {
-        "High": "1080p60,1080p,720p60,720p,best",
-        "Medium": "720p60,720p,480p,best",
-        "Low": "480p,360p,best",
-        # "Custom" is resolved dynamically from the parent's custom_quality
-    }
-
     _THEME_KEYS = ("system", "light", "dark", "bronze", "anthracite", "red")
 
     def __init__(self, parent, **kwargs):
@@ -93,12 +84,6 @@ class StreamlinePreferences(Adw.PreferencesDialog):
             combo_row.set_selected(values.index(current))
         except ValueError:
             combo_row.set_selected(0)
-
-    def _resolve_custom_quality(self):
-        """Get the custom quality string, with a sane fallback."""
-        return getattr(self.parent, "custom_quality", None) or "best"
-
-    # ── Signal handlers ──────────────────────────────────────
 
     def _on_player_changed(self, row, *_):
         types = ("mpv", "vlc", "custom")
