@@ -246,9 +246,7 @@ class StreamlineWindow(Adw.ApplicationWindow):
 
         if cached_data is not None:
             # Data is still cached, inform user how long until refresh is available
-            self.show_toast(
-                f"Please wait {seconds_until_refresh}s before refreshing again"
-            )
+            self.show_toast(f"Please wait {seconds_until_refresh}s before refreshing")
             return
 
         # Cache is expired, do refresh in background thread

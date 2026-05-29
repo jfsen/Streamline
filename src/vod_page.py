@@ -165,9 +165,7 @@ class VODPage(Adw.NavigationPage):
             now = datetime.now(timezone.utc)
             remaining = 60 - (now - mtime).total_seconds()
             if remaining > 0:
-                self.show_toast(
-                    f"Please wait {int(remaining)}s before refreshing again"
-                )
+                self.show_toast(f"Please wait {int(remaining)}s before refreshing")
                 return
 
         # Expired or no cache — force a fresh fetch
