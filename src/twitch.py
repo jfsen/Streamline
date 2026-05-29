@@ -1,4 +1,5 @@
 import json
+import re
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from time import time
@@ -23,7 +24,7 @@ class TwitchAPI:
         self._token_loaded = False
 
     def _get_access_token(self):
-        url = "https://id.twitch.tv/oauth2/token"  # test commit
+        url = "https://id.twitch.tv/oauth2/token"
         print(f"[Twitch] Requesting access token from {url}")
         params = {
             "client_id": self.client_id,
@@ -362,8 +363,6 @@ class TwitchAPI:
 
     def _format_duration(self, duration_str):
         """Convert Twitch duration string (e.g. '1h23m45s') to '1h 23m'."""
-        import re
-
         h = re.search(r"(\d+)h", duration_str)
         m = re.search(r"(\d+)m", duration_str)
         parts = []
