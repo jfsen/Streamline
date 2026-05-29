@@ -1,7 +1,8 @@
 import gi
 
 gi.require_version("Gio", "2.0")
-from gi.repository import Gio, GLib
+
+from gi.repository import Gio, GLib  # noqa: E402
 
 
 class ConfigManager:
@@ -39,8 +40,11 @@ class ConfigManager:
         )
         self.settings.set_string("theme", config.get("theme", "system"))
         self.settings.set_boolean("low-latency", config.get("low_latency", True))
-        self.settings.apply()
-        return True
+        try:
+            self.settings.apply()
+            return True
+        except Exception:
+            return False
 
     def create_config_dict(self, window):
         """Create config dict from window attributes."""
