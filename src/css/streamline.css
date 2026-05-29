@@ -53,6 +53,63 @@ list.boxed-list.streamer-list > row.offline-row {
     );
 }
 
+/* ── Just-went-online row highlight ── */
+list.boxed-list.streamer-list > row.just-went-online {
+    animation: went-online-pulse 4s ease-out forwards;
+}
+
+@keyframes went-online-pulse {
+    0% {
+        background-color: alpha(@success_bg_color, 0.22);
+    }
+    6% {
+        background-color: alpha(@success_bg_color, 0.18);
+    }
+    75% {
+        background-color: alpha(@success_bg_color, 0.18);
+    }
+    100% {
+        background-color: transparent;
+    }
+}
+
+/* ── Online count pill badge ── */
+.online-pill {
+    border-radius: 999px;
+    min-height: 0;
+    margin: 2px 0;
+    opacity: 1;
+    transition: opacity 1000ms ease-out;
+}
+
+.online-pill.fading {
+    opacity: 0;
+}
+
+.pill-plus,
+.pill-minus {
+    font-size: 0.75em;
+    font-weight: 700;
+    padding: 0 6px;
+}
+
+.pill-plus {
+    background-color: @success_bg_color;
+    color: @success_fg_color;
+    border-radius: 999px 0 0 999px;
+}
+
+.pill-minus {
+    background-color: @destructive_bg_color;
+    color: @destructive_fg_color;
+    border-radius: 0 999px 999px 0;
+}
+
+.pill-plus.pill-solo,
+.pill-minus.pill-solo {
+    border-radius: 999px;
+}
+
 /* ── Button hover effects ── */
 list.boxed-list.streamer-list > row button.flat {
     transition:

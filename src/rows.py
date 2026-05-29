@@ -11,6 +11,18 @@ class StreamerRowManager:
         self.streamer_rows = {}
         self.online_list = window.online_list
         self.offline_list = window.offline_list
+        self._previous_online = set()
+
+        # Pill badge on the online group header
+        self._pill_box = Gtk.Box(spacing=0)
+        self._pill_box.add_css_class("online-pill")
+        self._pill_box.set_visible(False)
+        self._pill_plus = Gtk.Label()
+        self._pill_plus.add_css_class("pill-plus")
+        self._pill_minus = Gtk.Label()
+        self._pill_minus.add_css_class("pill-minus")
+        self.window.online_group.set_header_suffix(self._pill_box)
+        self._pill_timeout_id = None
 
     @classmethod
     def _ensure_css(cls, display):
@@ -166,6 +178,15 @@ class StreamerRowManager:
     def update_rows(self, online_streamers, offline_streamers, streamer_info):
         """Update all streamer rows."""
 
+        # Detect newly-online and newly-offline streamers (skip if nothing was online before)
+        current_online = set(online_streamers)
+        new_online = set()
+        new_offline = set()
+        if self._previous_online:
+            new_online = current_online - self._previous_online
+            new_offline = self._previous_online - current_online
+        self._previous_online = current_online
+
         # Clear existing rows
         def clear_list(list_box):
             while row := list_box.get_first_child():
@@ -182,6 +203,9 @@ class StreamerRowManager:
         # Add new streamer rows
         for streamer in online_streamers:
             row = self.create_row(streamer, streamer_info.get(streamer, {}))
+            if streamer in new_online:
+                row.add_css_class("just-went-online")
+                GLib.timeout_add(4000, self._clear_highlight, row)
             self.online_list.append(row)
             self.streamer_rows[streamer] = row
 
@@ -189,3 +213,53 @@ class StreamerRowManager:
             row = self.create_row(streamer, {})
             self.offline_list.append(row)
             self.streamer_rows[streamer] = row
+
+        # Show pill badge for any online / offline changes
+        if new_online or new_offline:
+            self._show_pill(len(new_online), len(new_offline))
+
+    def _clear_highlight(self, row):
+        """Remove the just-went-online glow from a row."""
+        row.remove_css_class("just-went-online")
+        return GLib.SOURCE_REMOVE
+
+    def _show_pill(self, went_online, went_offline):
+        """Show a divided pill badge on the online group header."""
+        # Remove all children and rebuild
+        while child := self._pill_box.get_first_child():
+            self._pill_box.remove(child)
+
+        if went_online:
+            self._pill_plus.set_label(f"+{went_online}")
+            self._pill_plus.remove_css_class("pill-solo")
+            if not went_offline:
+                self._pill_plus.add_css_class("pill-solo")
+            self._pill_box.append(self._pill_plus)
+
+        if went_offline:
+            self._pill_minus.set_label(f"−{went_offline}")
+            self._pill_minus.remove_css_class("pill-solo")
+            if not went_online:
+                self._pill_minus.add_css_class("pill-solo")
+            self._pill_box.append(self._pill_minus)
+
+        self._pill_box.remove_css_class("fading")
+        self._pill_box.set_visible(True)
+
+        # Phase 1: show for 3s, then start fading
+        if self._pill_timeout_id:
+            GLib.source_remove(self._pill_timeout_id)
+        self._pill_timeout_id = GLib.timeout_add(3000, self._start_pill_fade)
+
+    def _start_pill_fade(self):
+        """Begin fade-out, then hide after 1s."""
+        self._pill_box.add_css_class("fading")
+        self._pill_timeout_id = GLib.timeout_add(1000, self._hide_pill)
+        return GLib.SOURCE_REMOVE
+
+    def _hide_pill(self):
+        """Hide the pill badge and reset state."""
+        self._pill_box.set_visible(False)
+        self._pill_box.remove_css_class("fading")
+        self._pill_timeout_id = None
+        return GLib.SOURCE_REMOVE
