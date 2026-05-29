@@ -2,6 +2,7 @@ import json
 import threading
 from datetime import datetime, timezone
 from pathlib import Path
+from weakref import proxy
 
 import requests
 from gi.repository import Adw, GLib, Gtk
@@ -13,7 +14,6 @@ class VODPage(Adw.NavigationPage):
 
     # Template children
     list_box = Gtk.Template.Child()
-    scroll = Gtk.Template.Child()
     toast_overlay = Gtk.Template.Child()
     refresh_button = Gtk.Template.Child()
 
@@ -22,8 +22,6 @@ class VODPage(Adw.NavigationPage):
         super().__init__(title=f"{streamer}'s VODs")
 
         # Use weak reference for parent
-        from weakref import proxy
-
         self.parent = proxy(parent)
         self.streamer = streamer
         self.twitch = twitch
@@ -53,10 +51,6 @@ class VODPage(Adw.NavigationPage):
         """Clean up when page is hidden"""
         while row := self.list_box.get_first_child():
             self.list_box.remove(row)
-
-    def on_back_clicked(self, button):
-        """Handle back button click."""
-        self.parent.navigation_view.pop()
 
     def get_cache_path(self):
         """Get path to VOD cache file for this streamer."""
@@ -156,7 +150,7 @@ class VODPage(Adw.NavigationPage):
             pass
 
     def _retry_load_vods(self):
-        """Clear the error row and retry loading VODs."""
+        """Retry loading VODs after an error."""
         self._load_vods()
 
     def _on_refresh_clicked(self, button):
@@ -197,7 +191,6 @@ class VODPage(Adw.NavigationPage):
             row.set_title_lines(1)
             row.set_tooltip_text(vod["title"])
 
-            # Update play button icon name
             play_button = Gtk.Button(icon_name="media-playback-start-symbolic")
             play_button.add_css_class("flat")
             play_button.set_valign(Gtk.Align.CENTER)
@@ -205,7 +198,6 @@ class VODPage(Adw.NavigationPage):
             play_button.connect("clicked", lambda btn, v=vod: self.play_vod(v))
             row.add_suffix(play_button)
 
-            # Update browser button icon name
             browser_button = Gtk.Button(icon_name="web-browser-symbolic")
             browser_button.add_css_class("flat")
             browser_button.set_valign(Gtk.Align.CENTER)
