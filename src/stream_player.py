@@ -1,7 +1,5 @@
-import os
 import subprocess
 import threading
-from pathlib import Path
 
 from gi.repository import GLib
 
