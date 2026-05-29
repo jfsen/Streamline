@@ -28,10 +28,7 @@ Streamline is a GTK4/libadwaita application that lets you follow your favorite T
 - **Quality presets** — Choose from High, Medium, Low, or set a custom quality string
 - **Low-latency streaming** — Enable low-latency mode for faster playback
 - **Custom themes** — Pick from Dark, Light, Bronze, Anthracite, and Red
-- **Narrow mode** — Compact window layout for tiling or small screens
-- **Stream cache** — Stream status is cached with a configurable refresh timer
 - **Export** — Save your streamer list to a text file
-- **Keyboard shortcuts** — Quick actions at your fingertips
 
 ## Screenshots
 
@@ -54,7 +51,7 @@ Streamline is a GTK4/libadwaita application that lets you follow your favorite T
 ```bash
 git clone https://github.com/jfsen/Streamline.git
 cd Streamline
-meson setup build
+meson setup build --prefix=$HOME/.local --wipe
 meson compile -C build
 meson install -C build
 ```
@@ -86,10 +83,11 @@ On first launch, Streamline will prompt you for your Twitch API credentials. You
 All preferences are available under **Preferences** (<kbd>Ctrl</kbd>+<kbd>,</kbd>):
 
 - **Player** — mpv, VLC, or a custom player executable
-- **Stream quality** — High, Medium, Low, or Custom
+- **Stream quality** — High, Medium, Low, or Custom.
+  When set to *Custom*, you can enter a [Streamlink stream type](https://streamlink.github.io/cli.html#cmdoption-stream-types) string.
+  Examples: `best` (default), `1080p60`, `720p,720p60`, `audio_only`, `worst`.
 - **Theme** — System, Light, Dark, Bronze, Anthracite, Red
 - **Low latency** — Toggle low-latency stream playback
-- **Window size** — Normal or narrow mode
 - **Export streamers** — Save your followed channels to a text file
 
 ## License
