@@ -6,13 +6,14 @@ from pathlib import Path
 from time import time
 
 import requests
+from gi.repository import GLib
 
 _ = gettext.gettext
 
 
 class TwitchAPI:
     # Single cache directory, computed once per process
-    _CACHE_DIR = Path.home() / ".cache" / "Streamline"
+    _CACHE_DIR = Path(GLib.get_user_cache_dir()) / "Streamline"
 
     def __init__(self, client_id, client_secret):
         self.client_id = client_id

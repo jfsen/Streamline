@@ -57,7 +57,7 @@ class VODPage(Adw.NavigationPage):
 
     def get_cache_path(self):
         """Get path to VOD cache file for this streamer."""
-        cache_dir = Path.home() / ".cache" / "Streamline" / "vods"
+        cache_dir = Path(GLib.get_user_cache_dir()) / "Streamline" / "vods"
         cache_dir.mkdir(parents=True, exist_ok=True)
         return cache_dir / f"{self.streamer}.json"
 
