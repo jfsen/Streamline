@@ -179,7 +179,9 @@ class StreamlineWindow(Adw.ApplicationWindow):
         cached_data, _cooldown = self.twitch._load_streams_cache()
         if cached_data:
             self.update_action_rows(
-                cached_data["online"], cached_data["offline"], cached_data["info"]
+                list(cached_data["online"].keys()),
+                cached_data["offline"],
+                cached_data["online"],
             )
         else:
             self.update_action_rows([], self.all_streamers, {})

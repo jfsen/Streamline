@@ -22,7 +22,7 @@ class TwitchAPI:
         print(f"[Twitch] Initializing API (client_id: {client_id[:5]}...)")
 
         # Lazy-loaded caches — nothing read from disk yet
-        self._user_cache = {"ids": {}, "names": {}}
+        self._user_cache = {}
         self._user_cache_loaded = False
         self._token_loaded = False
 
@@ -108,12 +108,22 @@ class TwitchAPI:
         return self._CACHE_DIR / "users.json"
 
     def _load_user_cache(self):
-        """Load user data from cache file."""
+        """Load user data from cache file, migrating old format if needed."""
         try:
             with open(self._get_user_cache_path()) as f:
-                return json.load(f)
+                data = json.load(f)
+            # Migrate from old {"ids": {...}, "names": {...}} format
+            if "ids" in data and "names" in data:
+                migrated = {}
+                for login in data["ids"]:
+                    migrated[login] = {
+                        "id": data["ids"][login],
+                        "name": data["names"].get(login, login),
+                    }
+                return migrated
+            return data
         except (json.JSONDecodeError, OSError, FileNotFoundError):
-            return {"ids": {}, "names": {}}  # Combined structure
+            return {}
 
     def _save_user_cache(self):
         """Save user data to cache file."""
@@ -173,20 +183,18 @@ class TwitchAPI:
                 cache_data = json.load(f)
 
             if "data" in cache_data:
+                offline = cache_data["data"].get("offline", [])
+                online = cache_data["data"].get("online", {})
                 if add:
-                    if username not in cache_data["data"]["offline"]:
-                        cache_data["data"]["offline"].append(username)
-                        cache_data["data"]["offline"].sort(key=str.lower)
+                    if username not in offline and username not in online:
+                        offline.append(username)
+                        offline.sort(key=str.lower)
                 else:
-                    cache_data["data"]["online"] = [
-                        s for s in cache_data["data"]["online"] if s != username
-                    ]
-                    cache_data["data"]["online"].sort(key=str.lower)
                     cache_data["data"]["offline"] = [
-                        s for s in cache_data["data"]["offline"] if s != username
+                        s for s in offline if s != username
                     ]
-                    if username in cache_data["data"]["info"]:
-                        del cache_data["data"]["info"][username]
+                    if username in online:
+                        del online[username]
 
                 with open(self._get_streams_cache_path(), "w") as f:
                     json.dump(cache_data, f, indent=4)
@@ -202,7 +210,11 @@ class TwitchAPI:
             print(
                 f"[Twitch] Using cached stream data (refresh in {seconds_until_refresh}s)"
             )
-            return cached_data["online"], cached_data["offline"], cached_data["info"]
+            return (
+                list(cached_data["online"].keys()),
+                cached_data["offline"],
+                cached_data["online"],
+            )
 
         # Only get access token if we need to make API calls
         self._ensure_access_token()
@@ -234,8 +246,10 @@ class TwitchAPI:
                     user_login = stream["user_login"]
                     online_streamers.append(user_login)
                     # Cache the user ID and display name
-                    self.user_cache["ids"][user_login] = stream["user_id"]
-                    self.user_cache["names"][user_login] = stream["user_name"]
+                    self.user_cache[user_login] = {
+                        "id": stream["user_id"],
+                        "name": stream["user_name"],
+                    }
                     streamer_info[user_login] = {
                         "game": stream["game_name"],
                         "title": stream["title"],
@@ -267,9 +281,8 @@ class TwitchAPI:
 
         # Save to cache
         cache_data = {
-            "online": online_streamers,
+            "online": streamer_info,
             "offline": offline_streamers,
-            "info": streamer_info,
         }
         self._save_streams_cache(cache_data)
 
@@ -288,7 +301,7 @@ class TwitchAPI:
         }
 
         # Try to get user ID from cache first
-        user_id = self.user_cache["ids"].get(username)
+        user_id = self.user_cache.get(username, {}).get("id")
 
         if not user_id:
             # If not in cache, fetch it from API
@@ -301,8 +314,10 @@ class TwitchAPI:
                     return []
 
                 user_id = user_data[0]["id"]
-                # Cache the user ID and save to file
-                self.user_cache["ids"][username] = user_id
+                self.user_cache[username] = {
+                    "id": user_id,
+                    "name": user_data[0].get("display_name", username),
+                }
                 self._save_user_cache()
 
             except requests.exceptions.RequestException as e:

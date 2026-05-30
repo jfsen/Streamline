@@ -52,7 +52,7 @@ class StreamerRowManager:
         # Set streamer name using combined cache (if API is available)
         display_name = None
         if self.window.twitch is not None:
-            display_name = self.window.twitch.user_cache["names"].get(streamer)
+            display_name = self.window.twitch.user_cache.get(streamer, {}).get("name")
 
         # Check if display name has non-ASCII characters
         if display_name and any(ord(c) > 127 for c in display_name):
