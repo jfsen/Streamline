@@ -91,7 +91,7 @@ class VODPage(Adw.NavigationPage):
             with open(self.get_cache_path(), "w") as f:
                 json.dump(cache_data, f, indent=4)
         except OSError as e:
-            print(f"[DEBUG] Failed to write VOD cache: {e}")
+            print(f"[VODPage] Failed to write VOD cache: {e}")
 
     def _show_spinner(self):
         """Show a loading spinner in the list."""

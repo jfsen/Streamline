@@ -69,7 +69,7 @@ class StreamPlayer:
             def start_stream_thread():
                 """Handle stream process and output monitoring."""
                 try:
-                    print(f"DEBUG: Running command: {' '.join(cmd)}")
+                    print(f"[StreamPlayer] Running: {' '.join(cmd)}")
                     self._current_process = subprocess.Popen(
                         cmd,
                         start_new_session=True,
@@ -80,7 +80,7 @@ class StreamPlayer:
                     )
 
                     for line in self._current_process.stdout:
-                        print(f"DEBUG: Streamlink output: {line.strip()}")
+                        print(f"[StreamPlayer] Streamlink: {line.strip()}")
 
                         if "No playable streams found on this URL" in line:
                             GLib.idle_add(
@@ -95,7 +95,7 @@ class StreamPlayer:
 
                     if self._current_process.poll() is not None:
                         print(
-                            f"DEBUG: Process ended with return code: {self._current_process.returncode}"
+                            f"[StreamPlayer] Process ended (code {self._current_process.returncode})"
                         )
                         if self._current_process.returncode != 0:
                             GLib.idle_add(
@@ -103,7 +103,7 @@ class StreamPlayer:
                             )
 
                 except Exception as e:
-                    print(f"DEBUG: Error in stream thread: {str(e)}")
+                    print(f"[StreamPlayer] Error in stream thread: {str(e)}")
 
             # Start in background thread
             thread = threading.Thread(target=start_stream_thread, daemon=True)
@@ -111,7 +111,7 @@ class StreamPlayer:
             return True
 
         except Exception as e:
-            print(f"DEBUG: Error in play_content: {str(e)}")
+            print(f"[StreamPlayer] Error in play_content: {str(e)}")
             self.window.show_toast(_("Error starting playback"), 3)
             return False
 
