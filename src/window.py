@@ -525,9 +525,29 @@ class StreamlineWindow(Adw.ApplicationWindow):
         """Show chat page for the given streamer."""
         logger.debug("Opening chat page for %s", streamer)
         page = ChatPage(
-            self, streamer, self.chat_alternating_bg, self.theme, self.chat_pause_emotes
+            self,
+            streamer,
+            self.chat_alternating_bg,
+            self.theme,
+            self.chat_pause_emotes,
+            twitch=self.twitch,
+            enable_detach=True,
         )
         self.navigation_view.push(page)
+
+    def show_chat_popup(self, streamer):
+        """Open chat in a separate pop-up window."""
+        logger.debug("Opening chat popup for %s", streamer)
+        from .chat.chat_window import ChatWindow
+
+        ChatWindow(
+            twitch=self.twitch,
+            streamer=streamer,
+            alternating_bg=self.chat_alternating_bg,
+            theme=self.theme,
+            pause_emotes=self.chat_pause_emotes,
+            transient_for=self,
+        ).present()
 
     def _cleanup_vod_page(self, page):
         """Clean up VOD page references"""

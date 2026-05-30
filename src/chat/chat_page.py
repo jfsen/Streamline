@@ -106,7 +106,7 @@ var _moreMsg = MORE_MSG;
           var img = document.createElement('img');
           img.src = pm[i].url;
           img.className = 'emote';
-          img.style.height = '1.2em';
+          img.style.height = '1.6em';
           img.style.verticalAlign = 'middle';
           if (window._paused) {
             img.dataset.src = pm[i].url;
@@ -165,13 +165,23 @@ class ChatPage(Adw.NavigationPage):
     """A read-only Twitch chat page using an IRC connection."""
 
     def __init__(
-        self, parent, streamer, alternating_bg=True, theme="system", pause_emotes=True
+        self,
+        parent,
+        streamer,
+        alternating_bg=True,
+        theme="system",
+        pause_emotes=True,
+        twitch=None,
+        enable_detach=False,
     ):
         super().__init__(title=_("Chat: {}").format(streamer))
 
         from weakref import proxy
 
-        self.parent = proxy(parent)
+        if parent is not None:
+            self.parent = proxy(parent)
+        else:
+            self.parent = None
         self._streamer = streamer
         self._chat = None
         self._msg_count = 0
@@ -183,6 +193,7 @@ class ChatPage(Adw.NavigationPage):
         self._focus_signal_id = None
         self._focus_window = None
         self._focus_scheduled = False
+        self._twitch = twitch
 
         # Pick alternating row color based on theme
         if theme == "light":
@@ -194,9 +205,11 @@ class ChatPage(Adw.NavigationPage):
 
         # Load BTTV/7TV emotes in background
         user_id = None
-        twitch = getattr(self.parent, "twitch", None)
-        if twitch is not None:
-            user_cache = getattr(twitch, "user_cache", {})
+        twitch_api = self._twitch
+        if twitch_api is None and self.parent is not None:
+            twitch_api = getattr(self.parent, "twitch", None)
+        if twitch_api is not None:
+            user_cache = getattr(twitch_api, "user_cache", {})
             user_id = user_cache.get(streamer, {}).get("id")
         self._third_party_emotes = ThirdPartyEmotes(user_id)
         threading.Thread(target=self._third_party_emotes.load, daemon=True).start()
@@ -224,6 +237,17 @@ class ChatPage(Adw.NavigationPage):
         toolbar = Adw.ToolbarView()
         header = Adw.HeaderBar()
         header.set_show_back_button(True)
+
+        # Detach button (only in the main window, not in pop-ups)
+        if enable_detach:
+            detach_button = Gtk.Button(
+                icon_name="window-new-symbolic",
+                tooltip_text=_("Detach chat"),
+            )
+            detach_button.add_css_class("flat")
+            detach_button.connect("clicked", self._on_detach)
+            header.pack_end(detach_button)
+
         toolbar.add_top_bar(header)
         toolbar.set_content(self._webview)
         self.set_child(toolbar)
@@ -325,7 +349,8 @@ class ChatPage(Adw.NavigationPage):
         )
         return GLib.SOURCE_REMOVE
 
-    def _on_hidden(self, page):
+    def cleanup(self):
+        """Stop chat and release resources. Idempotent."""
         if self._focus_signal_id is not None and self._focus_window is not None:
             self._focus_window.disconnect(self._focus_signal_id)
             self._focus_signal_id = None
@@ -343,3 +368,26 @@ class ChatPage(Adw.NavigationPage):
             except Exception:
                 pass
             self._webview = None
+
+    def _on_hidden(self, page):
+        self.cleanup()
+
+    def _on_detach(self, button):
+        """Open the chat in a separate window and go back to the streamer list."""
+        if self.parent is None:
+            return
+        parent = self.parent
+        root = self.get_root()
+        from .chat_window import ChatWindow
+
+        ChatWindow(
+            twitch=getattr(parent, "twitch", None),
+            streamer=self._streamer,
+            alternating_bg=self._alternating_bg,
+            theme=getattr(parent, "theme", "system"),
+            pause_emotes=self._pause_emotes,
+            transient_for=root,
+        ).present()
+
+        # Pop this page from the navigation view, returning to the streamer list
+        parent.navigation_view.pop()

@@ -132,6 +132,7 @@ class StreamerRowManager:
         # Add menu items - no icons needed
         menu_items = [
             (_("Chat"), "chat", self.window.show_chat_page),
+            (_("Pop-up Chat"), "popup-chat", self.window.show_chat_popup),
             (_("Show VODs"), "show-vods", self.window.show_vods_page),
             (_("Unfollow"), "unfollow", self.window.unfollow_streamer),
         ]

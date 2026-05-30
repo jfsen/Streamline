@@ -152,7 +152,7 @@ msgstr "Bist du sicher, dass du {} entfolgen möchtest?"
 msgid "Cancel"
 msgstr "Abbrechen"
 
-#: src/dialogs.py:51 src/rows.py:136
+#: src/dialogs.py:51 src/rows.py:137
 msgid "Unfollow"
 msgstr "Entfolgen"
 
@@ -296,6 +296,10 @@ msgid "Chat"
 msgstr "Chat"
 
 #: src/rows.py:135
+msgid "Pop-up Chat"
+msgstr "Pop-up-Chat"
+
+#: src/rows.py:136
 msgid "Show VODs"
 msgstr "VODs anzeigen"
 
@@ -408,10 +412,14 @@ msgstr "{} Std. {} Min."
 msgid "More messages below"
 msgstr "Weitere Nachrichten unten"
 
-#: src/chat/chat_page.py:170
+#: src/chat/chat_page.py:170 src/chat/chat_window.py:31
 #, python-brace-format
 msgid "Chat: {}"
 msgstr "Chat: {}"
+
+#: src/chat/chat_page.py:243
+msgid "Detach chat"
+msgstr "Chat ausgliedern"
 
 #: src/vod_page.py:29
 #, python-brace-format

@@ -284,7 +284,15 @@ msgid "Chat"
 msgstr ""
 
 #: src/rows.py:135
+msgid "Pop-up Chat"
+msgstr ""
+
+#: src/rows.py:136
 msgid "Show VODs"
+msgstr ""
+
+#: src/rows.py:137
+msgid "Unfollow"
 msgstr ""
 
 #: src/stream_player.py:29
@@ -384,9 +392,13 @@ msgstr ""
 msgid "More messages below"
 msgstr ""
 
-#: src/chat/chat_page.py:170
+#: src/chat/chat_page.py:170 src/chat/chat_window.py:31
 #, python-brace-format
 msgid "Chat: {}"
+msgstr ""
+
+#: src/chat/chat_page.py:243
+msgid "Detach chat"
 msgstr ""
 
 #: src/vod_page.py:29

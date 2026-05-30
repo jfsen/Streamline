@@ -1,0 +1,55 @@
+"""Standalone chat window for pop-up / detached chat."""
+
+import gettext
+import logging
+
+import gi
+
+gi.require_version("Gtk", "4.0")
+gi.require_version("Adw", "1")
+
+from gi.repository import Adw
+
+from .chat_page import ChatPage
+
+_ = gettext.gettext
+logger = logging.getLogger("ChatWindow")
+
+
+class ChatWindow(Adw.Window):
+    """A self-contained window that hosts a read-only Twitch chat."""
+
+    def __init__(
+        self,
+        twitch,
+        streamer,
+        alternating_bg=True,
+        theme="system",
+        pause_emotes=True,
+        transient_for=None,
+    ):
+        super().__init__(
+            title=_("Chat: {}").format(streamer),
+        )
+        self.set_default_size(340, 600)
+
+        if transient_for:
+            self.set_transient_for(transient_for)
+
+        self._chat_page = ChatPage(
+            parent=None,
+            streamer=streamer,
+            alternating_bg=alternating_bg,
+            theme=theme,
+            pause_emotes=pause_emotes,
+            twitch=twitch,
+            enable_detach=False,
+        )
+        self.set_content(self._chat_page)
+
+        self.connect("close-request", self._on_close_request)
+
+    def _on_close_request(self, window):
+        """Clean up the chat connection when the window is closed."""
+        self._chat_page.cleanup()
+        return False  # Allow the window to close normally
