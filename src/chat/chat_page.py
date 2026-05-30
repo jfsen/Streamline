@@ -19,15 +19,16 @@ logger = logging.getLogger("ChatPage")
 
 _HTML = """<!DOCTYPE html>
 <html><head><meta charset="utf-8"/><style>
-  :root { color-scheme: light; }
+  :root { }
+  @font-face { font-family: 'Emoji'; src: local('Noto Color Emoji'); unicode-range: U+2600-26FF, U+2700-27BF, U+1F300-1F5FF, U+1F600-1F64F, U+1F680-1F6FF, U+1F900-1F9FF, U+1FA00-1FA6F, U+1FA70-1FAFF, U+231A-231B, U+2328, U+23CF, U+23E9-23F3, U+23F8-23FA, U+200D, U+FE0F; }
   body {
     margin: 0; padding: 4px 8px;
     background: transparent;
-    font: 15px Inter, sans-serif;
+    font: 15px Inter, Emoji, sans-serif;
     overflow-wrap: break-word;
     color: COLORTEXT;
   }
-  .msg { margin: 1px 0; line-height: 1.4; }
+  .msg { padding: 4px 0; line-height: 1.4; }
   .user { font-weight: 700; margin-right: 4px; }
   .text {}
   #more-msg {
@@ -40,6 +41,7 @@ _HTML = """<!DOCTYPE html>
   ROWCSS
 </style></head><body><div id="chat"></div>
 <script>
+var _moreMsg = MORE_MSG;
 (function() {
   var chat = document.getElementById('chat');
   var paused = false;
@@ -56,7 +58,7 @@ _HTML = """<!DOCTYPE html>
       if (!btn) {
         btn = document.createElement('div');
         btn.id = 'more-msg';
-        btn.textContent = 'More messages below';
+        btn.textContent = _moreMsg;
         btn.onclick = function() {
           paused = false;
           window.scrollTo(0, document.body.scrollHeight);
@@ -72,31 +74,17 @@ _HTML = """<!DOCTYPE html>
     if (!paused) window.scrollTo(0, document.body.scrollHeight);
   }).observe(chat, {childList: true, subtree: true});
 
-  // Pause animated emotes outside the viewport
+  // Pause animated emotes when their message scrolls out of view
   var io = new IntersectionObserver(function(entries) {
     entries.forEach(function(e) {
-      if (e.isIntersecting) {
-        if (e.target.dataset.src) e.target.src = e.target.dataset.src;
-      } else {
-        if (!e.target.dataset.src) e.target.dataset.src = e.target.src;
-        e.target.src = '';
-      }
+      e.target.querySelectorAll('img.emote').forEach(function(img) {
+        if (e.isIntersecting) {
+          if (img.dataset.src) { img.src = img.dataset.src; }
+        } else {
+          if (img.src) { img.dataset.src = img.src; img.src = ''; }
+        }
+      });
     });
-  });
-
-  // Pause all animated emotes when the page is hidden
-  document.addEventListener('visibilitychange', function() {
-    var imgs = document.querySelectorAll('img.emote');
-    if (document.hidden) {
-      imgs.forEach(function(img) {
-        if (!img.dataset.src) img.dataset.src = img.src;
-        img.src = '';
-      });
-    } else {
-      imgs.forEach(function(img) {
-        if (img.dataset.src) img.src = img.dataset.src;
-      });
-    }
   });
 
   window.chat = function(user, text, color, emotes) {
@@ -120,8 +108,13 @@ _HTML = """<!DOCTYPE html>
           img.className = 'emote';
           img.style.height = '1.2em';
           img.style.verticalAlign = 'middle';
+          if (window._paused) {
+            img.dataset.src = pm[i].url;
+            img.style.visibility = 'hidden';
+          } else {
+            img.src = pm[i].url;
+          }
           div.appendChild(img);
-          io.observe(img);
           i = pm[i].end + 1;
         } else {
           var end = i;
@@ -140,6 +133,7 @@ _HTML = """<!DOCTYPE html>
       div.appendChild(t);
     }
     chat.appendChild(div);
+    io.observe(div);
     if (!paused) window.scrollTo(0, document.body.scrollHeight);
   };
 })();
@@ -156,6 +150,7 @@ def _build_html(alternating_bg, row_color, dark):
         html = _HTML.replace("COLORTEXT", "#2e2e2e")
         html = html.replace("COLORPILLBG", "rgba(0,0,0,0.82)")
         html = html.replace("COLORPILLFG", "#eee")
+    html = html.replace("MORE_MSG", json.dumps(_("More messages below")))
     if alternating_bg:
         html = html.replace(
             "ROWCSS",
@@ -169,8 +164,10 @@ def _build_html(alternating_bg, row_color, dark):
 class ChatPage(Adw.NavigationPage):
     """A read-only Twitch chat page using an IRC connection."""
 
-    def __init__(self, parent, streamer, alternating_bg=True, theme="system"):
-        super().__init__(title=f"Chat: {streamer}")
+    def __init__(
+        self, parent, streamer, alternating_bg=True, theme="system", pause_emotes=True
+    ):
+        super().__init__(title=_("Chat: {}").format(streamer))
 
         from weakref import proxy
 
@@ -180,8 +177,12 @@ class ChatPage(Adw.NavigationPage):
         self._msg_count = 0
         self._third_party_emotes = None
         self._alternating_bg = alternating_bg
+        self._pause_emotes = pause_emotes
         self._msg_batch = []
         self._batch_flush_id = None
+        self._focus_signal_id = None
+        self._focus_window = None
+        self._focus_scheduled = False
 
         # Pick alternating row color based on theme
         if theme == "light":
@@ -228,6 +229,7 @@ class ChatPage(Adw.NavigationPage):
         self.set_child(toolbar)
 
         self.connect("hidden", self._on_hidden)
+        self.connect("map", self._on_map)
 
         # Start IRC connection
         self._chat = TwitchChat(
@@ -239,6 +241,48 @@ class ChatPage(Adw.NavigationPage):
 
     def _on_connected(self):
         logger.debug("Connected to chat for %s", self._streamer)
+
+    def _on_map(self, _widget):
+        """Connect to window focus once the page is in the widget tree."""
+        if self._focus_scheduled:
+            return
+        self._focus_scheduled = True
+        GLib.idle_add(self._connect_focus)
+
+    def _connect_focus(self):
+        """Deferred connection to window focus signal."""
+        toplevel = self.get_root()
+        if toplevel:
+            self._focus_window = toplevel
+            self._focus_signal_id = toplevel.connect(
+                "notify::is-active", self._on_focus_changed
+            )
+        return GLib.SOURCE_REMOVE
+
+    def _on_focus_changed(self, window, _pspec):
+        """Pause or resume animated emotes based on window focus."""
+        if not self._pause_emotes:
+            return
+        if window.props.is_active:
+            self._webview.evaluate_javascript(
+                "window._paused=0;var imgs=document.querySelectorAll('img.emote');for(var i=0;i<imgs.length;i++){if(imgs[i].dataset.src)imgs[i].src=imgs[i].dataset.src;imgs[i].style.visibility=''}",
+                -1,
+                None,
+                None,
+                None,
+                None,
+                None,
+            )
+        else:
+            self._webview.evaluate_javascript(
+                "window._paused=1;var imgs=document.querySelectorAll('img.emote');for(var i=0;i<imgs.length;i++){if(!imgs[i].dataset.src)imgs[i].dataset.src=imgs[i].src;imgs[i].src='';imgs[i].style.visibility='hidden'}",
+                -1,
+                None,
+                None,
+                None,
+                None,
+                None,
+            )
 
     def _on_message(self, msg):
         self._msg_count += 1
@@ -264,6 +308,9 @@ class ChatPage(Adw.NavigationPage):
 
     def _flush_messages(self):
         """Inject all queued messages into the WebView in one IPC call."""
+        if not self._msg_batch:
+            self._batch_flush_id = None
+            return GLib.SOURCE_REMOVE
         batch = json.dumps(self._msg_batch)
         self._msg_batch.clear()
         self._batch_flush_id = None
@@ -279,6 +326,10 @@ class ChatPage(Adw.NavigationPage):
         return GLib.SOURCE_REMOVE
 
     def _on_hidden(self, page):
+        if self._focus_signal_id is not None and self._focus_window is not None:
+            self._focus_window.disconnect(self._focus_signal_id)
+            self._focus_signal_id = None
+            self._focus_window = None
         if self._batch_flush_id is not None:
             GLib.source_remove(self._batch_flush_id)
             self._flush_messages()

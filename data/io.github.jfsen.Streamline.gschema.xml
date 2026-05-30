@@ -47,11 +47,16 @@
 		      <summary>Twitch Client Secret</summary>
 		      <description>Twitch API client secret for authentication</description>
 		    </key>
-		    <key name="chat-alternating-background" type="b">
-		      <default>true</default>
-		      <summary>Alternating chat background</summary>
-		      <description
+		        <key name="chat-alternating-background" type="b">
+		          <default>true</default>
+		          <summary>Alternating chat background</summary>
+		          <description
             >Show alternating background colors on chat messages</description>
-		    </key>
+		        </key>
+		        <key name="chat-pause-emotes" type="b">
+		          <default>true</default>
+		          <summary>Hide emotes on focus loss</summary>
+		          <description>Hide all emotes when the window loses focus</description>
+		        </key>
 	</schema>
 </schemalist>

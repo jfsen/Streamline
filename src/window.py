@@ -157,6 +157,7 @@ class StreamlineWindow(Adw.ApplicationWindow):
         self.theme = config.get("theme", "system")
         self.low_latency = config.get("low_latency", True)
         self.chat_alternating_bg = config.get("chat_alternating_bg", True)
+        self.chat_pause_emotes = config.get("chat_pause_emotes", True)
 
     def _init_twitch_api(self):
         """Initialize the Twitch API with current credentials.
@@ -523,7 +524,9 @@ class StreamlineWindow(Adw.ApplicationWindow):
     def show_chat_page(self, streamer):
         """Show chat page for the given streamer."""
         logger.debug("Opening chat page for %s", streamer)
-        page = ChatPage(self, streamer, self.chat_alternating_bg, self.theme)
+        page = ChatPage(
+            self, streamer, self.chat_alternating_bg, self.theme, self.chat_pause_emotes
+        )
         self.navigation_view.push(page)
 
     def _cleanup_vod_page(self, page):

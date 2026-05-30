@@ -29,6 +29,7 @@ class StreamlinePreferences(Adw.PreferencesDialog):
 
     # Template children — Chat page
     chat_alternating_bg_switch = Gtk.Template.Child()
+    chat_pause_emotes_switch = Gtk.Template.Child()
 
     # Mapping of preset names to their stream quality strings
     _QUALITY_KEYS = ("High", "Medium", "Low", "Custom")
@@ -90,6 +91,11 @@ class StreamlinePreferences(Adw.PreferencesDialog):
         self.chat_alternating_bg_switch.set_active(parent.chat_alternating_bg)
         self.chat_alternating_bg_switch.connect(
             "notify::active", self._on_chat_alternating_bg_toggled
+        )
+
+        self.chat_pause_emotes_switch.set_active(parent.chat_pause_emotes)
+        self.chat_pause_emotes_switch.connect(
+            "notify::active", self._on_chat_pause_emotes_toggled
         )
 
     # ── Helpers ──────────────────────────────────────────────
@@ -163,6 +169,10 @@ class StreamlinePreferences(Adw.PreferencesDialog):
 
     def _on_chat_alternating_bg_toggled(self, switch, *_):
         self.parent.chat_alternating_bg = switch.get_active()
+        self.parent.save_config()
+
+    def _on_chat_pause_emotes_toggled(self, switch, *_):
+        self.parent.chat_pause_emotes = switch.get_active()
         self.parent.save_config()
 
     # ── Export streamers ─────────────────────────────────────

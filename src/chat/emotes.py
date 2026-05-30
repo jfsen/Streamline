@@ -2,6 +2,7 @@
 
 import json
 import logging
+import threading
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -74,6 +75,7 @@ def _fetch_bttv_global():
         return cached
     data = _fetch_json(_BTTV_GLOBAL)
     if not data:
+        _save_cache("bttv", "global", {})
         return {}
     emotes = {
         e["code"]: f"https://cdn.betterttv.net/emote/{e['id']}/1x"
@@ -90,6 +92,7 @@ def _fetch_bttv_channel(user_id):
         return cached
     data = _fetch_json(_BTTV_CHANNEL.format(user_id=user_id))
     if not data:
+        _save_cache("bttv", user_id, {})
         return {}
     shared = data.get("sharedEmotes", [])
     channel = data.get("channelEmotes", [])
@@ -108,6 +111,7 @@ def _fetch_7tv_global():
         return cached
     data = _fetch_json(_SEVENTV_GLOBAL)
     if not data:
+        _save_cache("7tv", "global", {})
         return {}
     emotes = {}
     for e in data.get("emotes", []):
@@ -128,6 +132,7 @@ def _fetch_7tv_channel(user_id):
         return cached
     data = _fetch_json(_SEVENTV_CHANNEL.format(user_id=user_id))
     if not data:
+        _save_cache("7tv", user_id, {})
         return {}
     emotes = {}
     for es in data.get("emote_set", {}).get("emotes", []):
@@ -152,21 +157,36 @@ class ThirdPartyEmotes:
         self._user_id = user_id
         self._emotes = {}  # name → url
         self._trie = {}
+        self._lock = threading.Lock()
 
     def load(self):
-        """Fetch all emote sets synchronously (call from a thread)."""
-        self._emotes = {}
-        self._emotes.update(_fetch_bttv_global())
-        self._emotes.update(_fetch_7tv_global())
+        """Fetch all emote sets in parallel, building the trie incrementally."""
+        fetchers = [_fetch_bttv_global, _fetch_7tv_global]
         if self._user_id:
-            self._emotes.update(_fetch_bttv_channel(self._user_id))
-            self._emotes.update(_fetch_7tv_channel(self._user_id))
-        self._build_trie()
+            fetchers.append(lambda: _fetch_bttv_channel(self._user_id))
+            fetchers.append(lambda: _fetch_7tv_channel(self._user_id))
+
+        threads = []
+        for fetch in fetchers:
+            t = threading.Thread(
+                target=self._fetch_and_merge, args=(fetch,), daemon=True
+            )
+            t.start()
+            threads.append(t)
+        for t in threads:
+            t.join()
         logger.debug(
             "Loaded %s third-party emotes for %s",
             len(self._emotes),
             self._user_id or "global-only",
         )
+
+    def _fetch_and_merge(self, fetch_fn):
+        """Fetch one emote set and merge it into the global dict."""
+        result = fetch_fn()
+        with self._lock:
+            self._emotes.update(result)
+            self._build_trie()
 
     def _build_trie(self):
         """Build a trie from emote names for fast text scanning."""

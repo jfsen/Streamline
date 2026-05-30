@@ -31,6 +31,7 @@ class ConfigManager:
             "chat_alternating_bg": self.settings.get_boolean(
                 "chat-alternating-background"
             ),
+            "chat_pause_emotes": self.settings.get_boolean("chat-pause-emotes"),
         }
 
     def save(self, config):
@@ -53,6 +54,9 @@ class ConfigManager:
         self.settings.set_boolean(
             "chat-alternating-background", config.get("chat_alternating_bg", True)
         )
+        self.settings.set_boolean(
+            "chat-pause-emotes", config.get("chat_pause_emotes", True)
+        )
         try:
             self.settings.apply()
             return True
@@ -73,4 +77,5 @@ class ConfigManager:
             "theme": window.theme,
             "low_latency": window.low_latency,
             "chat_alternating_bg": window.chat_alternating_bg,
+            "chat_pause_emotes": window.chat_pause_emotes,
         }

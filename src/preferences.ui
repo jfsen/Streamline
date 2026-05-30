@@ -119,6 +119,12 @@
                 <property name="subtitle" translatable="yes">Show subtle alternating background colors on chat messages</property>
               </object>
             </child>
+            <child>
+              <object class="AdwSwitchRow" id="chat_pause_emotes_switch">
+                <property name="title" translatable="yes">Hide Emotes on Focus Loss</property>
+                <property name="subtitle" translatable="yes">Hide all emotes when the window loses focus</property>
+              </object>
+            </child>
           </object>
         </child>
 

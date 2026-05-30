@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: streamline 3.2.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-05-30 04:45+0200\n"
+"POT-Creation-Date: 2026-05-30 23:19+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -18,7 +18,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 
 #: data/io.github.jfsen.Streamline.desktop.in:2
-#: data/io.github.jfsen.Streamline.metainfo.xml.in:7 src/window.py:118
+#: data/io.github.jfsen.Streamline.metainfo.xml.in:7 src/window.py:122
 #: src/window.ui:6
 msgid "Streamline"
 msgstr ""
@@ -79,40 +79,56 @@ msgstr ""
 msgid "Theme"
 msgstr ""
 
-#: data/io.github.jfsen.Streamline.gschema.xml:27
+#: data/io.github.jfsen.Streamline.gschema.xml:28
 msgid "The application theme (system, light, dark, bronze, anthracite, red)"
 msgstr ""
 
-#: data/io.github.jfsen.Streamline.gschema.xml:31
+#: data/io.github.jfsen.Streamline.gschema.xml:32
 msgid "Low latency mode"
 msgstr ""
 
-#: data/io.github.jfsen.Streamline.gschema.xml:32
+#: data/io.github.jfsen.Streamline.gschema.xml:33
 msgid "Enable low latency streaming"
 msgstr ""
 
-#: data/io.github.jfsen.Streamline.gschema.xml:36
+#: data/io.github.jfsen.Streamline.gschema.xml:37
 msgid "Followed streamers"
 msgstr ""
 
-#: data/io.github.jfsen.Streamline.gschema.xml:37
+#: data/io.github.jfsen.Streamline.gschema.xml:38
 msgid "List of followed Twitch streamers"
 msgstr ""
 
-#: data/io.github.jfsen.Streamline.gschema.xml:41
+#: data/io.github.jfsen.Streamline.gschema.xml:42
 msgid "Twitch Client ID"
 msgstr ""
 
-#: data/io.github.jfsen.Streamline.gschema.xml:42
+#: data/io.github.jfsen.Streamline.gschema.xml:43
 msgid "Twitch API client ID for authentication"
 msgstr ""
 
-#: data/io.github.jfsen.Streamline.gschema.xml:46
+#: data/io.github.jfsen.Streamline.gschema.xml:47
 msgid "Twitch Client Secret"
 msgstr ""
 
-#: data/io.github.jfsen.Streamline.gschema.xml:47
+#: data/io.github.jfsen.Streamline.gschema.xml:48
 msgid "Twitch API client secret for authentication"
+msgstr ""
+
+#: data/io.github.jfsen.Streamline.gschema.xml:52
+msgid "Alternating chat background"
+msgstr ""
+
+#: data/io.github.jfsen.Streamline.gschema.xml:54
+msgid "Show alternating background colors on chat messages"
+msgstr ""
+
+#: data/io.github.jfsen.Streamline.gschema.xml:58
+msgid "Hide emotes on focus loss"
+msgstr ""
+
+#: data/io.github.jfsen.Streamline.gschema.xml:59 src/preferences.ui:125
+msgid "Hide all emotes when the window loses focus"
 msgstr ""
 
 #: src/dialogs.py:39
@@ -132,7 +148,7 @@ msgstr ""
 msgid "Cancel"
 msgstr ""
 
-#: src/dialogs.py:51 src/rows.py:131
+#: src/dialogs.py:51 src/rows.py:136
 msgid "Unfollow"
 msgstr ""
 
@@ -148,7 +164,7 @@ msgstr ""
 msgid "Follow"
 msgstr ""
 
-#: src/dialogs.py:90 src/window.py:481 src/window.ui:25
+#: src/dialogs.py:90 src/window.py:488 src/window.ui:25
 msgid "Quick Play Stream"
 msgstr ""
 
@@ -171,11 +187,11 @@ msgid ""
 "You can get these at https://dev.twitch.tv/console/apps"
 msgstr ""
 
-#: src/dialogs.py:133 src/preferences.ui:119
+#: src/dialogs.py:133 src/preferences.ui:137
 msgid "Client ID"
 msgstr ""
 
-#: src/dialogs.py:139 src/preferences.ui:124
+#: src/dialogs.py:139 src/preferences.ui:142
 msgid "Client Secret"
 msgstr ""
 
@@ -188,51 +204,51 @@ msgstr ""
 msgid "translator-credits"
 msgstr ""
 
-#: src/preferences.py:38 src/preferences.py:39
+#: src/preferences.py:44 src/preferences.py:45
 msgid "Custom"
 msgstr ""
 
-#: src/preferences.py:39
+#: src/preferences.py:45
 msgid "High"
 msgstr ""
 
-#: src/preferences.py:39
+#: src/preferences.py:45
 msgid "Medium"
 msgstr ""
 
-#: src/preferences.py:39
+#: src/preferences.py:45
 msgid "Low"
 msgstr ""
 
-#: src/preferences.py:188
+#: src/preferences.py:213
 #, python-brace-format
 msgid "Streamers list saved to {}"
 msgstr ""
 
-#: src/preferences.py:191
+#: src/preferences.py:217
 #, python-brace-format
 msgid "Error saving file: {}"
 msgstr ""
 
-#: src/preferences.py:230
+#: src/preferences.py:256
 msgid "No streamer names found in file"
 msgstr ""
 
-#: src/preferences.py:246
+#: src/preferences.py:272
 #, python-brace-format
 msgid "Added {} streamer(s) ({} already followed)"
 msgstr ""
 
-#: src/preferences.py:253
+#: src/preferences.py:279
 #, python-brace-format
 msgid "Added {} streamer(s)"
 msgstr ""
 
-#: src/preferences.py:256
+#: src/preferences.py:282
 msgid "All streamers already followed"
 msgstr ""
 
-#: src/preferences.py:259
+#: src/preferences.py:286
 #, python-brace-format
 msgid "Error importing file: {}"
 msgstr ""
@@ -244,64 +260,68 @@ msgid ""
 "{} viewers"
 msgstr ""
 
-#: src/rows.py:80
+#: src/rows.py:84
 #, python-brace-format
 msgid ""
 "Title: {}\n"
 "Uptime: {}"
 msgstr ""
 
-#: src/rows.py:99
+#: src/rows.py:103
 msgid "Play stream"
 msgstr ""
 
-#: src/rows.py:112
+#: src/rows.py:116
 msgid "Open in browser"
 msgstr ""
 
-#: src/rows.py:123
+#: src/rows.py:127
 msgid "More"
 msgstr ""
 
-#: src/rows.py:130
+#: src/rows.py:134 src/preferences.ui:115
+msgid "Chat"
+msgstr ""
+
+#: src/rows.py:135
 msgid "Show VODs"
 msgstr ""
 
-#: src/stream_player.py:26
+#: src/stream_player.py:29
 msgid "Connecting..."
 msgstr ""
 
-#: src/stream_player.py:87
+#: src/stream_player.py:88
 msgid "Stream not available"
 msgstr ""
 
-#: src/stream_player.py:92
+#: src/stream_player.py:93
 msgid "Waiting for ads to finish..."
 msgstr ""
 
-#: src/stream_player.py:102
+#: src/stream_player.py:103
 msgid "Stream playback failed"
 msgstr ""
 
-#: src/stream_player.py:115
+#: src/stream_player.py:116
 msgid "Error starting playback"
 msgstr ""
 
-#: src/stream_player.py:156
+#: src/stream_player.py:157
 #, python-brace-format
 msgid ""
 "Could not find {path} on your system.\n"
 "Check the path in Preferences → Player → Custom player executable."
 msgstr ""
 
-#: src/stream_player.py:161
+#: src/stream_player.py:162
 msgid ""
 "No custom player executable configured.\n"
 "Set the path to your player in Preferences → Player → Custom player "
 "executable."
 msgstr ""
 
-#: src/stream_player.py:166
+#: src/stream_player.py:167
 #, python-brace-format
 msgid ""
 "Could not find {player} on your system.\n"
@@ -312,199 +332,208 @@ msgid ""
 "• Fedora: sudo dnf install {player}"
 msgstr ""
 
-#: src/stream_player.py:172
+#: src/stream_player.py:173
 msgid "Missing Player"
 msgstr ""
 
-#: src/twitch.py:365
+#: src/twitch.py:389
 msgid "Just now"
 msgstr ""
 
-#: src/twitch.py:367
+#: src/twitch.py:391
 #, python-brace-format
 msgid "{}m ago"
 msgstr ""
 
-#: src/twitch.py:371
+#: src/twitch.py:395
 #, python-brace-format
 msgid "{}h ago"
 msgstr ""
 
-#: src/twitch.py:375
+#: src/twitch.py:399
 #, python-brace-format
 msgid "{}d ago"
 msgstr ""
 
-#: src/twitch.py:378
+#: src/twitch.py:402
 #, python-brace-format
 msgid "{}w ago"
 msgstr ""
 
-#: src/twitch.py:388
+#: src/twitch.py:412
 #, python-brace-format
 msgid "{}h"
 msgstr ""
 
-#: src/twitch.py:390
+#: src/twitch.py:414
 #, python-brace-format
 msgid "{}m"
 msgstr ""
 
-#: src/twitch.py:394
+#: src/twitch.py:418
 #, python-brace-format
 msgid "{}s"
 msgstr ""
 
-#: src/twitch.py:404
+#: src/twitch.py:428
 #, python-brace-format
 msgid "{}h {}m"
 msgstr ""
 
-#: src/vod_page.py:25
+#: src/chat/chat_page.py:153
+msgid "More messages below"
+msgstr ""
+
+#: src/chat/chat_page.py:170
+#, python-brace-format
+msgid "Chat: {}"
+msgstr ""
+
+#: src/vod_page.py:29
 #, python-brace-format
 msgid "{}'s VODs"
 msgstr ""
 
-#: src/vod_page.py:100
+#: src/vod_page.py:104
 msgid "Loading VODs…"
 msgstr ""
 
-#: src/vod_page.py:127 src/vod_page.py:134
+#: src/vod_page.py:132 src/vod_page.py:139
 msgid "Error Loading VODs"
 msgstr ""
 
-#: src/vod_page.py:128
+#: src/vod_page.py:133
 msgid "No internet connection. Check your network and try again."
 msgstr ""
 
-#: src/vod_page.py:168 src/window.py:263
+#: src/vod_page.py:173 src/window.py:269
 #, python-brace-format
 msgid "Please wait {}s before refreshing"
 msgstr ""
 
-#: src/vod_page.py:184
+#: src/vod_page.py:189
 msgid "No VODs found"
 msgstr ""
 
-#: src/vod_page.py:185
+#: src/vod_page.py:190
 msgid "This channel has no recent VODs available"
 msgstr ""
 
-#: src/vod_page.py:202
+#: src/vod_page.py:214
 msgid "Play VOD"
 msgstr ""
 
-#: src/vod_page.py:209
+#: src/vod_page.py:221
 msgid "Open VOD in browser"
 msgstr ""
 
-#: src/vod_page.py:221
+#: src/vod_page.py:235
 #, python-brace-format
 msgid "Starting VOD: {}"
 msgstr ""
 
-#: src/vod_page.py:223
+#: src/vod_page.py:237
 msgid "Error playing VOD: player failed to start"
 msgstr ""
 
-#: src/window.py:200 src/window.py:279
+#: src/window.py:206 src/window.py:285
 msgid "Connection Error"
 msgstr ""
 
-#: src/window.py:202 src/window.py:281
+#: src/window.py:208 src/window.py:287
 msgid "Could not fetch streamer data. Please check your internet connection."
 msgstr ""
 
-#: src/window.py:212 src/window.py:291
+#: src/window.py:218 src/window.py:297
 msgid "API Rate Limit"
 msgstr ""
 
-#: src/window.py:214 src/window.py:293
+#: src/window.py:220 src/window.py:299
 msgid ""
 "Twitch API rate limit reached. Please wait a few minutes before refreshing "
 "again."
 msgstr ""
 
-#: src/window.py:220 src/window.py:228 src/window.py:299 src/window.py:307
+#: src/window.py:226 src/window.py:234 src/window.py:305 src/window.py:313
 msgid "API Error"
 msgstr ""
 
-#: src/window.py:221 src/window.py:300
+#: src/window.py:227 src/window.py:306
 #, python-brace-format
 msgid "HTTP error {} occurred while fetching streamer data."
 msgstr ""
 
-#: src/window.py:229 src/window.py:308
+#: src/window.py:235 src/window.py:314
 #, python-brace-format
 msgid "Failed to fetch streamer data: {}"
 msgstr ""
 
-#: src/window.py:254
+#: src/window.py:260
 msgid "API not available"
 msgstr ""
 
-#: src/window.py:314
+#: src/window.py:320
 msgid "Stream data refreshed"
 msgstr ""
 
-#: src/window.py:425
+#: src/window.py:432
 #, python-brace-format
 msgid "Now following {}"
 msgstr ""
 
-#: src/window.py:427
+#: src/window.py:434
 #, python-brace-format
 msgid "Added {} new streamers"
 msgstr ""
 
-#: src/window.py:431
+#: src/window.py:438
 #, python-brace-format
 msgid "Already following {}"
 msgstr ""
 
-#: src/window.py:434
+#: src/window.py:441
 #, python-brace-format
 msgid "Already following: {}"
 msgstr ""
 
-#: src/window.py:446
+#: src/window.py:453
 #, python-brace-format
 msgid "Error: {}"
 msgstr ""
 
-#: src/window.py:453
+#: src/window.py:460
 msgid "Error Saving Config"
 msgstr ""
 
-#: src/window.py:453
+#: src/window.py:460
 msgid "Could not save configuration"
 msgstr ""
 
-#: src/window.py:470
+#: src/window.py:477
 msgid "Application"
 msgstr ""
 
-#: src/window.py:471 src/preferences.ui:7
+#: src/window.py:478 src/preferences.ui:7
 msgid "Preferences"
 msgstr ""
 
-#: src/window.py:472
+#: src/window.py:479
 msgid "Show Shortcuts"
 msgstr ""
 
-#: src/window.py:473
+#: src/window.py:480
 msgid "Quit"
 msgstr ""
 
-#: src/window.py:477
+#: src/window.py:484
 msgid "Stream Management"
 msgstr ""
 
-#: src/window.py:479
+#: src/window.py:486
 msgid "Follow New Streamer"
 msgstr ""
 
-#: src/window.py:482 src/window.py:483
+#: src/window.py:489 src/window.py:490
 msgid "Refresh Streams"
 msgstr ""
 
@@ -632,11 +661,23 @@ msgstr ""
 msgid "Load a backup file to follow streamers"
 msgstr ""
 
-#: src/preferences.ui:115
+#: src/preferences.ui:118
+msgid "Alternating Background"
+msgstr ""
+
+#: src/preferences.ui:119
+msgid "Show subtle alternating background colors on chat messages"
+msgstr ""
+
+#: src/preferences.ui:124
+msgid "Hide Emotes on Focus Loss"
+msgstr ""
+
+#: src/preferences.ui:133
 msgid "Twitch API"
 msgstr ""
 
-#: src/preferences.ui:116
+#: src/preferences.ui:134
 msgid ""
 "Credentials are required to fetch stream data. You can get these at "
 "dev.twitch.tv/console/apps"
