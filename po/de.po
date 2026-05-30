@@ -1,15 +1,14 @@
 # German translations for streamline package.
 # Copyright (C) 2026 THE streamline'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the streamline package.
-# Automatically generated, 2026.
 #
 msgid ""
 msgstr ""
 "Project-Id-Version: streamline 3.1.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-05-30 02:02+0200\n"
-"PO-Revision-Date: 2026-05-30 01:23+0200\n"
-"Last-Translator: Automatically generated\n"
+"POT-Creation-Date: 2026-05-30 00:02+0200\n"
+"PO-Revision-Date: 2026-05-30 00:23+0200\n"
+"Last-Translator: jfsen\n"
 "Language-Team: none\n"
 "Language: de\n"
 "MIME-Version: 1.0\n"
