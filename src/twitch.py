@@ -40,8 +40,11 @@ class TwitchAPI:
             response.raise_for_status()
             data = response.json()
             self.access_token = data["access_token"]
-            # Set expiration time (token is valid for 4 hours, we'll set it to 3.5 hours to be safe)
-            self.token_expires_at = datetime.now(timezone.utc) + timedelta(hours=3.5)
+            # Use the expiration from the API (typically ~60 days)
+            expires_in = data.get("expires_in", 3600)
+            self.token_expires_at = datetime.now(timezone.utc) + timedelta(
+                seconds=expires_in
+            )
             self._save_token_cache()
             print("[Twitch] Access token obtained successfully")
             return self.access_token
