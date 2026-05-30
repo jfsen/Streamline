@@ -18,12 +18,15 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 
 import gettext
+import logging
 import threading
 
 import gi
 
 _ = gettext.gettext
 import requests
+
+logger = logging.getLogger("Window")
 
 gi.require_version("Adw", "1")
 gi.require_version("Gtk", "4.0")
@@ -350,6 +353,7 @@ class StreamlineWindow(Adw.ApplicationWindow):
 
     def _apply_theme(self):
         """Apply the current theme, including custom CSS themes if selected."""
+        logger.debug("Applying theme: %s", self.theme)
         # Remove any previously applied custom theme CSS
         if self._theme_css_provider is not None:
             Gtk.StyleContext.remove_provider_for_display(
@@ -506,6 +510,7 @@ class StreamlineWindow(Adw.ApplicationWindow):
 
     def show_vods_page(self, streamer):
         """Show VODs page for the given streamer."""
+        logger.debug("Opening VOD page for %s", streamer)
         page = VODPage(self, streamer, self.twitch, self.player)
         # Store weak reference to track the current VOD page
         from weakref import proxy

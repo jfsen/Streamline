@@ -25,6 +25,7 @@ import signal
 import ctypes
 import ctypes.util
 import gettext
+import logging
 
 os.environ['GETTEXT_PACKAGE'] = 'io.github.jfsen.Streamline'
 
@@ -34,6 +35,8 @@ localedir = '@localedir@'
 
 sys.path.insert(1, pkgdatadir)
 signal.signal(signal.SIGINT, signal.SIG_DFL)
+
+logging.basicConfig(level=logging.DEBUG, format="[%(name)s] %(message)s")
 
 # Python gettext
 gettext.bindtextdomain('io.github.jfsen.Streamline', localedir)

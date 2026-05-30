@@ -1,10 +1,13 @@
 import gettext
+import logging
 import subprocess
 import threading
 
 from gi.repository import GLib
 
 _ = gettext.gettext
+
+logger = logging.getLogger("StreamPlayer")
 
 
 class StreamPlayer:
@@ -46,9 +49,8 @@ class StreamPlayer:
 
             quality = quality_presets.get(self.window.stream_quality, "best")
 
-            print(
-                f"[StreamPlayer] Quality setting: {self.window.stream_quality}"
-                f" -> {quality}"
+            logger.debug(
+                "Quality setting: %s -> %s", self.window.stream_quality, quality
             )
 
             # Always ensure 'best' is available as a final fallback, unless
@@ -68,7 +70,7 @@ class StreamPlayer:
             def start_stream_thread():
                 """Handle stream process and output monitoring."""
                 try:
-                    print(f"[StreamPlayer] Running: {' '.join(cmd)}")
+                    logger.debug("Running: %s", " ".join(cmd))
                     self._current_process = subprocess.Popen(
                         cmd,
                         start_new_session=True,
@@ -79,7 +81,7 @@ class StreamPlayer:
                     )
 
                     for line in self._current_process.stdout:
-                        print(f"[StreamPlayer] Streamlink: {line.strip()}")
+                        logger.debug("Streamlink: %s", line.strip())
 
                         if "No playable streams found on this URL" in line:
                             GLib.idle_add(
@@ -93,8 +95,8 @@ class StreamPlayer:
                             )
 
                     if self._current_process.poll() is not None:
-                        print(
-                            f"[StreamPlayer] Process ended (code {self._current_process.returncode})"
+                        logger.debug(
+                            "Process ended (code %s)", self._current_process.returncode
                         )
                         if self._current_process.returncode != 0:
                             GLib.idle_add(
@@ -102,7 +104,7 @@ class StreamPlayer:
                             )
 
                 except Exception as e:
-                    print(f"[StreamPlayer] Error in stream thread: {str(e)}")
+                    logger.debug("Error in stream thread: %s", str(e))
 
             # Start in background thread
             thread = threading.Thread(target=start_stream_thread, daemon=True)
@@ -110,7 +112,7 @@ class StreamPlayer:
             return True
 
         except Exception as e:
-            print(f"[StreamPlayer] Error in play_content: {str(e)}")
+            logger.debug("Error in play_content: %s", str(e))
             self.window.show_toast(_("Error starting playback"), 3)
             return False
 

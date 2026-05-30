@@ -1,5 +1,6 @@
 import gettext
 import json
+import logging
 import re
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -9,6 +10,8 @@ import requests
 from gi.repository import GLib
 
 _ = gettext.gettext
+
+logger = logging.getLogger("Twitch")
 
 
 class TwitchAPI:
@@ -20,7 +23,7 @@ class TwitchAPI:
         self.client_secret = client_secret
         self.access_token = None
         self.token_expires_at = None
-        print(f"[Twitch] Initializing API (client_id: {client_id[:5]}...)")
+        logger.debug("Initializing API (client_id: %s...)", client_id[:5])
 
         # Lazy-loaded caches — nothing read from disk yet
         self._user_cache = {}
@@ -29,7 +32,7 @@ class TwitchAPI:
 
     def _get_access_token(self):
         url = "https://id.twitch.tv/oauth2/token"
-        print(f"[Twitch] Requesting access token from {url}")
+        logger.debug("Requesting access token from %s", url)
         params = {
             "client_id": self.client_id,
             "client_secret": self.client_secret,
@@ -46,10 +49,10 @@ class TwitchAPI:
                 seconds=expires_in
             )
             self._save_token_cache()
-            print("[Twitch] Access token obtained successfully")
+            logger.debug("Access token obtained successfully")
             return self.access_token
         except requests.exceptions.RequestException as e:
-            print(f"[Twitch] Failed to get access token: {str(e)}")
+            logger.debug("Failed to get access token: %s", str(e))
             raise
 
     def _ensure_access_token(self):
@@ -90,7 +93,7 @@ class TwitchAPI:
                 if datetime.now(timezone.utc) < expires_at:
                     self.access_token = cache_data["access_token"]
                     self.token_expires_at = expires_at
-                    print("[Twitch] Loaded valid token from cache")
+                    logger.debug("Loaded valid token from cache")
         except (json.JSONDecodeError, KeyError, OSError, FileNotFoundError):
             pass
 
@@ -105,7 +108,7 @@ class TwitchAPI:
             with open(self._get_token_cache_path(), "w") as f:
                 json.dump(cache_data, f, indent=4)
         except OSError:
-            print("[Twitch] Failed to save token cache")
+            logger.debug("Failed to save token cache")
 
     def _get_user_cache_path(self):
         """Get path to user cache file."""
@@ -118,6 +121,7 @@ class TwitchAPI:
                 data = json.load(f)
             # Migrate from old {"ids": {...}, "names": {...}} format
             if "ids" in data and "names" in data:
+                logger.debug("Migrating old user cache format")
                 migrated = {}
                 for login in data["ids"]:
                     migrated[login] = {
@@ -136,7 +140,7 @@ class TwitchAPI:
             with open(self._get_user_cache_path(), "w") as f:
                 json.dump(self.user_cache, f, indent=4)
         except OSError:
-            print("[Twitch] Failed to save user cache")
+            logger.debug("Failed to save user cache")
 
     def _get_streams_cache_path(self):
         """Get path to streams cache file."""
@@ -171,7 +175,7 @@ class TwitchAPI:
             with open(self._get_streams_cache_path(), "w") as f:
                 json.dump(cache_data, f, indent=4)
         except OSError:
-            print("[Twitch] Failed to save streams cache")
+            logger.debug("Failed to save streams cache")
 
     def _invalidate_streams_cache(self):
         """Delete streams cache so the next refresh is not blocked by cooldown."""
@@ -182,6 +186,8 @@ class TwitchAPI:
 
     def update_streams_cache(self, username, add=True):
         """Update streams cache without modifying timestamp."""
+        action = "adding" if add else "removing"
+        logger.debug("Updating streams cache: %s %s", action, username)
         try:
             with open(self._get_streams_cache_path()) as f:
                 cache_data = json.load(f)
@@ -211,8 +217,8 @@ class TwitchAPI:
         # Try to load from cache first
         cached_data, seconds_until_refresh = self._load_streams_cache()
         if cached_data is not None:
-            print(
-                f"[Twitch] Using cached stream data (refresh in {seconds_until_refresh}s)"
+            logger.debug(
+                "Using cached stream data (refresh in %ss)", seconds_until_refresh
             )
             return (
                 list(cached_data["online"].keys()),
@@ -224,7 +230,7 @@ class TwitchAPI:
         self._ensure_access_token()
 
         start_time = time()
-        print(f"[Twitch] Fetching streams for {len(usernames)} users")
+        logger.debug("Fetching streams for %s users", len(usernames))
 
         headers = {
             "Client-ID": self.client_id,
@@ -237,7 +243,7 @@ class TwitchAPI:
 
         for i in range(0, len(usernames), 100):
             batch = usernames[i : i + 100]
-            print(f"[Twitch] Processing batch {i // 100 + 1} ({len(batch)} users)")
+            logger.debug("Processing batch %s (%s users)", i // 100 + 1, len(batch))
             user_logins = "&user_login=".join(batch)
             url = f"https://api.twitch.tv/helix/streams?user_login={user_logins}"
 
@@ -260,8 +266,11 @@ class TwitchAPI:
                         "viewers": stream["viewer_count"],
                         "uptime": self._calculate_uptime(stream["started_at"]),
                     }
-                    print(
-                        f"[Twitch] Live: {stream['user_name']} playing {stream['game_name']} ({stream['viewer_count']} viewers)"
+                    logger.debug(
+                        "Live: %s playing %s (%s viewers)",
+                        stream["user_name"],
+                        stream["game_name"],
+                        stream["viewer_count"],
                     )
 
                 offline_streamers_batch = [
@@ -269,18 +278,21 @@ class TwitchAPI:
                 ]
                 offline_streamers.extend(offline_streamers_batch)
                 if offline_streamers_batch:
-                    print(f"[Twitch] Offline: {', '.join(offline_streamers_batch)}")
+                    logger.debug("Offline: %s", ", ".join(offline_streamers_batch))
 
                 # Save both caches after updating
                 self._save_user_cache()
 
             except requests.exceptions.RequestException as e:
-                print(f"[Twitch] API request failed: {str(e)}")
+                logger.debug("API request failed: %s", str(e))
                 raise
 
         elapsed = time() - start_time
-        print(
-            f"[Twitch] Completed in {elapsed:.2f}s - {len(online_streamers)} online, {len(offline_streamers)} offline"
+        logger.debug(
+            "Completed in %.2fs - %s online, %s offline",
+            elapsed,
+            len(online_streamers),
+            len(offline_streamers),
         )
 
         # Save to cache
@@ -294,7 +306,8 @@ class TwitchAPI:
 
     def get_user_vods(self, username, limit=20):
         """Get recent VODs for a user."""
-        print(f"[Twitch] Fetching VODs for {username}")
+        start_time = time()
+        logger.debug("Fetching VODs for %s", username)
 
         # Only get access token if we need to make API calls
         self._ensure_access_token()
@@ -306,6 +319,8 @@ class TwitchAPI:
 
         # Try to get user ID from cache first
         user_id = self.user_cache.get(username, {}).get("id")
+        if user_id:
+            logger.debug("Using cached user ID for %s: %s", username, user_id)
 
         if not user_id:
             # If not in cache, fetch it from API
@@ -325,7 +340,7 @@ class TwitchAPI:
                 self._save_user_cache()
 
             except requests.exceptions.RequestException as e:
-                print(f"[Twitch] Failed to fetch user ID: {str(e)}")
+                logger.debug("Failed to fetch user ID: %s", str(e))
                 raise
 
         # Now get VODs
@@ -348,11 +363,16 @@ class TwitchAPI:
                     }
                 )
 
-            print(f"[Twitch] Found {len(formatted_vods)} VODs for {username}")
+            logger.debug(
+                "Found %s VODs for %s in %.2fs",
+                len(formatted_vods),
+                username,
+                time() - start_time,
+            )
             return formatted_vods
 
         except requests.exceptions.RequestException as e:
-            print(f"[Twitch] Failed to fetch VODs: {str(e)}")
+            logger.debug("Failed to fetch VODs: %s", str(e))
             raise
 
     def _format_date(self, date_str):

@@ -1,8 +1,10 @@
 import gettext
+import logging
 
 from gi.repository import Adw, GLib, Gtk
 
 _ = gettext.gettext
+logger = logging.getLogger("Preferences")
 
 
 @Gtk.Template(resource_path="/io/github/jfsen/Streamline/preferences.ui")
@@ -188,6 +190,7 @@ class StreamlinePreferences(Adw.PreferencesDialog):
                     Adw.Toast.new(_("Streamers list saved to {}").format(file_path))
                 )
             except Exception as e:
+                logger.debug("Error saving file: %s", e)
                 self.add_toast(Adw.Toast.new(_("Error saving file: {}").format(str(e))))
         dialog.destroy()
 
@@ -255,6 +258,7 @@ class StreamlinePreferences(Adw.PreferencesDialog):
                 else:
                     self.add_toast(Adw.Toast.new(_("All streamers already followed")))
             except Exception as e:
+                logger.debug("Error importing file: %s", e)
                 self.add_toast(
                     Adw.Toast.new(_("Error importing file: {}").format(str(e)))
                 )

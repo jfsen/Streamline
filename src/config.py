@@ -1,4 +1,5 @@
 import gettext
+import logging
 
 import gi
 
@@ -7,6 +8,8 @@ gi.require_version("Gio", "2.0")
 from gi.repository import Gio, GLib  # noqa: E402
 
 _ = gettext.gettext
+
+logger = logging.getLogger("Config")
 
 
 class ConfigManager:
@@ -47,7 +50,8 @@ class ConfigManager:
         try:
             self.settings.apply()
             return True
-        except Exception:
+        except Exception as e:
+            logger.debug("Failed to save settings: %s", e)
             return False
 
     def create_config_dict(self, window):

@@ -1,5 +1,6 @@
 import gettext
 import json
+import logging
 import threading
 from datetime import datetime, timezone
 from pathlib import Path
@@ -9,6 +10,8 @@ import requests
 from gi.repository import Adw, GLib, Gtk
 
 _ = gettext.gettext
+
+logger = logging.getLogger("VODPage")
 
 
 @Gtk.Template(resource_path="/io/github/jfsen/Streamline/vod_page.ui")
@@ -91,7 +94,7 @@ class VODPage(Adw.NavigationPage):
             with open(self.get_cache_path(), "w") as f:
                 json.dump(cache_data, f, indent=4)
         except OSError as e:
-            print(f"[VODPage] Failed to write VOD cache: {e}")
+            logger.debug("Failed to write VOD cache: %s", e)
 
     def _show_spinner(self):
         """Show a loading spinner in the list."""
@@ -104,13 +107,14 @@ class VODPage(Adw.NavigationPage):
 
     def _load_vods(self):
         """Load and display VODs — cache check is instant, network is async."""
-        # Try cache first (fast, no spinner needed if hit)
         cached_vods = self.load_cached_vods()
         if cached_vods is not None:
+            logger.debug("Using %s cached VODs for %s", len(cached_vods), self.streamer)
             self.display_vods(cached_vods)
             return
 
         # Show spinner while fetching from network in background
+        logger.debug("Cache miss for %s, fetching from API", self.streamer)
         self._show_spinner()
         threading.Thread(target=self._fetch_vods_thread, daemon=True).start()
 
@@ -175,7 +179,7 @@ class VODPage(Adw.NavigationPage):
 
     def display_vods(self, vods):
         """Display VODs in the list box."""
-        # Clear existing rows using the same pattern as _on_hidden
+        self.list_box.set_visible(False)
         while row := self.list_box.get_first_child():
             self.list_box.remove(row)
 
@@ -186,6 +190,7 @@ class VODPage(Adw.NavigationPage):
             )
             row.add_prefix(Gtk.Image.new_from_icon_name("video-x-generic-symbolic"))
             self.list_box.append(row)
+            self.list_box.set_visible(True)
             return
 
         for vod in vods:
@@ -213,6 +218,8 @@ class VODPage(Adw.NavigationPage):
             row.add_suffix(browser_button)
 
             self.list_box.append(row)
+
+        self.list_box.set_visible(True)
 
     def play_vod(self, vod):
         """Play VOD using streamlink."""
