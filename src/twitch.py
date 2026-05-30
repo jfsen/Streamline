@@ -264,7 +264,7 @@ class TwitchAPI:
                         "game": stream["game_name"],
                         "title": stream["title"],
                         "viewers": stream["viewer_count"],
-                        "uptime": self._calculate_uptime(stream["started_at"]),
+                        "started_at": stream["started_at"],
                     }
                     logger.debug(
                         "Live: %s playing %s (%s viewers)",
@@ -357,8 +357,8 @@ class TwitchAPI:
                         "id": vod["id"],
                         "title": vod["title"],
                         "url": vod["url"],
-                        "duration": self._format_duration(vod["duration"]),
-                        "created_at": self._format_date(vod["created_at"]),
+                        "duration": vod["duration"],
+                        "created_at": vod["created_at"],
                         "view_count": vod["view_count"],
                     }
                 )

@@ -1,6 +1,7 @@
 import gettext
 import json
 import logging
+import re
 import threading
 from datetime import datetime, timezone
 from pathlib import Path
@@ -194,9 +195,15 @@ class VODPage(Adw.NavigationPage):
             return
 
         for vod in vods:
+            created_at = vod["created_at"]
+            if created_at.startswith("20"):  # raw ISO timestamp
+                created_at = self.twitch._format_date(created_at)
+            duration = vod["duration"]
+            if re.search(r"\dh", duration):  # raw Twitch format like "2h29m45s"
+                duration = self.twitch._format_duration(duration)
             row = Adw.ActionRow(
                 title=GLib.markup_escape_text(vod["title"]),
-                subtitle=f"{vod['created_at']} • {vod['duration']}",
+                subtitle=f"{created_at} • {duration}",
             )
             row.set_title_lines(1)
             row.set_tooltip_text(vod["title"])

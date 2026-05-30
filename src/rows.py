@@ -76,7 +76,11 @@ class StreamerRowManager:
 
             raw_title = info.get("title", "No title")
             title = unescape(raw_title)  # Unescape special characters
-            uptime = info.get("uptime", "N/A")
+            started_at = info.get("started_at")
+            if started_at:
+                uptime = self.window.twitch._calculate_uptime(started_at)
+            else:
+                uptime = info.get("uptime", "N/A")
             tooltip = _("Title: {}\nUptime: {}").format(title, uptime)
             row.set_tooltip_text(tooltip)
         else:  # Offline streamer
