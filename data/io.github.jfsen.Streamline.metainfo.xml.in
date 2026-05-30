@@ -31,6 +31,21 @@
   </branding>
 
   <releases>
+    <release version="3.2.0" date="2026-05-30">
+      <description translate="no">
+        <p>Streamline 3.2 — infrastructure, polish, and language-agnostic caching.</p>
+        <ul>
+          <li>Replaced print() debugging with Python logging module across all modules</li>
+          <li>Uptime, VOD dates, and durations are now cached as raw values and formatted at display time — survives locale switches</li>
+          <li>Fixed app access token expiring every 3.5 hours; now uses the actual ~60 day lifetime from the Twitch API</li>
+          <li>Removed deprecated --twitch-disable-ads Streamlink flag</li>
+          <li>Simplified cache file structures: merged users.json format, consolidated streams.json</li>
+          <li>Cache paths now use GLib.get_user_cache_dir() for proper Flatpak sandbox integration</li>
+          <li>Added GPL-3.0 license link to the About dialog</li>
+          <li>Removed redundant preferences description strings</li>
+        </ul>
+      </description>
+    </release>
     <release version="3.1.0" date="2026-05-30">
       <description translate="no">
         <p>Streamline 3.1 — German translation.</p>
