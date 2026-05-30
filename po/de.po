@@ -647,10 +647,6 @@ msgstr ""
 msgid "Streamers"
 msgstr "Streamer"
 
-#: src/preferences.ui:80
-msgid "Export your followed streamers list for backup"
-msgstr "Exportiere deine gefolgten Streamer zur Sicherung"
-
 #: src/preferences.ui:83
 msgid "Export List"
 msgstr "Liste exportieren"

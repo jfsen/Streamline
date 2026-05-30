@@ -77,7 +77,6 @@
         <child>
           <object class="AdwPreferencesGroup">
             <property name="title" translatable="yes">Streamers</property>
-            <property name="description" translatable="yes">Export your followed streamers list for backup</property>
             <child>
               <object class="AdwActionRow">
                 <property name="title" translatable="yes">Export List</property>
