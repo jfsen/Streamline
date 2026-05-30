@@ -1,7 +1,10 @@
+import gettext
 import subprocess
 import threading
 
 from gi.repository import GLib
+
+_ = gettext.gettext
 
 
 class StreamPlayer:
@@ -20,7 +23,7 @@ class StreamPlayer:
                 return False
 
             # Show initial toast message
-            self.window.show_toast("Connecting...", 1)
+            self.window.show_toast(_("Connecting..."), 1)
 
             # Build streamlink command with flatpak-spawn
             cmd = ["flatpak-spawn", "--host", "streamlink"]
@@ -81,12 +84,12 @@ class StreamPlayer:
 
                         if "No playable streams found on this URL" in line:
                             GLib.idle_add(
-                                self.window.show_toast, "Stream not available", 3
+                                self.window.show_toast, _("Stream not available"), 3
                             )
                         elif "Waiting for pre-roll ads to finish" in line:
                             GLib.idle_add(
                                 self.window.show_toast,
-                                "Waiting for ads to finish...",
+                                _("Waiting for ads to finish..."),
                                 3,
                             )
 
@@ -96,7 +99,7 @@ class StreamPlayer:
                         )
                         if self._current_process.returncode != 0:
                             GLib.idle_add(
-                                self.window.show_toast, "Stream playback failed", 3
+                                self.window.show_toast, _("Stream playback failed"), 3
                             )
 
                 except Exception as e:
@@ -109,7 +112,7 @@ class StreamPlayer:
 
         except Exception as e:
             print(f"DEBUG: Error in play_content: {str(e)}")
-            self.window.show_toast("Error starting playback", 3)
+            self.window.show_toast(_("Error starting playback"), 3)
             return False
 
     def _get_player_executable(self):
@@ -149,21 +152,21 @@ class StreamPlayer:
         if player == "custom":
             path = self.window.custom_player_path
             if path:
-                message = (
-                    f"Could not find {path} on your system.\n"
+                message = _(
+                    "Could not find {path} on your system.\n"
                     "Check the path in Preferences → Player → Custom player executable."
-                )
+                ).format(path=path)
             else:
-                message = (
+                message = _(
                     "No custom player executable configured.\n"
                     "Set the path to your player in Preferences → Player → Custom player executable."
                 )
         else:
-            message = (
-                f"Could not find {player} on your system.\n"
+            message = _(
+                "Could not find {player} on your system.\n"
                 "Please install it using your distribution's package manager:\n\n"
-                f"• Arch: sudo pacman -S {player}\n"
-                f"• Ubuntu/Debian: sudo apt install {player}\n"
-                f"• Fedora: sudo dnf install {player}"
-            )
-        self.window._show_error_dialog("Missing Player", message)
+                "• Arch: sudo pacman -S {player}\n"
+                "• Ubuntu/Debian: sudo apt install {player}\n"
+                "• Fedora: sudo dnf install {player}"
+            ).format(player=player)
+        self.window._show_error_dialog(_("Missing Player"), message)

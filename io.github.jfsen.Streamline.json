@@ -37,17 +37,8 @@
       "buildsystem": "meson",
       "sources": [
         {
-          "type": "git",
-          "url": "https://github.com/jfsen/Streamline.git",
-          "tag": "v2.0.0"
-        },
-        {
-          "type": "file",
-          "path": "data/icons/hicolor/scalable/apps/io.github.jfsen.Streamline.svg"
-        },
-        {
-          "type": "file",
-          "path": "data/icons/hicolor/symbolic/apps/io.github.jfsen.Streamline-symbolic.svg"
+          "type": "dir",
+          "path": "."
         }
       ],
       "config-opts": ["--libdir=lib"]

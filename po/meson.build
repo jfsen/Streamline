@@ -1,1 +1,1 @@
-i18n.gettext('streamline', preset: 'glib')
+i18n.gettext('io.github.jfsen.Streamline', preset: 'glib')

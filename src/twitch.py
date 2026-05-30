@@ -1,3 +1,4 @@
+import gettext
 import json
 import re
 from datetime import datetime, timedelta, timezone
@@ -5,6 +6,8 @@ from pathlib import Path
 from time import time
 
 import requests
+
+_ = gettext.gettext
 
 
 class TwitchAPI:
@@ -344,20 +347,20 @@ class TwitchAPI:
 
         minutes = int(delta.total_seconds() // 60)
         if minutes < 1:
-            return "Just now"
+            return _("Just now")
         if minutes < 60:
-            return f"{minutes}m ago"
+            return _("{}m ago").format(minutes)
 
         hours = minutes // 60
         if hours < 24:
-            return f"{hours}h ago"
+            return _("{}h ago").format(hours)
 
         days = hours // 24
         if days < 7:
-            return f"{days}d ago"
+            return _("{}d ago").format(days)
         if days < 30:
             weeks = days // 7
-            return f"{weeks}w ago"
+            return _("{}w ago").format(weeks)
 
         return date.strftime("%b %d")
 
@@ -367,13 +370,13 @@ class TwitchAPI:
         m = re.search(r"(\d+)m", duration_str)
         parts = []
         if h:
-            parts.append(f"{h.group(1)}h")
+            parts.append(_("{}h").format(h.group(1)))
         if m:
-            parts.append(f"{m.group(1)}m")
+            parts.append(_("{}m").format(m.group(1)))
         if not parts:
             s = re.search(r"(\d+)s", duration_str)
             if s:
-                parts.append(f"{s.group(1)}s")
+                parts.append(_("{}s").format(s.group(1)))
         return " ".join(parts) if parts else duration_str
 
     def _calculate_uptime(self, start_time):
@@ -382,5 +385,5 @@ class TwitchAPI:
         now = datetime.now(timezone.utc)
         uptime = now - start_time
         hours, remainder = divmod(uptime.total_seconds(), 3600)
-        minutes, _ = divmod(remainder, 60)
-        return f"{int(hours)}h {int(minutes)}m"
+        minutes, _secs = divmod(remainder, 60)
+        return _("{}h {}m").format(int(hours), int(minutes))

@@ -1,0 +1,655 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the streamline package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: streamline 3.1.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-05-30 02:02+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: data/io.github.jfsen.Streamline.desktop.in:2
+#: data/io.github.jfsen.Streamline.metainfo.xml.in:7 src/window.py:118
+#: src/window.ui:6
+msgid "Streamline"
+msgstr ""
+
+#: data/io.github.jfsen.Streamline.desktop.in:3
+#: data/io.github.jfsen.Streamline.metainfo.xml.in:8
+msgid "Watch Twitch streams in your local media player"
+msgstr ""
+
+#: data/io.github.jfsen.Streamline.desktop.in:9
+msgid "Twitch;Livestream;Streaming;Streamlink;"
+msgstr ""
+
+#: data/io.github.jfsen.Streamline.metainfo.xml.in:10
+msgid ""
+"Follow your favorite Twitch streamers, check their online status, and watch "
+"them in your preferred media player — mpv, VLC, or any custom player. Browse "
+"and play channel VODs, all without a web browser."
+msgstr ""
+
+#: data/io.github.jfsen.Streamline.metainfo.xml.in:14
+msgid "jfsen"
+msgstr ""
+
+#: data/io.github.jfsen.Streamline.gschema.xml:6
+msgid "Player type"
+msgstr ""
+
+#: data/io.github.jfsen.Streamline.gschema.xml:7
+msgid "The preferred media player (mpv, vlc, or custom)"
+msgstr ""
+
+#: data/io.github.jfsen.Streamline.gschema.xml:11
+msgid "Custom player path"
+msgstr ""
+
+#: data/io.github.jfsen.Streamline.gschema.xml:12
+msgid "Path to a custom media player executable"
+msgstr ""
+
+#: data/io.github.jfsen.Streamline.gschema.xml:16
+msgid "Stream quality preset"
+msgstr ""
+
+#: data/io.github.jfsen.Streamline.gschema.xml:17
+msgid "The stream quality preset (High, Medium, Low, Custom)"
+msgstr ""
+
+#: data/io.github.jfsen.Streamline.gschema.xml:21
+msgid "Custom quality string"
+msgstr ""
+
+#: data/io.github.jfsen.Streamline.gschema.xml:22
+msgid "Custom stream quality string for streamlink"
+msgstr ""
+
+#: data/io.github.jfsen.Streamline.gschema.xml:26 src/preferences.ui:13
+msgid "Theme"
+msgstr ""
+
+#: data/io.github.jfsen.Streamline.gschema.xml:27
+msgid "The application theme (system, light, dark, bronze, anthracite, red)"
+msgstr ""
+
+#: data/io.github.jfsen.Streamline.gschema.xml:31
+msgid "Low latency mode"
+msgstr ""
+
+#: data/io.github.jfsen.Streamline.gschema.xml:32
+msgid "Enable low latency streaming"
+msgstr ""
+
+#: data/io.github.jfsen.Streamline.gschema.xml:36
+msgid "Followed streamers"
+msgstr ""
+
+#: data/io.github.jfsen.Streamline.gschema.xml:37
+msgid "List of followed Twitch streamers"
+msgstr ""
+
+#: data/io.github.jfsen.Streamline.gschema.xml:41
+msgid "Twitch Client ID"
+msgstr ""
+
+#: data/io.github.jfsen.Streamline.gschema.xml:42
+msgid "Twitch API client ID for authentication"
+msgstr ""
+
+#: data/io.github.jfsen.Streamline.gschema.xml:46
+msgid "Twitch Client Secret"
+msgstr ""
+
+#: data/io.github.jfsen.Streamline.gschema.xml:47
+msgid "Twitch API client secret for authentication"
+msgstr ""
+
+#: src/dialogs.py:39
+msgid "OK"
+msgstr ""
+
+#: src/dialogs.py:46
+msgid "Unfollow Streamer?"
+msgstr ""
+
+#: src/dialogs.py:47
+#, python-brace-format
+msgid "Are you sure you want to unfollow {}?"
+msgstr ""
+
+#: src/dialogs.py:50 src/dialogs.py:70 src/dialogs.py:95 src/dialogs.py:149
+msgid "Cancel"
+msgstr ""
+
+#: src/dialogs.py:51 src/rows.py:131
+msgid "Unfollow"
+msgstr ""
+
+#: src/dialogs.py:65
+msgid "Follow Streamer(s)"
+msgstr ""
+
+#: src/dialogs.py:66
+msgid "Enter Twitch usernames (separate multiple with commas):"
+msgstr ""
+
+#: src/dialogs.py:71
+msgid "Follow"
+msgstr ""
+
+#: src/dialogs.py:90 src/window.py:479 src/window.ui:25
+msgid "Quick Play Stream"
+msgstr ""
+
+#: src/dialogs.py:91
+msgid "Enter the Twitch username of the streamer:"
+msgstr ""
+
+#: src/dialogs.py:96
+msgid "Play"
+msgstr ""
+
+#: src/dialogs.py:116
+msgid "Twitch API Credentials"
+msgstr ""
+
+#: src/dialogs.py:118
+msgid ""
+"Enter your Twitch Client ID and Client Secret to enable the app:\n"
+"\n"
+"You can get these at https://dev.twitch.tv/console/apps"
+msgstr ""
+
+#: src/dialogs.py:133 src/preferences.ui:120
+msgid "Client ID"
+msgstr ""
+
+#: src/dialogs.py:139 src/preferences.ui:125
+msgid "Client Secret"
+msgstr ""
+
+#: src/dialogs.py:150
+msgid "Save"
+msgstr ""
+
+#. Translators: Replace "translator-credits" with your name/username, and optionally an email or URL.
+#: src/main.py:80
+msgid "translator-credits"
+msgstr ""
+
+#: src/preferences.py:38 src/preferences.py:39
+msgid "Custom"
+msgstr ""
+
+#: src/preferences.py:39
+msgid "High"
+msgstr ""
+
+#: src/preferences.py:39
+msgid "Medium"
+msgstr ""
+
+#: src/preferences.py:39
+msgid "Low"
+msgstr ""
+
+#: src/preferences.py:188
+#, python-brace-format
+msgid "Streamers list saved to {}"
+msgstr ""
+
+#: src/preferences.py:191
+#, python-brace-format
+msgid "Error saving file: {}"
+msgstr ""
+
+#: src/preferences.py:230
+msgid "No streamer names found in file"
+msgstr ""
+
+#: src/preferences.py:246
+#, python-brace-format
+msgid "Added {} streamer(s) ({} already followed)"
+msgstr ""
+
+#: src/preferences.py:253
+#, python-brace-format
+msgid "Added {} streamer(s)"
+msgstr ""
+
+#: src/preferences.py:256
+msgid "All streamers already followed"
+msgstr ""
+
+#: src/preferences.py:259
+#, python-brace-format
+msgid "Error importing file: {}"
+msgstr ""
+
+#: src/rows.py:74
+#, python-brace-format
+msgid ""
+"{}\n"
+"{} viewers"
+msgstr ""
+
+#: src/rows.py:80
+#, python-brace-format
+msgid ""
+"Title: {}\n"
+"Uptime: {}"
+msgstr ""
+
+#: src/rows.py:99
+msgid "Play stream"
+msgstr ""
+
+#: src/rows.py:112
+msgid "Open in browser"
+msgstr ""
+
+#: src/rows.py:123
+msgid "More"
+msgstr ""
+
+#: src/rows.py:130
+msgid "Show VODs"
+msgstr ""
+
+#: src/stream_player.py:26
+msgid "Connecting..."
+msgstr ""
+
+#: src/stream_player.py:87
+msgid "Stream not available"
+msgstr ""
+
+#: src/stream_player.py:92
+msgid "Waiting for ads to finish..."
+msgstr ""
+
+#: src/stream_player.py:102
+msgid "Stream playback failed"
+msgstr ""
+
+#: src/stream_player.py:115
+msgid "Error starting playback"
+msgstr ""
+
+#: src/stream_player.py:156
+#, python-brace-format
+msgid ""
+"Could not find {path} on your system.\n"
+"Check the path in Preferences → Player → Custom player executable."
+msgstr ""
+
+#: src/stream_player.py:161
+msgid ""
+"No custom player executable configured.\n"
+"Set the path to your player in Preferences → Player → Custom player "
+"executable."
+msgstr ""
+
+#: src/stream_player.py:166
+#, python-brace-format
+msgid ""
+"Could not find {player} on your system.\n"
+"Please install it using your distribution's package manager:\n"
+"\n"
+"• Arch: sudo pacman -S {player}\n"
+"• Ubuntu/Debian: sudo apt install {player}\n"
+"• Fedora: sudo dnf install {player}"
+msgstr ""
+
+#: src/stream_player.py:172
+msgid "Missing Player"
+msgstr ""
+
+#: src/twitch.py:350
+msgid "Just now"
+msgstr ""
+
+#: src/twitch.py:352
+#, python-brace-format
+msgid "{}m ago"
+msgstr ""
+
+#: src/twitch.py:356
+#, python-brace-format
+msgid "{}h ago"
+msgstr ""
+
+#: src/twitch.py:360
+#, python-brace-format
+msgid "{}d ago"
+msgstr ""
+
+#: src/twitch.py:363
+#, python-brace-format
+msgid "{}w ago"
+msgstr ""
+
+#: src/twitch.py:373
+#, python-brace-format
+msgid "{}h"
+msgstr ""
+
+#: src/twitch.py:375
+#, python-brace-format
+msgid "{}m"
+msgstr ""
+
+#: src/twitch.py:379
+#, python-brace-format
+msgid "{}s"
+msgstr ""
+
+#: src/twitch.py:389
+#, python-brace-format
+msgid "{}h {}m"
+msgstr ""
+
+#: src/vod_page.py:25
+#, python-brace-format
+msgid "{}'s VODs"
+msgstr ""
+
+#: src/vod_page.py:100
+msgid "Loading VODs…"
+msgstr ""
+
+#: src/vod_page.py:127 src/vod_page.py:134
+msgid "Error Loading VODs"
+msgstr ""
+
+#: src/vod_page.py:128
+msgid "No internet connection. Check your network and try again."
+msgstr ""
+
+#: src/vod_page.py:168 src/window.py:261
+#, python-brace-format
+msgid "Please wait {}s before refreshing"
+msgstr ""
+
+#: src/vod_page.py:184
+msgid "No VODs found"
+msgstr ""
+
+#: src/vod_page.py:185
+msgid "This channel has no recent VODs available"
+msgstr ""
+
+#: src/vod_page.py:202
+msgid "Play VOD"
+msgstr ""
+
+#: src/vod_page.py:209
+msgid "Open VOD in browser"
+msgstr ""
+
+#: src/vod_page.py:221
+#, python-brace-format
+msgid "Starting VOD: {}"
+msgstr ""
+
+#: src/vod_page.py:223
+msgid "Error playing VOD: player failed to start"
+msgstr ""
+
+#: src/window.py:198 src/window.py:277
+msgid "Connection Error"
+msgstr ""
+
+#: src/window.py:200 src/window.py:279
+msgid "Could not fetch streamer data. Please check your internet connection."
+msgstr ""
+
+#: src/window.py:210 src/window.py:289
+msgid "API Rate Limit"
+msgstr ""
+
+#: src/window.py:212 src/window.py:291
+msgid ""
+"Twitch API rate limit reached. Please wait a few minutes before refreshing "
+"again."
+msgstr ""
+
+#: src/window.py:218 src/window.py:226 src/window.py:297 src/window.py:305
+msgid "API Error"
+msgstr ""
+
+#: src/window.py:219 src/window.py:298
+#, python-brace-format
+msgid "HTTP error {} occurred while fetching streamer data."
+msgstr ""
+
+#: src/window.py:227 src/window.py:306
+#, python-brace-format
+msgid "Failed to fetch streamer data: {}"
+msgstr ""
+
+#: src/window.py:252
+msgid "API not available"
+msgstr ""
+
+#: src/window.py:312
+msgid "Stream data refreshed"
+msgstr ""
+
+#: src/window.py:423
+#, python-brace-format
+msgid "Now following {}"
+msgstr ""
+
+#: src/window.py:425
+#, python-brace-format
+msgid "Added {} new streamers"
+msgstr ""
+
+#: src/window.py:429
+#, python-brace-format
+msgid "Already following {}"
+msgstr ""
+
+#: src/window.py:432
+#, python-brace-format
+msgid "Already following: {}"
+msgstr ""
+
+#: src/window.py:444
+#, python-brace-format
+msgid "Error: {}"
+msgstr ""
+
+#: src/window.py:451
+msgid "Error Saving Config"
+msgstr ""
+
+#: src/window.py:451
+msgid "Could not save configuration"
+msgstr ""
+
+#: src/window.py:468
+msgid "Application"
+msgstr ""
+
+#: src/window.py:469 src/preferences.ui:7
+msgid "Preferences"
+msgstr ""
+
+#: src/window.py:470
+msgid "Show Shortcuts"
+msgstr ""
+
+#: src/window.py:471
+msgid "Quit"
+msgstr ""
+
+#: src/window.py:475
+msgid "Stream Management"
+msgstr ""
+
+#: src/window.py:477
+msgid "Follow New Streamer"
+msgstr ""
+
+#: src/window.py:480 src/window.py:481
+msgid "Refresh Streams"
+msgstr ""
+
+#: src/window.ui:19
+msgid "Refresh"
+msgstr ""
+
+#: src/window.ui:36
+msgid "Follow Streamer"
+msgstr ""
+
+#: src/window.ui:44
+msgid "Main Menu"
+msgstr ""
+
+#: src/window.ui:60
+msgid "Online"
+msgstr ""
+
+#: src/window.ui:65
+msgid "Offline"
+msgstr ""
+
+#: src/window.ui:80
+msgid "_Preferences"
+msgstr ""
+
+#: src/window.ui:84
+msgid "_Keyboard Shortcuts"
+msgstr ""
+
+#: src/window.ui:88
+msgid "_About Streamline"
+msgstr ""
+
+#: src/preferences.ui:16
+msgid "Style"
+msgstr ""
+
+#: src/preferences.ui:17
+msgid "Change the color scheme"
+msgstr ""
+
+#: src/preferences.ui:21
+msgid "System"
+msgstr ""
+
+#: src/preferences.ui:22
+msgid "Light"
+msgstr ""
+
+#: src/preferences.ui:23
+msgid "Dark"
+msgstr ""
+
+#: src/preferences.ui:24
+msgid "Bronze"
+msgstr ""
+
+#: src/preferences.ui:25
+msgid "Anthracite"
+msgstr ""
+
+#: src/preferences.ui:26
+msgid "Red"
+msgstr ""
+
+#: src/preferences.ui:37
+msgid "Player"
+msgstr ""
+
+#: src/preferences.ui:40
+msgid "Media Player"
+msgstr ""
+
+#: src/preferences.ui:41
+msgid "The video player used to watch streams"
+msgstr ""
+
+#: src/preferences.ui:46
+msgid "Custom Player Command"
+msgstr ""
+
+#: src/preferences.ui:55
+msgid "Quality"
+msgstr ""
+
+#: src/preferences.ui:58
+msgid "Stream Quality"
+msgstr ""
+
+#: src/preferences.ui:59
+msgid "Higher quality uses more bandwidth"
+msgstr ""
+
+#: src/preferences.ui:64
+msgid "Custom Quality"
+msgstr ""
+
+#: src/preferences.ui:70
+msgid "Low Latency Mode"
+msgstr ""
+
+#: src/preferences.ui:71
+msgid "Reduces stream delay but may cause buffering on slower connections"
+msgstr ""
+
+#: src/preferences.ui:79
+msgid "Streamers"
+msgstr ""
+
+#: src/preferences.ui:80
+msgid "Export your followed streamers list for backup"
+msgstr ""
+
+#: src/preferences.ui:83
+msgid "Export List"
+msgstr ""
+
+#: src/preferences.ui:84
+msgid "Save your followed streamers for backup"
+msgstr ""
+
+#: src/preferences.ui:98
+msgid "Import List"
+msgstr ""
+
+#: src/preferences.ui:99
+msgid "Load a backup file to follow streamers"
+msgstr ""
+
+#: src/preferences.ui:116
+msgid "Twitch API"
+msgstr ""
+
+#: src/preferences.ui:117
+msgid ""
+"Credentials are required to fetch stream data. You can get these at "
+"dev.twitch.tv/console/apps"
+msgstr ""
+
+#: src/vod_page.ui:6
+msgid "VODs"
+msgstr ""
+
+#: src/vod_page.ui:23
+msgid "Refresh VODs"
+msgstr ""

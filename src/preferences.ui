@@ -6,7 +6,6 @@
   <template class="StreamlinePreferences" parent="AdwPreferencesDialog">
     <property name="title" translatable="yes">Preferences</property>
 
-    <!-- Single page -->
     <child>
       <object class="AdwPreferencesPage">
         <child>
@@ -15,7 +14,7 @@
             <child>
               <object class="AdwComboRow" id="theme_row">
                 <property name="title" translatable="yes">Style</property>
-                <property name="subtitle" translatable="yes">Change the application color scheme</property>
+                <property name="subtitle" translatable="yes">Change the color scheme</property>
                 <property name="model">
                   <object class="GtkStringList">
                     <items>

@@ -1,3 +1,4 @@
+import gettext
 import json
 import threading
 from datetime import datetime, timezone
@@ -6,6 +7,8 @@ from weakref import proxy
 
 import requests
 from gi.repository import Adw, GLib, Gtk
+
+_ = gettext.gettext
 
 
 @Gtk.Template(resource_path="/io/github/jfsen/Streamline/vod_page.ui")
@@ -19,7 +22,7 @@ class VODPage(Adw.NavigationPage):
 
     def __init__(self, parent, streamer, twitch, player):
         # Create navigation page with proper title
-        super().__init__(title=f"{streamer}'s VODs")
+        super().__init__(title=_("{}'s VODs").format(streamer))
 
         # Use weak reference for parent
         self.parent = proxy(parent)
@@ -94,7 +97,7 @@ class VODPage(Adw.NavigationPage):
         """Show a loading spinner in the list."""
         while row := self.list_box.get_first_child():
             self.list_box.remove(row)
-        row = Adw.ActionRow(title="Loading VODs…")
+        row = Adw.ActionRow(title=_("Loading VODs…"))
         spinner = Gtk.Spinner(spinning=True)
         row.add_prefix(spinner)
         self.list_box.append(row)
@@ -121,14 +124,14 @@ class VODPage(Adw.NavigationPage):
             self._invalidate_vods_cache()
             GLib.idle_add(
                 self._show_error_row,
-                "Error Loading VODs",
-                "No internet connection. Check your network and try again.",
+                _("Error Loading VODs"),
+                _("No internet connection. Check your network and try again."),
             )
         except Exception as e:
             self._invalidate_vods_cache()
             GLib.idle_add(
                 self._show_error_row,
-                "Error Loading VODs",
+                _("Error Loading VODs"),
                 GLib.markup_escape_text(str(e)),
             )
 
@@ -161,7 +164,9 @@ class VODPage(Adw.NavigationPage):
             now = datetime.now(timezone.utc)
             remaining = 60 - (now - mtime).total_seconds()
             if remaining > 0:
-                self.show_toast(f"Please wait {int(remaining)}s before refreshing")
+                self.show_toast(
+                    _("Please wait {}s before refreshing").format(int(remaining))
+                )
                 return
 
         # Expired or no cache — force a fresh fetch
@@ -176,8 +181,8 @@ class VODPage(Adw.NavigationPage):
 
         if not vods:
             row = Adw.ActionRow(
-                title="No VODs found",
-                subtitle="This channel has no recent VODs available",
+                title=_("No VODs found"),
+                subtitle=_("This channel has no recent VODs available"),
             )
             row.add_prefix(Gtk.Image.new_from_icon_name("video-x-generic-symbolic"))
             self.list_box.append(row)
@@ -194,14 +199,14 @@ class VODPage(Adw.NavigationPage):
             play_button = Gtk.Button(icon_name="media-playback-start-symbolic")
             play_button.add_css_class("flat")
             play_button.set_valign(Gtk.Align.CENTER)
-            play_button.set_tooltip_text("Play VOD")
+            play_button.set_tooltip_text(_("Play VOD"))
             play_button.connect("clicked", lambda btn, v=vod: self.play_vod(v))
             row.add_suffix(play_button)
 
             browser_button = Gtk.Button(icon_name="web-browser-symbolic")
             browser_button.add_css_class("flat")
             browser_button.set_valign(Gtk.Align.CENTER)
-            browser_button.set_tooltip_text("Open VOD in browser")
+            browser_button.set_tooltip_text(_("Open VOD in browser"))
             browser_button.connect(
                 "clicked", lambda btn, v=vod: self.open_in_browser(v)
             )
@@ -213,9 +218,9 @@ class VODPage(Adw.NavigationPage):
         """Play VOD using streamlink."""
         try:
             self.player.play_content(vod["url"], is_vod=True)
-            self.show_toast(f"Starting VOD: {vod['title']}")
+            self.show_toast(_("Starting VOD: {}").format(vod["title"]))
         except Exception:
-            self.show_toast("Error playing VOD: player failed to start", 4)
+            self.show_toast(_("Error playing VOD: player failed to start"), 4)
 
     def open_in_browser(self, vod):
         """Open VOD in web browser."""

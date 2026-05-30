@@ -22,8 +22,11 @@
 import os
 import sys
 import signal
-import locale
+import ctypes
+import ctypes.util
 import gettext
+
+os.environ['GETTEXT_PACKAGE'] = 'io.github.jfsen.Streamline'
 
 VERSION = '@VERSION@'
 pkgdatadir = '@pkgdatadir@'
@@ -31,9 +34,16 @@ localedir = '@localedir@'
 
 sys.path.insert(1, pkgdatadir)
 signal.signal(signal.SIGINT, signal.SIG_DFL)
-locale.bindtextdomain('streamline', localedir)
-locale.textdomain('streamline')
-gettext.install('streamline', localedir)
+
+# Python gettext
+gettext.bindtextdomain('io.github.jfsen.Streamline', localedir)
+gettext.textdomain('io.github.jfsen.Streamline')
+gettext.install('io.github.jfsen.Streamline', localedir)
+
+# C-level gettext (GTK uses dgettext(NULL, ...) for UI templates)
+libc = ctypes.CDLL(ctypes.util.find_library('c'))
+libc.bindtextdomain(b'io.github.jfsen.Streamline', localedir.encode())
+libc.textdomain(b'io.github.jfsen.Streamline')
 
 if __name__ == '__main__':
     import gi

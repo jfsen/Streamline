@@ -1,4 +1,8 @@
+import gettext
+
 from gi.repository import Adw, GLib, Gtk
+
+_ = gettext.gettext
 
 
 @Gtk.Template(resource_path="/io/github/jfsen/Streamline/preferences.ui")
@@ -31,8 +35,9 @@ class StreamlinePreferences(Adw.PreferencesDialog):
         self._save_debounce_id = None
 
         # Build models
-        player_model = Gtk.StringList.new(["MPV", "VLC", "Custom"])
-        quality_model = Gtk.StringList.new(list(self._QUALITY_KEYS))
+        player_model = Gtk.StringList.new(["MPV", "VLC", _("Custom")])
+        quality_labels = (_("High"), _("Medium"), _("Low"), _("Custom"))
+        quality_model = Gtk.StringList.new(list(quality_labels))
 
         # ── Set up all rows in one pass ──
 
@@ -179,9 +184,11 @@ class StreamlinePreferences(Adw.PreferencesDialog):
             try:
                 with open(file_path, "w") as file:
                     file.write(streamers_text)
-                self.add_toast(Adw.Toast.new(f"Streamers list saved to {file_path}"))
+                self.add_toast(
+                    Adw.Toast.new(_("Streamers list saved to {}").format(file_path))
+                )
             except Exception as e:
-                self.add_toast(Adw.Toast.new(f"Error saving file: {str(e)}"))
+                self.add_toast(Adw.Toast.new(_("Error saving file: {}").format(str(e))))
         dialog.destroy()
 
     def _on_import_clicked(self, button):
@@ -220,7 +227,7 @@ class StreamlinePreferences(Adw.PreferencesDialog):
                             names.append(name)
 
                 if not names:
-                    self.add_toast(Adw.Toast.new("No streamer names found in file"))
+                    self.add_toast(Adw.Toast.new(_("No streamer names found in file")))
                     dialog.destroy()
                     return
 
@@ -236,13 +243,19 @@ class StreamlinePreferences(Adw.PreferencesDialog):
                 if new_count > 0 and dup_count > 0:
                     self.add_toast(
                         Adw.Toast.new(
-                            f"Added {new_count} streamer(s) ({dup_count} already followed)"
+                            _("Added {} streamer(s) ({} already followed)").format(
+                                new_count, dup_count
+                            )
                         )
                     )
                 elif new_count > 0:
-                    self.add_toast(Adw.Toast.new(f"Added {new_count} streamer(s)"))
+                    self.add_toast(
+                        Adw.Toast.new(_("Added {} streamer(s)").format(new_count))
+                    )
                 else:
-                    self.add_toast(Adw.Toast.new("All streamers already followed"))
+                    self.add_toast(Adw.Toast.new(_("All streamers already followed")))
             except Exception as e:
-                self.add_toast(Adw.Toast.new(f"Error importing file: {str(e)}"))
+                self.add_toast(
+                    Adw.Toast.new(_("Error importing file: {}").format(str(e)))
+                )
         dialog.destroy()

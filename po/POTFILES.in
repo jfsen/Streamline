@@ -3,7 +3,15 @@
 data/io.github.jfsen.Streamline.desktop.in
 data/io.github.jfsen.Streamline.metainfo.xml.in
 data/io.github.jfsen.Streamline.gschema.xml
+src/config.py
 src/dialogs.py
 src/main.py
+src/preferences.py
+src/rows.py
+src/stream_player.py
+src/twitch.py
+src/vod_page.py
 src/window.py
 src/window.ui
+src/preferences.ui
+src/vod_page.ui

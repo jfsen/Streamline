@@ -18,7 +18,7 @@
   <url type="vcs-browser">https://github.com/jfsen/Streamline</url>
   <url type="bugtracker">https://github.com/jfsen/Streamline/issues</url>
 
-  <translation type="gettext">streamline</translation>
+  <translation type="gettext">io.github.jfsen.Streamline</translation>
   <launchable type="desktop-id">io.github.jfsen.Streamline.desktop</launchable>
 
   <content_rating type="oars-1.1">
@@ -31,7 +31,15 @@
   </branding>
 
   <releases>
-    <release version="3.0.0" date="2026-05-30">
+    <release version="3.1.0" date="2026-05-30">
+      <description translate="no">
+        <p>Streamline 3.1 — German translation.</p>
+        <ul>
+          <li>German translation</li>
+        </ul>
+      </description>
+    </release>
+    <release version="3.0.0" date="2026-05-28">
       <description translate="no">
         <p>Streamline 3.0 — visual polish, responsiveness, and fixes.</p>
         <ul>

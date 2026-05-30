@@ -1,6 +1,9 @@
+import gettext
 from html import unescape
 
 from gi.repository import Adw, Gio, GLib, Gtk
+
+_ = gettext.gettext
 
 
 class StreamerRowManager:
@@ -68,12 +71,13 @@ class StreamerRowManager:
             row.add_css_class("online-row")
             viewers = info.get("viewers", "N/A")
             game = info.get("game", "Unknown")
-            row.set_subtitle(GLib.markup_escape_text(f"{game}\n{viewers} viewers"))
+            subtitle = _("{}\n{} viewers").format(game, viewers)
+            row.set_subtitle(GLib.markup_escape_text(subtitle))
 
             raw_title = info.get("title", "No title")
             title = unescape(raw_title)  # Unescape special characters
             uptime = info.get("uptime", "N/A")
-            tooltip = f"Title: {title}\nUptime: {uptime}"
+            tooltip = _("Title: {}\nUptime: {}").format(title, uptime)
             row.set_tooltip_text(tooltip)
         else:  # Offline streamer
             row.add_css_class("offline-row")
@@ -92,7 +96,7 @@ class StreamerRowManager:
         if not row.is_online:
             play_button.add_css_class("offline-stream-button")
         play_button.set_valign(Gtk.Align.CENTER)
-        play_button.set_tooltip_text("Play stream")
+        play_button.set_tooltip_text(_("Play stream"))
         play_button.connect(
             "clicked",
             lambda btn: self.window.player.play_content(
@@ -105,7 +109,7 @@ class StreamerRowManager:
         browser_button = Gtk.Button(icon_name="web-browser-symbolic")
         browser_button.add_css_class("flat")
         browser_button.set_valign(Gtk.Align.CENTER)
-        browser_button.set_tooltip_text("Open in browser")
+        browser_button.set_tooltip_text(_("Open in browser"))
         browser_button.connect(
             "clicked", lambda btn: self.window.open_stream_in_browser(streamer)
         )
@@ -116,15 +120,15 @@ class StreamerRowManager:
         menu_button.set_icon_name("view-more-symbolic")
         menu_button.add_css_class("flat")
         menu_button.set_valign(Gtk.Align.CENTER)
-        menu_button.set_tooltip_text("More")
+        menu_button.set_tooltip_text(_("More"))
 
         # Create menu model
         menu = Gio.Menu.new()
 
         # Add menu items - no icons needed
         menu_items = [
-            ("Show VODs", "show-vods", self.window.show_vods_page),
-            ("Unfollow", "unfollow", self.window.unfollow_streamer),
+            (_("Show VODs"), "show-vods", self.window.show_vods_page),
+            (_("Unfollow"), "unfollow", self.window.unfollow_streamer),
         ]
 
         for label, action_name, handler in menu_items:
@@ -140,7 +144,7 @@ class StreamerRowManager:
         row.insert_action_group("row", action_group)
 
         # Create the actions
-        for _, action_name, handler in menu_items:
+        for _label, action_name, handler in menu_items:
             action = Gio.SimpleAction.new(action_name, None)
             action.connect("activate", lambda act, param, h=handler: h(streamer))
             action_group.add_action(action)

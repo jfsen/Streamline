@@ -71,9 +71,10 @@ class StreamlineApplication(Adw.Application):
             application_name="Streamline",
             application_icon="io.github.jfsen.Streamline",
             developer_name="jfsen",
-            version="2.0.0",
+            version="3.1.0",
             developers=["jfsen"],
             copyright="© 2025 jfsen",
+            license_type=Gtk.License.GPL_3_0,
         )
         # Translators: Replace "translator-credits" with your name/username, and optionally an email or URL.
         about.set_translator_credits(_("translator-credits"))

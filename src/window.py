@@ -17,9 +17,12 @@
 #
 # SPDX-License-Identifier: GPL-3.0-or-later
 
+import gettext
 import threading
 
 import gi
+
+_ = gettext.gettext
 import requests
 
 gi.require_version("Adw", "1")
@@ -111,7 +114,9 @@ class StreamlineWindow(Adw.ApplicationWindow):
         self.set_content(self.navigation_view)
 
         # Add main page
-        self.main_page = Adw.NavigationPage(title="Streamline", child=self.main_content)
+        self.main_page = Adw.NavigationPage(
+            title=_("Streamline"), child=self.main_content
+        )
         self.navigation_view.add(self.main_page)
         self._preferences = None
 
@@ -171,7 +176,7 @@ class StreamlineWindow(Adw.ApplicationWindow):
             return
 
         # Show cached data immediately so the window opens fast
-        cached_data, _ = self.twitch._load_streams_cache()
+        cached_data, _cooldown = self.twitch._load_streams_cache()
         if cached_data:
             self.update_action_rows(
                 cached_data["online"], cached_data["offline"], cached_data["info"]
@@ -190,8 +195,10 @@ class StreamlineWindow(Adw.ApplicationWindow):
         except requests.ConnectionError:
             GLib.idle_add(
                 self._show_error_dialog,
-                "Connection Error",
-                "Could not fetch streamer data. Please check your internet connection.",
+                _("Connection Error"),
+                _(
+                    "Could not fetch streamer data. Please check your internet connection."
+                ),
             )
         except requests.HTTPError as e:
             status = e.response.status_code if e.response else None
@@ -200,20 +207,24 @@ class StreamlineWindow(Adw.ApplicationWindow):
             elif status == 429:
                 GLib.idle_add(
                     self._show_error_dialog,
-                    "API Rate Limit",
-                    "Twitch API rate limit reached. Please wait a few minutes before refreshing again.",
+                    _("API Rate Limit"),
+                    _(
+                        "Twitch API rate limit reached. Please wait a few minutes before refreshing again."
+                    ),
                 )
             else:
                 GLib.idle_add(
                     self._show_error_dialog,
-                    "API Error",
-                    f"HTTP error {status} occurred while fetching streamer data.",
+                    _("API Error"),
+                    _("HTTP error {} occurred while fetching streamer data.").format(
+                        status
+                    ),
                 )
         except Exception as e:
             GLib.idle_add(
                 self._show_error_dialog,
-                "API Error",
-                f"Failed to fetch streamer data: {str(e)[:100]}",
+                _("API Error"),
+                _("Failed to fetch streamer data: {}").format(str(e)[:100]),
             )
 
     def _on_streams_fetched(self, online, offline, info):
@@ -238,7 +249,7 @@ class StreamlineWindow(Adw.ApplicationWindow):
     def on_refresh_button_clicked(self, button):
         """Refresh streamer data in a background thread."""
         if not self.twitch:
-            self.show_toast("API not available")
+            self.show_toast(_("API not available"))
             return
 
         # Check cache status
@@ -246,7 +257,9 @@ class StreamlineWindow(Adw.ApplicationWindow):
 
         if cached_data is not None:
             # Data is still cached, inform user how long until refresh is available
-            self.show_toast(f"Please wait {seconds_until_refresh}s before refreshing")
+            self.show_toast(
+                _("Please wait {}s before refreshing").format(seconds_until_refresh)
+            )
             return
 
         # Cache is expired, do refresh in background thread
@@ -261,8 +274,10 @@ class StreamlineWindow(Adw.ApplicationWindow):
         except requests.ConnectionError:
             GLib.idle_add(
                 self._on_refresh_error,
-                "Connection Error",
-                "Could not fetch streamer data. Please check your internet connection.",
+                _("Connection Error"),
+                _(
+                    "Could not fetch streamer data. Please check your internet connection."
+                ),
             )
         except requests.HTTPError as e:
             status = e.response.status_code if e.response else None
@@ -271,26 +286,30 @@ class StreamlineWindow(Adw.ApplicationWindow):
             elif status == 429:
                 GLib.idle_add(
                     self._on_refresh_error,
-                    "API Rate Limit",
-                    "Twitch API rate limit reached. Please wait a few minutes before refreshing again.",
+                    _("API Rate Limit"),
+                    _(
+                        "Twitch API rate limit reached. Please wait a few minutes before refreshing again."
+                    ),
                 )
             else:
                 GLib.idle_add(
                     self._on_refresh_error,
-                    "API Error",
-                    f"HTTP error {status} occurred while fetching streamer data.",
+                    _("API Error"),
+                    _("HTTP error {} occurred while fetching streamer data.").format(
+                        status
+                    ),
                 )
         except Exception as e:
             GLib.idle_add(
                 self._on_refresh_error,
-                "API Error",
-                f"Failed to fetch streamer data: {str(e)[:100]}",
+                _("API Error"),
+                _("Failed to fetch streamer data: {}").format(str(e)[:100]),
             )
 
     def _on_refresh_complete(self, online, offline, info):
         """Callback from background thread: update UI with fresh stream data."""
         self.refresh_button.set_sensitive(True)
-        self.show_toast("Stream data refreshed")
+        self.show_toast(_("Stream data refreshed"))
         self.update_action_rows(online, offline, info)
 
     def _on_refresh_error(self, heading, message):
@@ -401,15 +420,17 @@ class StreamlineWindow(Adw.ApplicationWindow):
         if added:
             self.save_config()
             if len(added) == 1:
-                self.show_toast(f"Now following {added[0]}")
+                self.show_toast(_("Now following {}").format(added[0]))
             else:
-                self.show_toast(f"Added {len(added)} new streamers")
+                self.show_toast(_("Added {} new streamers").format(len(added)))
 
         if already_following:
             if len(already_following) == 1:
-                self.show_toast(f"Already following {already_following[0]}")
+                self.show_toast(_("Already following {}").format(already_following[0]))
             else:
-                self.show_toast(f"Already following: {', '.join(already_following)}")
+                self.show_toast(
+                    _("Already following: {}").format(", ".join(already_following))
+                )
 
     def quick_play(self, *args):
         """Show dialog to quickly play a stream."""
@@ -420,14 +441,14 @@ class StreamlineWindow(Adw.ApplicationWindow):
         try:
             self.player.play_content(f"twitch.tv/{username}", is_vod=False)
         except Exception as e:
-            self.show_toast(f"Error: {str(e)}", 4)
+            self.show_toast(_("Error: {}").format(str(e)), 4)
 
     def save_config(self):
         """Save current configuration to file."""
         config = self.config_manager.create_config_dict(self)
         if not self.config_manager.save(config):
             self.dialogs.show_error_dialog(
-                "Error Saving Config", "Could not save configuration"
+                _("Error Saving Config"), _("Could not save configuration")
             )
 
     def show_preferences(self, *args):
@@ -444,18 +465,20 @@ class StreamlineWindow(Adw.ApplicationWindow):
         dialog = Adw.ShortcutsDialog()
 
         # Application section
-        app_section = Adw.ShortcutsSection(title="Application")
-        app_section.add(Adw.ShortcutsItem.new("Preferences", "<primary>comma"))
-        app_section.add(Adw.ShortcutsItem.new("Show Shortcuts", "<primary>question"))
-        app_section.add(Adw.ShortcutsItem.new("Quit", "<primary>q"))
+        app_section = Adw.ShortcutsSection(title=_("Application"))
+        app_section.add(Adw.ShortcutsItem.new(_("Preferences"), "<primary>comma"))
+        app_section.add(Adw.ShortcutsItem.new(_("Show Shortcuts"), "<primary>question"))
+        app_section.add(Adw.ShortcutsItem.new(_("Quit"), "<primary>q"))
         dialog.add(app_section)
 
         # Stream Management section
-        stream_section = Adw.ShortcutsSection(title="Stream Management")
-        stream_section.add(Adw.ShortcutsItem.new("Follow New Streamer", "<primary>n"))
-        stream_section.add(Adw.ShortcutsItem.new("Quick Play Stream", "<primary>p"))
-        stream_section.add(Adw.ShortcutsItem.new("Refresh Streams", "<primary>r"))
-        stream_section.add(Adw.ShortcutsItem.new("Refresh Streams", "F5"))
+        stream_section = Adw.ShortcutsSection(title=_("Stream Management"))
+        stream_section.add(
+            Adw.ShortcutsItem.new(_("Follow New Streamer"), "<primary>n")
+        )
+        stream_section.add(Adw.ShortcutsItem.new(_("Quick Play Stream"), "<primary>p"))
+        stream_section.add(Adw.ShortcutsItem.new(_("Refresh Streams"), "<primary>r"))
+        stream_section.add(Adw.ShortcutsItem.new(_("Refresh Streams"), "F5"))
         dialog.add(stream_section)
 
         dialog.present(self)

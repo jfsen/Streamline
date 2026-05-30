@@ -1,4 +1,8 @@
+import gettext
+
 from gi.repository import Adw, Gtk
+
+_ = gettext.gettext
 
 
 class StreamlineDialogs:
@@ -32,7 +36,7 @@ class StreamlineDialogs:
         dialog = Adw.MessageDialog(
             transient_for=self.parent, heading=heading, body=message
         )
-        dialog.add_response("ok", "OK")
+        dialog.add_response("ok", _("OK"))
         dialog.present()
 
     def show_unfollow_dialog(self, streamer, callback):
@@ -58,13 +62,13 @@ class StreamlineDialogs:
     def show_follow_dialog(self, callback):
         """Show dialog to follow new streamer(s)."""
         dialog, entry = self.create_input_dialog(
-            heading="Follow Streamer(s)",
-            body="Enter Twitch usernames (separate multiple with commas):",
+            heading=_("Follow Streamer(s)"),
+            body=_("Enter Twitch usernames (separate multiple with commas):"),
             default_response="follow",
         )
 
-        dialog.add_response("cancel", "Cancel")
-        dialog.add_response("follow", "Follow")
+        dialog.add_response("cancel", _("Cancel"))
+        dialog.add_response("follow", _("Follow"))
         dialog.set_response_appearance("follow", Adw.ResponseAppearance.SUGGESTED)
         dialog.set_default_response("follow")
 
@@ -83,13 +87,13 @@ class StreamlineDialogs:
     def show_quick_play_dialog(self, callback):
         """Show dialog to quickly play a stream."""
         dialog, entry = self.create_input_dialog(
-            heading="Quick Play Stream",
-            body="Enter the Twitch username of the streamer:",
+            heading=_("Quick Play Stream"),
+            body=_("Enter the Twitch username of the streamer:"),
             default_response="play",
         )
 
-        dialog.add_response("cancel", "Cancel")
-        dialog.add_response("play", "Play")
+        dialog.add_response("cancel", _("Cancel"))
+        dialog.add_response("play", _("Play"))
         dialog.set_response_appearance("play", Adw.ResponseAppearance.SUGGESTED)
         dialog.set_default_response("play")
 
@@ -109,9 +113,11 @@ class StreamlineDialogs:
         """Show dialog to input Twitch API credentials."""
         dialog = Adw.MessageDialog(
             transient_for=self.parent,
-            heading="Twitch API Credentials",
-            body="Enter your Twitch Client ID and Client Secret to enable the app:\n\n"
-            "You can get these at https://dev.twitch.tv/console/apps",
+            heading=_("Twitch API Credentials"),
+            body=_(
+                "Enter your Twitch Client ID and Client Secret to enable the app:\n\n"
+                "You can get these at https://dev.twitch.tv/console/apps"
+            ),
         )
 
         content_box = Gtk.Box(
@@ -124,13 +130,13 @@ class StreamlineDialogs:
         )
 
         client_id_entry = Gtk.Entry(
-            placeholder_text="Client ID",
+            placeholder_text=_("Client ID"),
             width_chars=30,
             hexpand=True,
         )
 
         client_secret_entry = Gtk.Entry(
-            placeholder_text="Client Secret",
+            placeholder_text=_("Client Secret"),
             width_chars=30,
             hexpand=True,
             visibility=False,
@@ -140,8 +146,8 @@ class StreamlineDialogs:
         content_box.append(client_secret_entry)
         dialog.set_extra_child(content_box)
 
-        dialog.add_response("cancel", "Cancel")
-        dialog.add_response("save", "Save")
+        dialog.add_response("cancel", _("Cancel"))
+        dialog.add_response("save", _("Save"))
         dialog.set_response_appearance("save", Adw.ResponseAppearance.SUGGESTED)
         dialog.set_default_response("save")
 
