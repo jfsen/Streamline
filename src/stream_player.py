@@ -33,7 +33,6 @@ class StreamPlayer:
                 # Enable HLS passthrough for proper seeking in VODs
                 cmd.append("--player-passthrough=hls")
             else:
-                cmd.extend(["--twitch-disable-ads"])
                 if self.window.low_latency:
                     cmd.append("--twitch-low-latency")
 
