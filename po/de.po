@@ -276,6 +276,10 @@ msgid "More"
 msgstr "Mehr"
 
 #: src/rows.py:130
+msgid "Chat"
+msgstr "Chat"
+
+#: src/rows.py:131
 msgid "Show VODs"
 msgstr "VODs anzeigen"
 

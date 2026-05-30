@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8" ?>
 <schemalist gettext-domain="streamline">
 	<schema id="io.github.jfsen.Streamline" path="/io/github/jfsen/Streamline/">
 		<key name="player-type" type="s">
@@ -24,7 +24,8 @@
 		<key name="theme" type="s">
 			<default>'system'</default>
 			<summary>Theme</summary>
-			<description>The application theme (system, light, dark, bronze, anthracite, red)</description>
+			<description
+            >The application theme (system, light, dark, bronze, anthracite, red)</description>
 		</key>
 		<key name="low-latency" type="b">
 			<default>true</default>
@@ -41,10 +42,16 @@
 			<summary>Twitch Client ID</summary>
 			<description>Twitch API client ID for authentication</description>
 		</key>
-		<key name="twitch-client-secret" type="s">
-			<default>''</default>
-			<summary>Twitch Client Secret</summary>
-			<description>Twitch API client secret for authentication</description>
-		</key>
+		    <key name="twitch-client-secret" type="s">
+		      <default>''</default>
+		      <summary>Twitch Client Secret</summary>
+		      <description>Twitch API client secret for authentication</description>
+		    </key>
+		    <key name="chat-alternating-background" type="b">
+		      <default>true</default>
+		      <summary>Alternating chat background</summary>
+		      <description
+            >Show alternating background colors on chat messages</description>
+		    </key>
 	</schema>
 </schemalist>

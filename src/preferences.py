@@ -27,6 +27,9 @@ class StreamlinePreferences(Adw.PreferencesDialog):
     client_id_row = Gtk.Template.Child()
     client_secret_row = Gtk.Template.Child()
 
+    # Template children — Chat page
+    chat_alternating_bg_switch = Gtk.Template.Child()
+
     # Mapping of preset names to their stream quality strings
     _QUALITY_KEYS = ("High", "Medium", "Low", "Custom")
     _THEME_KEYS = ("system", "light", "dark", "bronze", "anthracite", "red")
@@ -82,6 +85,12 @@ class StreamlinePreferences(Adw.PreferencesDialog):
         self.client_id_row.connect("notify::text", self._on_client_id_changed)
         self.client_secret_row.set_text(parent.client_secret)
         self.client_secret_row.connect("notify::text", self._on_client_secret_changed)
+
+        # Chat
+        self.chat_alternating_bg_switch.set_active(parent.chat_alternating_bg)
+        self.chat_alternating_bg_switch.connect(
+            "notify::active", self._on_chat_alternating_bg_toggled
+        )
 
     # ── Helpers ──────────────────────────────────────────────
 
@@ -151,6 +160,10 @@ class StreamlinePreferences(Adw.PreferencesDialog):
     def _on_client_secret_changed(self, entry, *_):
         self.parent.client_secret = entry.get_text()
         self._debounced_save()
+
+    def _on_chat_alternating_bg_toggled(self, switch, *_):
+        self.parent.chat_alternating_bg = switch.get_active()
+        self.parent.save_config()
 
     # ── Export streamers ─────────────────────────────────────
 

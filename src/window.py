@@ -33,6 +33,7 @@ gi.require_version("Gtk", "4.0")
 
 from gi.repository import Adw, GLib, Gtk
 
+from .chat.chat_page import ChatPage
 from .config import ConfigManager
 from .dialogs import StreamlineDialogs
 from .preferences import StreamlinePreferences
@@ -155,6 +156,7 @@ class StreamlineWindow(Adw.ApplicationWindow):
         self.custom_quality = config.get("custom_quality", "best")
         self.theme = config.get("theme", "system")
         self.low_latency = config.get("low_latency", True)
+        self.chat_alternating_bg = config.get("chat_alternating_bg", True)
 
     def _init_twitch_api(self):
         """Initialize the Twitch API with current credentials.
@@ -516,6 +518,12 @@ class StreamlineWindow(Adw.ApplicationWindow):
         from weakref import proxy
 
         self._current_vod_page = proxy(page)
+        self.navigation_view.push(page)
+
+    def show_chat_page(self, streamer):
+        """Show chat page for the given streamer."""
+        logger.debug("Opening chat page for %s", streamer)
+        page = ChatPage(self, streamer, self.chat_alternating_bg, self.theme)
         self.navigation_view.push(page)
 
     def _cleanup_vod_page(self, page):

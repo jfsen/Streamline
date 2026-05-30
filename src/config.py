@@ -28,6 +28,9 @@ class ConfigManager:
             "twitch_client_secret": self.settings.get_string("twitch-client-secret"),
             "theme": self.settings.get_string("theme"),
             "low_latency": self.settings.get_boolean("low-latency"),
+            "chat_alternating_bg": self.settings.get_boolean(
+                "chat-alternating-background"
+            ),
         }
 
     def save(self, config):
@@ -47,6 +50,9 @@ class ConfigManager:
         )
         self.settings.set_string("theme", config.get("theme", "system"))
         self.settings.set_boolean("low-latency", config.get("low_latency", True))
+        self.settings.set_boolean(
+            "chat-alternating-background", config.get("chat_alternating_bg", True)
+        )
         try:
             self.settings.apply()
             return True
@@ -66,4 +72,5 @@ class ConfigManager:
             "custom_quality": window.custom_quality,
             "theme": window.theme,
             "low_latency": window.low_latency,
+            "chat_alternating_bg": window.chat_alternating_bg,
         }

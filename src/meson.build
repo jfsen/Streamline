@@ -42,3 +42,5 @@ streamline_sources = [
 ]
 
 install_data(streamline_sources, install_dir: moduledir)
+
+install_subdir('chat', install_dir: moduledir)

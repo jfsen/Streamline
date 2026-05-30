@@ -112,6 +112,18 @@
 
         <child>
           <object class="AdwPreferencesGroup">
+            <property name="title" translatable="yes">Chat</property>
+            <child>
+              <object class="AdwSwitchRow" id="chat_alternating_bg_switch">
+                <property name="title" translatable="yes">Alternating Background</property>
+                <property name="subtitle" translatable="yes">Show subtle alternating background colors on chat messages</property>
+              </object>
+            </child>
+          </object>
+        </child>
+
+        <child>
+          <object class="AdwPreferencesGroup">
             <property name="title" translatable="yes">Twitch API</property>
             <property name="description" translatable="yes">Credentials are required to fetch stream data. You can get these at dev.twitch.tv/console/apps</property>
             <child>
