@@ -3,6 +3,7 @@
 import gettext
 import json
 import logging
+import re
 import threading
 from pathlib import Path
 
@@ -179,8 +180,8 @@ def _badge_svg_defs():
         return ""
     parts = ["<svg style='display:none' xmlns='http://www.w3.org/2000/svg'>"]
     for name, svg in _BADGE_SVGS.items():
-        # Strip outer <svg> tag and add id
-        inner = svg.replace("<svg ", f'<symbol id="badge-{name}" ').replace(
+        # Strip outer <svg> tag and add id (handles single-line and multi-line tags)
+        inner = re.sub(r"<svg\b", f'<symbol id="badge-{name}"', svg, count=1).replace(
             "</svg>", "</symbol>"
         )
         parts.append(inner)

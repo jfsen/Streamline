@@ -1,39 +1,6 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<svg
-   viewBox="0 0 36 36"
-   width="18"
-   height="18"
-   version="1.1"
-   id="svg1"
-   xmlns="http://www.w3.org/2000/svg"
-   xmlns:svg="http://www.w3.org/2000/svg">
-  <defs
-     id="defs1" />
-  <rect
-     width="36"
-     height="36"
-     rx="6"
-     fill="#00ad03"
-     id="rect1" />
-  <path
-     style="opacity:1;fill:#ffffff;fill-opacity:1;stroke-width:0.252"
-     id="path3"
-     d="m 19.142681,-2.2214041 10.975743,7.9743442 -4.192361,12.9027589 -13.566764,0 L 8.1669385,5.7529395 Z"
-     transform="matrix(0.42982961,0.43065496,-0.85729451,0.85565151,21.705219,-1.9990999)" />
-  <rect
-     style="opacity:1;fill:#ffffff;fill-opacity:1;stroke-width:0.236971"
-     id="rect4"
-     width="14.979381"
-     height="2.9699993"
-     x="18.031008"
-     y="5.7737298"
-     transform="rotate(45.054957)" />
-  <rect
-     style="opacity:1;fill:#ffffff;fill-opacity:1;stroke-width:0.252"
-     id="rect5"
-     width="4.1399999"
-     height="8.7749996"
-     x="23.46002"
-     y="8.6800909"
-     transform="rotate(45.054957)" />
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 36 36" width="18" height="18">
+  <rect width="36" height="36" rx="6" fill="#00ad03"/>
+  <path fill="#fff" d="m 19.142681,-2.2214041 10.975743,7.9743442 -4.192361,12.9027589 -13.566764,0 L 8.1669385,5.7529395 Z" transform="matrix(0.42982961,0.43065496,-0.85729451,0.85565151,21.705219,-1.9990999)"/>
+  <rect fill="#fff" width="14.979381" height="2.97" x="18.031008" y="5.7737298" transform="rotate(45.054957)"/>
+  <rect fill="#fff" width="4.14" height="8.775" x="23.46002" y="8.6800909" transform="rotate(45.054957)"/>
 </svg>

@@ -1,23 +1,4 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<svg
-   viewBox="0 0 36 36"
-   width="18"
-   height="18"
-   version="1.1"
-   id="svg1"
-   xmlns="http://www.w3.org/2000/svg"
-   xmlns:svg="http://www.w3.org/2000/svg">
-  <defs
-     id="defs1" />
-  <rect
-     width="36"
-     height="36"
-     rx="6"
-     fill="#8200e6"
-     id="rect1" />
-  <path
-     style="fill:#ffffff;stroke-width:0.252"
-     id="path2"
-     d="M 8.0550007,-6.5563765 12.320939,2.9484379 22.678803,4.0684385 14.957435,11.062737 17.093007,21.25975 8.0550005,16.077649 -0.98300716,21.259749 1.1525656,11.062737 -6.5688023,4.0684378 3.7890609,2.9484381 Z"
-     transform="translate(9.945,10.62)" />
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 36 36" width="18" height="18">
+  <rect width="36" height="36" rx="6" fill="#8200e6"/>
+  <path fill="#fff" d="M 8.0550007,-6.5563765 12.320939,2.9484379 22.678803,4.0684385 14.957435,11.062737 17.093007,21.25975 8.0550005,16.077649 -0.98300716,21.259749 1.1525656,11.062737 -6.5688023,4.0684378 3.7890609,2.9484381 Z" transform="translate(9.945,10.62)"/>
 </svg>
