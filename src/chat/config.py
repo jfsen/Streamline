@@ -16,8 +16,8 @@ STYLE = {
     "body_padding": "4px 8px",
     "scroll_threshold": 30,
     "max_messages": 500,
-    "cull_chunk": 50,
-    "flush_ms": 50,
+    "cull_chunk": 30,
+    "flush_ms": 500,
     "dark": {
         "text_color": "#dedede",
         "pill_bg": "rgba(255,255,255,0.18)",
