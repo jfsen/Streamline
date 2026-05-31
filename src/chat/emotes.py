@@ -61,6 +61,7 @@ def _save_cache(source, identifier, emotes):
                     "emotes": emotes,
                 },
                 f,
+                indent=2,
             )
     except OSError:
         pass
