@@ -249,6 +249,10 @@ class ChatPage(Adw.NavigationPage):
         # Block context menu (Reload blanks load_html pages; Ctrl+C still works)
         self._webview.connect("context-menu", lambda *a: True)
 
+        # Update chat colors when the system theme changes
+        self._style_manager = Adw.StyleManager.get_default()
+        self._style_manager.connect("notify::dark", self._on_theme_changed)
+
         # Toolbar
         toolbar = Adw.ToolbarView()
         header = Adw.HeaderBar()
@@ -274,6 +278,28 @@ class ChatPage(Adw.NavigationPage):
     def _on_connected(self):
         logger.debug("Connected to chat for %s", self._streamer)
 
+    def _on_theme_changed(self, style_manager, _pspec):
+        """Re-inject CSS colors when dark/light mode changes."""
+        if not self._webview:
+            return
+        dark = style_manager.get_dark()
+        theme = _CHAT_STYLE["dark"] if dark else _CHAT_STYLE["light"]
+        js = (
+            f"document.body.style.color='{theme['text_color']}';"
+            f"var p=document.getElementById('more-msg');"
+            f"if(p){{p.style.background='{theme['pill_bg']}';p.style.color='{theme['pill_fg']}'}}"
+        )
+        if self._alternating_bg:
+            js += (
+                f"var s=document.createElement('style');"
+                f"s.textContent='.msg:nth-child(even){{background:{theme['row_color']}}}';"
+                f"s.id='row-color';"
+                f"var old=document.getElementById('row-color');"
+                f"if(old)old.remove();"
+                f"document.head.appendChild(s);"
+            )
+        self._webview.evaluate_javascript(js, -1, None, None, None, None, None)
+
     def _on_map(self, _widget):
         """Connect to window focus once the page is in the widget tree."""
         if self._focus_scheduled:
@@ -294,6 +320,15 @@ class ChatPage(Adw.NavigationPage):
     def _on_focus_changed(self, window, _pspec):
         """Hide emotes when the window loses focus (user-preference controlled)."""
         if not self._pause_emotes:
+            self._webview.evaluate_javascript(
+                "window._paused=0;var imgs=document.querySelectorAll('img.emote');for(var i=0;i<imgs.length;i++){imgs[i].style.visibility=''}",
+                -1,
+                None,
+                None,
+                None,
+                None,
+                None,
+            )
             return
         if window.props.is_active:
             self._webview.evaluate_javascript(
@@ -361,6 +396,9 @@ class ChatPage(Adw.NavigationPage):
 
     def cleanup(self):
         """Stop chat and release resources. Idempotent."""
+        if self._style_manager is not None:
+            self._style_manager.disconnect_by_func(self._on_theme_changed)
+            self._style_manager = None
         if self._focus_signal_id is not None and self._focus_window is not None:
             self._focus_window.disconnect(self._focus_signal_id)
             self._focus_signal_id = None
