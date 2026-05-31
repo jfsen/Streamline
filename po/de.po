@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: streamline 3.2.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-05-30 23:19+0200\n"
+"POT-Creation-Date: 2026-05-31 12:13+0200\n"
 "PO-Revision-Date: 2026-05-30 00:23+0200\n"
 "Last-Translator: jfsen\n"
 "Language-Team: none\n"
@@ -132,8 +132,8 @@ msgid "Hide emotes on focus loss"
 msgstr "Emotes bei Fokusverlust ausblenden"
 
 #: data/io.github.jfsen.Streamline.gschema.xml:59 src/preferences.ui:125
-msgid "Hide all emotes when the window loses focus"
-msgstr "Alle Emotes ausblenden, wenn das Fenster den Fokus verliert"
+msgid "Hide all emotes when the window loses focus to save resources"
+msgstr "Alle Emotes ausblenden, wenn das Fenster den Fokus verliert, um Ressourcen zu sparen"
 
 #: src/dialogs.py:39
 msgid "OK"
@@ -408,16 +408,16 @@ msgstr "{} Sek."
 msgid "{}h {}m"
 msgstr "{} Std. {} Min."
 
-#: src/chat/chat_page.py:153
+#: src/chat/chat_page.py:148
 msgid "More messages below"
 msgstr "Weitere Nachrichten unten"
 
-#: src/chat/chat_page.py:170 src/chat/chat_window.py:31
+#: src/chat/chat_page.py:172 src/chat/chat_window.py:32
 #, python-brace-format
 msgid "Chat: {}"
 msgstr "Chat: {}"
 
-#: src/chat/chat_page.py:243
+#: src/chat/chat_page.py:240
 msgid "Detach chat"
 msgstr "Chat ausgliedern"
 

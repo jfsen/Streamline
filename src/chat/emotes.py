@@ -36,7 +36,11 @@ def _load_cache(source, identifier):
             data = json.load(f)
         age = datetime.now(timezone.utc) - datetime.fromisoformat(data["ts"])
         if age.total_seconds() > _CACHE_TTL:
+            logger.debug("Cache expired: %s/%s", source, identifier)
             return None
+        logger.debug(
+            "Cache hit: %s/%s (%s emotes)", source, identifier, len(data["emotes"])
+        )
         return data["emotes"]
     except (json.JSONDecodeError, KeyError, OSError):
         return None
@@ -73,6 +77,7 @@ def _fetch_bttv_global():
     cached = _load_cache("bttv", "global")
     if cached is not None:
         return cached
+    logger.debug("Cache miss: bttv/global, fetching")
     data = _fetch_json(_BTTV_GLOBAL)
     if not data:
         _save_cache("bttv", "global", {})
@@ -90,6 +95,7 @@ def _fetch_bttv_channel(user_id):
     cached = _load_cache("bttv", user_id)
     if cached is not None:
         return cached
+    logger.debug("Cache miss: bttv/%s, fetching", user_id)
     data = _fetch_json(_BTTV_CHANNEL.format(user_id=user_id))
     if not data:
         _save_cache("bttv", user_id, {})
@@ -109,6 +115,7 @@ def _fetch_7tv_global():
     cached = _load_cache("7tv", "global")
     if cached is not None:
         return cached
+    logger.debug("Cache miss: 7tv/global, fetching")
     data = _fetch_json(_SEVENTV_GLOBAL)
     if not data:
         _save_cache("7tv", "global", {})
@@ -130,6 +137,7 @@ def _fetch_7tv_channel(user_id):
     cached = _load_cache("7tv", user_id)
     if cached is not None:
         return cached
+    logger.debug("Cache miss: 7tv/%s, fetching", user_id)
     data = _fetch_json(_SEVENTV_CHANNEL.format(user_id=user_id))
     if not data:
         _save_cache("7tv", user_id, {})

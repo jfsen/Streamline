@@ -1,10 +1,13 @@
 """Twitch IRC chat client (read-only, anonymous)."""
 
+import logging
 import re
 import socket
 import threading
 
 from gi.repository import GLib
+
+logger = logging.getLogger("IRCChat")
 
 # Twitch IRC tags for extracting display name and color
 _TAG_RE = re.compile(r"@([^ ]+) ")
@@ -40,6 +43,7 @@ class TwitchChat:
             self._sock = None
 
     def _connect(self):
+        logger.debug("Connecting to IRC for #%s", self._channel)
         try:
             self._sock = socket.create_connection(
                 ("irc.chat.twitch.tv", 6667), timeout=10
@@ -49,6 +53,7 @@ class TwitchChat:
             self._send_raw("NICK", "justinfan12345")
             self._send_raw("JOIN", f"#{self._channel}")
             self._send_raw("CAP REQ", "twitch.tv/tags")
+            logger.debug("Joined #%s", self._channel)
 
             if self._on_connected:
                 GLib.idle_add(self._on_connected)
@@ -66,7 +71,7 @@ class TwitchChat:
                 except (OSError, UnicodeDecodeError):
                     break
         except OSError:
-            pass  # Connection failed silently
+            logger.debug("Failed to connect to IRC for #%s", self._channel)
 
     def _send_raw(self, command, *args):
         if self._sock:

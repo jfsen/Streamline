@@ -122,7 +122,7 @@
             <child>
               <object class="AdwSwitchRow" id="chat_pause_emotes_switch">
                 <property name="title" translatable="yes">Hide Emotes on Focus Loss</property>
-                <property name="subtitle" translatable="yes">Hide all emotes when the window loses focus</property>
+                <property name="subtitle" translatable="yes">Hide all emotes when the window loses focus to save resources</property>
               </object>
             </child>
           </object>

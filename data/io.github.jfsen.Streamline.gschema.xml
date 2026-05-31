@@ -54,9 +54,9 @@
             >Show alternating background colors on chat messages</description>
 		        </key>
 		        <key name="chat-pause-emotes" type="b">
-		          <default>true</default>
+		          <default>false</default>
 		          <summary>Hide emotes on focus loss</summary>
-		          <description>Hide all emotes when the window loses focus</description>
+		          <description>Hide all emotes when the window loses focus to save resources</description>
 		        </key>
 	</schema>
 </schemalist>

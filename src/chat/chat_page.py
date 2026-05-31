@@ -47,7 +47,7 @@ var _moreMsg = MORE_MSG;
   var paused = false;
 
   window.addEventListener('scroll', function() {
-    var atBottom = window.innerHeight + window.scrollY >= document.body.scrollHeight - 80;
+    var atBottom = window.innerHeight + window.scrollY >= document.body.scrollHeight - 30;
     if (atBottom) {
       paused = false;
       var btn = document.getElementById('more-msg');
@@ -74,7 +74,7 @@ var _moreMsg = MORE_MSG;
     if (!paused) window.scrollTo(0, document.body.scrollHeight);
   }).observe(chat, {childList: true, subtree: true});
 
-  // Pause animated emotes when their message scrolls out of view
+  // Always hide emotes when scrolled out of view
   var io = new IntersectionObserver(function(entries) {
     entries.forEach(function(e) {
       e.target.querySelectorAll('img.emote').forEach(function(img) {
@@ -106,14 +106,9 @@ var _moreMsg = MORE_MSG;
           var img = document.createElement('img');
           img.src = pm[i].url;
           img.className = 'emote';
-          img.style.height = '1.6em';
+          img.style.height = '1.7em';
           img.style.verticalAlign = 'middle';
-          if (window._paused) {
-            img.dataset.src = pm[i].url;
-            img.style.visibility = 'hidden';
-          } else {
-            img.src = pm[i].url;
-          }
+          if (window._paused) img.style.visibility = 'hidden';
           div.appendChild(img);
           i = pm[i].end + 1;
         } else {
@@ -284,7 +279,7 @@ class ChatPage(Adw.NavigationPage):
         return GLib.SOURCE_REMOVE
 
     def _on_focus_changed(self, window, _pspec):
-        """Pause or resume animated emotes based on window focus."""
+        """Hide emotes when the window loses focus (user-preference controlled)."""
         if not self._pause_emotes:
             return
         if window.props.is_active:

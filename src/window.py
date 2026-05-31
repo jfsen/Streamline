@@ -157,7 +157,7 @@ class StreamlineWindow(Adw.ApplicationWindow):
         self.theme = config.get("theme", "system")
         self.low_latency = config.get("low_latency", True)
         self.chat_alternating_bg = config.get("chat_alternating_bg", True)
-        self.chat_pause_emotes = config.get("chat_pause_emotes", True)
+        self.chat_pause_emotes = config.get("chat_pause_emotes", False)
 
     def _init_twitch_api(self):
         """Initialize the Twitch API with current credentials.

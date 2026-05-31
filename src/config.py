@@ -55,7 +55,7 @@ class ConfigManager:
             "chat-alternating-background", config.get("chat_alternating_bg", True)
         )
         self.settings.set_boolean(
-            "chat-pause-emotes", config.get("chat_pause_emotes", True)
+            "chat-pause-emotes", config.get("chat_pause_emotes", False)
         )
         try:
             self.settings.apply()
