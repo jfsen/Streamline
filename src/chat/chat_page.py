@@ -246,6 +246,9 @@ class ChatPage(Adw.NavigationPage):
 
         self._webview.load_html(_build_html(self._alternating_bg, self._dark), None)
 
+        # Block context menu (Reload blanks load_html pages; Ctrl+C still works)
+        self._webview.connect("context-menu", lambda *a: True)
+
         # Toolbar
         toolbar = Adw.ToolbarView()
         header = Adw.HeaderBar()
