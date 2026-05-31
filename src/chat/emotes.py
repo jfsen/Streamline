@@ -189,7 +189,7 @@ def _fetch_ffz_global():
         for e in data.get("sets", {}).get(str(set_id), {}).get("emoticons", []):
             name = e.get("name")
             eid = e.get("id")
-            if name and eid:
+            if name and eid and not e.get("hidden") and not e.get("modifier"):
                 emotes[name] = {
                     "url": f"https://cdn.frankerfacez.com/emoticon/{eid}/1",
                     "source": "FFZ",
@@ -215,7 +215,7 @@ def _fetch_ffz_channel(user_id):
         for e in data.get("sets", {}).get(str(room_set), {}).get("emoticons", []):
             name = e.get("name")
             eid = e.get("id")
-            if name and eid:
+            if name and eid and not e.get("hidden") and not e.get("modifier"):
                 emotes[name] = {
                     "url": f"https://cdn.frankerfacez.com/emoticon/{eid}/1",
                     "source": "FFZ",
@@ -228,7 +228,7 @@ def _fetch_ffz_channel(user_id):
 
 
 class ThirdPartyEmotes:
-    """Fetches and caches BTTV/7TV emotes for a channel."""
+    """Fetches and caches BTTV/7TV/FFZ emotes for a channel."""
 
     def __init__(self, user_id):
         self._user_id = user_id
@@ -237,12 +237,16 @@ class ThirdPartyEmotes:
         self._lock = threading.Lock()
 
     def load(self):
-        """Fetch all emote sets in parallel, building the trie incrementally."""
-        fetchers = [_fetch_bttv_global, _fetch_7tv_global, _fetch_ffz_global]
+        """Fetch all emote sets in parallel, building the trie incrementally.
+
+        Order matters for priority: later updates overwrite earlier ones.
+        Priority (lowest→highest): FFZ < 7TV < BTTV, channel > global.
+        """
+        fetchers = [_fetch_ffz_global, _fetch_7tv_global, _fetch_bttv_global]
         if self._user_id:
-            fetchers.append(lambda: _fetch_bttv_channel(self._user_id))
-            fetchers.append(lambda: _fetch_7tv_channel(self._user_id))
             fetchers.append(lambda: _fetch_ffz_channel(self._user_id))
+            fetchers.append(lambda: _fetch_7tv_channel(self._user_id))
+            fetchers.append(lambda: _fetch_bttv_channel(self._user_id))
 
         threads = []
         for fetch in fetchers:
