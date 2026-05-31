@@ -25,7 +25,6 @@ class ChatWindow(Adw.Window):
         streamer,
         alternating_bg=False,
         theme="system",
-        pause_emotes=False,
         transient_for=None,
     ):
         super().__init__(
@@ -41,7 +40,6 @@ class ChatWindow(Adw.Window):
             streamer=streamer,
             alternating_bg=alternating_bg,
             theme=theme,
-            pause_emotes=pause_emotes,
             twitch=twitch,
             enable_detach=False,
         )

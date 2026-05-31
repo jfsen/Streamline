@@ -233,7 +233,6 @@ class ChatPage(Adw.NavigationPage):
         streamer,
         alternating_bg=False,
         theme="system",
-        pause_emotes=False,
         twitch=None,
         enable_detach=False,
     ):
@@ -250,12 +249,11 @@ class ChatPage(Adw.NavigationPage):
         self._msg_count = 0
         self._third_party_emotes = None
         self._alternating_bg = alternating_bg
-        self._pause_emotes = pause_emotes
         self._msg_batch = []
         self._batch_flush_id = None
-        self._focus_signal_id = None
-        self._focus_window = None
-        self._focus_scheduled = False
+        self._suspend_signal_id = None
+        self._suspend_window = None
+        self._suspend_scheduled = False
         self._twitch = twitch
         self._dark = theme != "light"
 
@@ -351,55 +349,57 @@ class ChatPage(Adw.NavigationPage):
         self._webview.evaluate_javascript(js, -1, None, None, None, None, None)
 
     def _on_map(self, _widget):
-        """Connect to window focus once the page is in the widget tree."""
-        if self._focus_scheduled:
+        """Connect to window suspend signal once the page is in the widget tree."""
+        if self._suspend_scheduled:
             return
-        self._focus_scheduled = True
-        GLib.idle_add(self._connect_focus)
+        self._suspend_scheduled = True
+        GLib.idle_add(self._connect_suspend)
 
-    def _connect_focus(self):
-        """Deferred connection to window focus signal."""
+    def _connect_suspend(self):
+        """Deferred connection to window suspend signal."""
         toplevel = self.get_root()
         if toplevel:
-            self._focus_window = toplevel
-            self._focus_signal_id = toplevel.connect(
-                "notify::is-active", self._on_focus_changed
+            self._suspend_window = toplevel
+            self._suspend_signal_id = toplevel.connect(
+                "notify::suspended", self._on_suspend_changed
             )
         return GLib.SOURCE_REMOVE
 
-    def _on_focus_changed(self, window, _pspec):
-        """Hide emotes when the window loses focus (user-preference controlled)."""
-        if not self._pause_emotes:
+    def _on_suspend_changed(self, window, _pspec):
+        """Clear emote image sources when the window is suspended
+        (minimised or on a different workspace), restoring them on resume."""
+        suspended = window.props.suspended
+        logger.debug("Suspend changed: suspended=%s", suspended)
+        if suspended:
             self._webview.evaluate_javascript(
-                "window._paused=0;var imgs=document.querySelectorAll('img.emote');for(var i=0;i<imgs.length;i++){imgs[i].style.visibility=''}",
+                "var imgs=document.querySelectorAll('img.emote');var n=0;for(var i=0;i<imgs.length;i++){if(imgs[i].src){imgs[i].dataset.src=imgs[i].src;imgs[i].src='';n++}};n",
                 -1,
                 None,
                 None,
                 None,
-                None,
-                None,
-            )
-            return
-        if window.props.is_active:
-            self._webview.evaluate_javascript(
-                "window._paused=0;var imgs=document.querySelectorAll('img.emote');for(var i=0;i<imgs.length;i++){if(imgs[i].dataset.src)imgs[i].src=imgs[i].dataset.src;imgs[i].style.visibility=''}",
-                -1,
-                None,
-                None,
-                None,
-                None,
-                None,
+                self._on_suspend_done,
+                ("suspended",),
             )
         else:
             self._webview.evaluate_javascript(
-                "window._paused=1;var imgs=document.querySelectorAll('img.emote');for(var i=0;i<imgs.length;i++){if(!imgs[i].dataset.src)imgs[i].dataset.src=imgs[i].src;imgs[i].src='';imgs[i].style.visibility='hidden'}",
+                "var imgs=document.querySelectorAll('img.emote');var n=0;for(var i=0;i<imgs.length;i++){if(!imgs[i].src&&imgs[i].dataset.src){imgs[i].src=imgs[i].dataset.src;n++}};n",
                 -1,
                 None,
                 None,
                 None,
-                None,
-                None,
+                self._on_suspend_done,
+                ("resumed",),
             )
+
+    def _on_suspend_done(self, source, result, action):
+        """Log the result of a suspend/resume JS evaluation."""
+        action = action[0] if isinstance(action, tuple) else action
+        try:
+            js_value = self._webview.evaluate_javascript_finish(result)
+            count = js_value.to_int32()
+            logger.debug("Suspend %s: %d emotes affected", action, count)
+        except Exception as e:
+            logger.debug("Suspend %s: could not read result (%s)", action, e)
 
     def _on_message(self, msg):
         self._msg_count += 1
@@ -458,10 +458,10 @@ class ChatPage(Adw.NavigationPage):
         if self._style_manager is not None:
             self._style_manager.disconnect_by_func(self._on_theme_changed)
             self._style_manager = None
-        if self._focus_signal_id is not None and self._focus_window is not None:
-            self._focus_window.disconnect(self._focus_signal_id)
-            self._focus_signal_id = None
-            self._focus_window = None
+        if self._suspend_signal_id is not None and self._suspend_window is not None:
+            self._suspend_window.disconnect(self._suspend_signal_id)
+            self._suspend_signal_id = None
+            self._suspend_window = None
         if self._batch_flush_id is not None:
             GLib.source_remove(self._batch_flush_id)
             self._flush_messages()
@@ -492,7 +492,6 @@ class ChatPage(Adw.NavigationPage):
             streamer=self._streamer,
             alternating_bg=self._alternating_bg,
             theme=getattr(parent, "theme", "system"),
-            pause_emotes=self._pause_emotes,
             transient_for=root,
         )
         popup.connect(
