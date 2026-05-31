@@ -1,7 +1,24 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 36 36" width="18" height="18">
-  <!--!Font Awesome Free v7.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2026 Fonticons, Inc.-->
-  <rect width="36" height="36" rx="6" fill="#e005b9"/>
-  <g transform="scale(0.05625)">
-    <path d="M341.5 45.1C337.4 37.1 329.1 32 320.1 32C311.1 32 302.8 37.1 298.7 45.1L225.1 189.3L65.2 214.7C56.3 216.1 48.9 222.4 46.1 231C43.3 239.6 45.6 249 51.9 255.4L166.3 369.9L141.1 529.8C139.7 538.7 143.4 547.7 150.7 553C158 558.3 167.6 559.1 175.7 555L320.1 481.6L464.4 555C472.4 559.1 482.1 558.3 489.4 553C496.7 547.7 500.4 538.8 499 529.8L473.7 369.9L588.1 255.4C594.5 249 596.7 239.6 593.9 231C591.1 222.4 583.8 216.1 574.8 214.7L415 189.3L341.5 45.1z" fill="#fff" transform="translate(32,56) scale(0.9)"/>
-  </g>
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   viewBox="0 0 36 36"
+   width="18"
+   height="18"
+   version="1.1"
+   id="svg1"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <defs
+     id="defs1" />
+  <rect
+     width="36"
+     height="36"
+     rx="6"
+     fill="#8200e6"
+     id="rect1"
+     style="fill:#e005b9;fill-opacity:1" />
+  <path
+     style="fill:#ffffff;stroke-width:0.252"
+     id="path2"
+     d="M 8.0550007,-6.5563765 12.320939,2.9484379 22.678803,4.0684385 14.957435,11.062737 17.093007,21.25975 8.0550005,16.077649 -0.98300716,21.259749 1.1525656,11.062737 -6.5688023,4.0684378 3.7890609,2.9484381 Z"
+     transform="translate(9.945,10.62)" />
 </svg>
