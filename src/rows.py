@@ -150,10 +150,26 @@ class StreamerRowManager:
         row.insert_action_group("row", action_group)
 
         # Create the actions
+        chat_action = None
+        detach_action = None
         for _label, action_name, handler in menu_items:
             action = Gio.SimpleAction.new(action_name, None)
+            if action_name == "chat":
+                chat_action = action
+            elif action_name == "detached-chat":
+                detach_action = action
             action.connect("activate", lambda act, param, h=handler: h(streamer))
             action_group.add_action(action)
+
+        def _sync_chat_actions(popover):
+            if popover.get_visible():
+                chat_open = streamer in self.window._active_chats
+                if chat_action:
+                    chat_action.set_enabled(not chat_open)
+                if detach_action:
+                    detach_action.set_enabled(not chat_open)
+
+        popover.connect("notify::visible", lambda p, *_: _sync_chat_actions(p))
 
         row.add_suffix(menu_button)
 
