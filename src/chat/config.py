@@ -10,13 +10,14 @@ STYLE = {
     "user_weight": "700",
     "user_margin": "4px",
     "emote_height": "1.6em",
+    "badge_height": "1.4em",
     "pill_font": "bold 13px Inter, sans-serif",
     "pill_bottom": "8px",
     "pill_padding": "4px 12px",
     "body_padding": "4px 8px",
     "scroll_threshold": 30,
     "max_messages": 500,
-    "cull_chunk": 30,
+    "cull_chunk": 100,
     "flush_ms": 500,
     "dark": {
         "text_color": "#dedede",
@@ -37,6 +38,22 @@ STYLE = {
 IRC_HOST = "irc.chat.twitch.tv"
 IRC_PORT = 6667
 FALLBACK_USER_COLOR = "#9147ff"  # Twitch purple, used when IRC omits color tag
+
+# ── Badges — rendered from src/chat/badges/*.svg ────────────
+
+BADGE_NAMES = {
+    "broadcaster",
+    "moderator",
+    "vip",
+    "subscriber",
+    "founder",
+    "partner",
+    "staff",
+    "admin",
+    "global_mod",
+    "no_audio",
+    "no_video",
+}
 
 # ── Emote CDNs ──────────────────────────────────────────────
 

@@ -7,7 +7,13 @@ import threading
 
 from gi.repository import GLib
 
-from .config import FALLBACK_USER_COLOR, IRC_HOST, IRC_PORT, TWITCH_EMOTE_CDN
+from .config import (
+    BADGE_NAMES,
+    FALLBACK_USER_COLOR,
+    IRC_HOST,
+    IRC_PORT,
+    TWITCH_EMOTE_CDN,
+)
 
 logger = logging.getLogger("IRCChat")
 
@@ -16,6 +22,7 @@ _TAG_RE = re.compile(r"@([^ ]+) ")
 _COLOR_RE = re.compile(r"color=#([0-9A-Fa-f]{6})")
 _DISPLAY_NAME_RE = re.compile(r"display-name=([^;]+)")
 _EMOTES_RE = re.compile(r"emotes=([^;]+)")
+_BADGES_RE = re.compile(r"badges=([^;]+)")
 
 
 class TwitchChat:
@@ -102,6 +109,7 @@ class TwitchChat:
 
         tag_match = _TAG_RE.match(tags_part)
         emotes = []
+        badges = []
         if tag_match:
             tags = tag_match.group(1)
             color_match = _COLOR_RE.search(tags)
@@ -114,6 +122,9 @@ class TwitchChat:
             emotes_match = _EMOTES_RE.search(tags)
             if emotes_match:
                 emotes = _parse_emotes(emotes_match.group(1), text)
+            badges_match = _BADGES_RE.search(tags)
+            if badges_match:
+                badges = _parse_badges(badges_match.group(1))
 
         if display_name is None:
             user_part = line.split("!", 1)[0] if "!" in line else ""
@@ -124,7 +135,20 @@ class TwitchChat:
             "text": text.strip(),
             "color": color,
             "emotes": emotes,
+            "badges": badges,
         }
+
+
+def _parse_badges(tag_value):
+    """Parse the badges tag into a list of badge names."""
+    result = []
+    for badge in tag_value.split(","):
+        badge = badge.strip()
+        if "/" in badge:
+            name, _version = badge.split("/", 1)
+            if name in BADGE_NAMES:
+                result.append(name)
+    return result
 
 
 def _parse_emotes(tag_value, text):

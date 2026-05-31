@@ -4,6 +4,7 @@ import gettext
 import json
 import logging
 import threading
+from pathlib import Path
 
 import gi
 
@@ -40,13 +41,16 @@ _HTML = """<!DOCTYPE html>
     background: COLORPILLBG; color: COLORPILLFG;
   }
   ROWCSS
-</style></head><body><div id="chat"></div>
+</style></head><body>
+BADGE_SVGS
+<div id="chat"></div>
 <script>
 var _moreMsg = MORE_MSG;
 var _scrollThresh = SCROLL_THRESH;
 var _maxMsgs = MAX_MSGS;
 var _cullChunk = CULL_CHUNK;
 var _emoteHeight = EMOTE_HEIGHT;
+var _badgeHeight = BADGE_HEIGHT;
 (function() {
   var chat = document.getElementById('chat');
   var paused = false;
@@ -92,9 +96,28 @@ var _emoteHeight = EMOTE_HEIGHT;
     });
   });
 
-  window.chat = function(user, text, color, emotes) {
+  window.chat = function(user, text, color, emotes, badges) {
     var div = document.createElement('div');
     div.className = 'msg';
+    if (badges && badges.length) {
+      badges.forEach(function(name) {
+        var svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        svg.setAttribute('class', 'badge');
+        svg.setAttribute('width', _badgeHeight);
+        svg.setAttribute('height', _badgeHeight);
+        svg.style.verticalAlign = 'middle';
+        svg.style.marginRight = '2px';
+        svg.style.pointerEvents = 'bounding-box';
+        var title = document.createElementNS('http://www.w3.org/2000/svg', 'title');
+        title.textContent = name;
+        svg.appendChild(title);
+        var use = document.createElementNS('http://www.w3.org/2000/svg', 'use');
+        use.setAttributeNS('http://www.w3.org/1999/xlink', 'xlink:href', '#badge-' + name);
+        use.setAttribute('href', '#badge-' + name);
+        svg.appendChild(use);
+        div.appendChild(svg);
+      });
+    }
     var u = document.createElement('span');
     u.className = 'user';
     u.style.color = color;
@@ -141,6 +164,29 @@ var _emoteHeight = EMOTE_HEIGHT;
 </script></body></html>"""
 
 
+# ── Badge SVGs (loaded once at module level) ────────────────
+
+_BADGE_DIR = Path(__file__).parent / "badges"
+_BADGE_SVGS = {}
+for _f in _BADGE_DIR.glob("*.svg"):
+    _BADGE_SVGS[_f.stem] = _f.read_text()
+
+
+def _badge_svg_defs():
+    """Build an inline SVG defs block so <use href="#badge-X"/> works."""
+    if not _BADGE_SVGS:
+        return ""
+    parts = ["<svg style='display:none' xmlns='http://www.w3.org/2000/svg'>"]
+    for name, svg in _BADGE_SVGS.items():
+        # Strip outer <svg> tag and add id
+        inner = svg.replace("<svg ", f'<symbol id="badge-{name}" ').replace(
+            "</svg>", "</symbol>"
+        )
+        parts.append(inner)
+    parts.append("</svg>")
+    return "\n".join(parts)
+
+
 def _build_html(alternating_bg, dark):
     """Build the chat HTML with theme-aware colors."""
     s = _CHAT_STYLE
@@ -164,6 +210,8 @@ def _build_html(alternating_bg, dark):
     html = html.replace("MAX_MSGS", str(s["max_messages"]))
     html = html.replace("CULL_CHUNK", str(s["cull_chunk"]))
     html = html.replace("EMOTE_HEIGHT", json.dumps(s["emote_height"]))
+    html = html.replace("BADGE_HEIGHT", json.dumps(s["badge_height"]))
+    html = html.replace("BADGE_SVGS", _badge_svg_defs())
     if alternating_bg:
         html = html.replace(
             "ROWCSS",
@@ -368,7 +416,9 @@ class ChatPage(Adw.NavigationPage):
         emotes = list(msg["emotes"])
         if self._third_party_emotes:
             emotes.extend(self._third_party_emotes.find_emotes(msg["text"]))
-        self._msg_batch.append((msg["user"], msg["text"], msg["color"], emotes))
+        self._msg_batch.append(
+            (msg["user"], msg["text"], msg["color"], emotes, msg.get("badges", []))
+        )
 
         if self._batch_flush_id is None:
             self._batch_flush_id = GLib.timeout_add(
@@ -384,7 +434,7 @@ class ChatPage(Adw.NavigationPage):
         self._msg_batch.clear()
         self._batch_flush_id = None
         self._webview.evaluate_javascript(
-            f"(function(){{var b={batch};b.forEach(function(m){{chat(m[0],m[1],m[2],m[3])}})}})()",
+            f"(function(){{var b={batch};b.forEach(function(m){{chat(m[0],m[1],m[2],m[3],m[4])}})}})()",
             -1,
             None,
             None,
