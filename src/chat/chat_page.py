@@ -96,9 +96,10 @@ var _badgeHeight = BADGE_HEIGHT;
     });
   });
 
-  window.chat = function(user, text, color, emotes, badges) {
+  window.chat = function(user, text, color, emotes, badges, action) {
     var div = document.createElement('div');
     div.className = 'msg';
+    if (action) div.style.fontStyle = 'italic';
     if (badges && badges.length) {
       badges.forEach(function(name) {
         var svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
@@ -121,7 +122,7 @@ var _badgeHeight = BADGE_HEIGHT;
     var u = document.createElement('span');
     u.className = 'user';
     u.style.color = color;
-    u.textContent = user + ':';
+    u.textContent = action ? user : user + ':';
     div.appendChild(u);
     if (emotes && emotes.length) {
       var pm = {};
@@ -417,7 +418,14 @@ class ChatPage(Adw.NavigationPage):
         if self._third_party_emotes:
             emotes.extend(self._third_party_emotes.find_emotes(msg["text"]))
         self._msg_batch.append(
-            (msg["user"], msg["text"], msg["color"], emotes, msg.get("badges", []))
+            (
+                msg["user"],
+                msg["text"],
+                msg["color"],
+                emotes,
+                msg.get("badges", []),
+                msg.get("action", False),
+            )
         )
 
         if self._batch_flush_id is None:

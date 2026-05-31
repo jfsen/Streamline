@@ -16,7 +16,7 @@ STYLE = {
     "pill_padding": "4px 12px",
     "body_padding": "4px 8px",
     "scroll_threshold": 30,
-    "max_messages": 500,
+    "max_messages": 1000,
     "cull_chunk": 100,
     "flush_ms": 500,
     "dark": {

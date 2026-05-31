@@ -104,6 +104,12 @@ class TwitchChat:
             return None
         user, text = body.split(" :", 1)
 
+        # Detect CTCP ACTION (/me) — IRC convention used by Twitch
+        action = False
+        if text.startswith("\x01ACTION ") and text.endswith("\x01"):
+            action = True
+            text = text[8:-1]  # strip \x01ACTION and trailing \x01
+
         display_name = None
         color = FALLBACK_USER_COLOR
 
@@ -136,6 +142,7 @@ class TwitchChat:
             "color": color,
             "emotes": emotes,
             "badges": badges,
+            "action": action,
         }
 
 
