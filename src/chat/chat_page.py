@@ -140,12 +140,12 @@ def _build_html(alternating_bg, row_color, dark):
     """Build the chat HTML with theme-aware colors."""
     if dark:
         html = _HTML.replace("COLORTEXT", "#dedede")
-        html = html.replace("COLORPILLBG", "rgba(255,255,255,0.88)")
-        html = html.replace("COLORPILLFG", "#1a1a1a")
+        html = html.replace("COLORPILLBG", "rgba(255,255,255,0.18)")
+        html = html.replace("COLORPILLFG", "#ccc")
     else:
         html = _HTML.replace("COLORTEXT", "#2e2e2e")
-        html = html.replace("COLORPILLBG", "rgba(0,0,0,0.82)")
-        html = html.replace("COLORPILLFG", "#eee")
+        html = html.replace("COLORPILLBG", "rgba(0,0,0,0.14)")
+        html = html.replace("COLORPILLFG", "#555")
     html = html.replace("MORE_MSG", json.dumps(_("More messages below")))
     if alternating_bg:
         html = html.replace(
@@ -377,14 +377,23 @@ class ChatPage(Adw.NavigationPage):
         root = self.get_root()
         from .chat_window import ChatWindow
 
-        ChatWindow(
+        popup = ChatWindow(
             twitch=getattr(parent, "twitch", None),
             streamer=self._streamer,
             alternating_bg=self._alternating_bg,
             theme=getattr(parent, "theme", "system"),
             pause_emotes=self._pause_emotes,
             transient_for=root,
-        ).present()
+        )
+        popup.connect(
+            "close-request",
+            lambda w, s=self._streamer: (
+                getattr(parent, "_active_chats", {}).pop(s, None),
+                False,
+            )[-1],
+        )
+        getattr(parent, "_active_chats", {})[self._streamer] = popup
+        popup.present()
 
         # Pop this page from the navigation view, returning to the streamer list
         parent.navigation_view.pop()

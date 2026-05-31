@@ -123,6 +123,7 @@ class StreamlineWindow(Adw.ApplicationWindow):
         )
         self.navigation_view.add(self.main_page)
         self._preferences = None
+        self._active_chats = {}  # streamer → ChatPage or ChatWindow
 
         # ── Phase 2: deferred heavy work — runs after the first frame paints ──
         GLib.idle_add(self._complete_startup, priority=GLib.PRIORITY_LOW)
@@ -522,7 +523,13 @@ class StreamlineWindow(Adw.ApplicationWindow):
         self.navigation_view.push(page)
 
     def show_chat_page(self, streamer):
-        """Show chat page for the given streamer."""
+        """Show chat page for the given streamer, reusing existing if open."""
+        existing = self._active_chats.get(streamer)
+        if existing is not None:
+            if isinstance(existing, ChatPage):
+                self.navigation_view.push(existing)
+            return
+
         logger.debug("Opening chat page for %s", streamer)
         page = ChatPage(
             self,
@@ -533,21 +540,41 @@ class StreamlineWindow(Adw.ApplicationWindow):
             twitch=self.twitch,
             enable_detach=True,
         )
+        page.connect(
+            "hidden",
+            lambda p, s=streamer: (
+                self._active_chats.pop(s, None)
+                if self._active_chats.get(s) is p
+                else None
+            ),
+        )
+        self._active_chats[streamer] = page
         self.navigation_view.push(page)
 
     def show_chat_popup(self, streamer):
-        """Open chat in a separate pop-up window."""
+        """Open chat in a separate pop-up window, reusing existing if open."""
+        existing = self._active_chats.get(streamer)
+        if existing is not None:
+            existing.present()
+            return
+
         logger.debug("Opening chat popup for %s", streamer)
         from .chat.chat_window import ChatWindow
 
-        ChatWindow(
+        popup = ChatWindow(
             twitch=self.twitch,
             streamer=streamer,
             alternating_bg=self.chat_alternating_bg,
             theme=self.theme,
             pause_emotes=self.chat_pause_emotes,
             transient_for=self,
-        ).present()
+        )
+        popup.connect(
+            "close-request",
+            lambda w, s=streamer: (self._active_chats.pop(s, None), False)[-1],
+        )
+        self._active_chats[streamer] = popup
+        popup.present()
 
     def _cleanup_vod_page(self, page):
         """Clean up VOD page references"""

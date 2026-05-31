@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: streamline 3.2.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-05-31 12:13+0200\n"
+"POT-Creation-Date: 2026-05-31 14:13+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -164,7 +164,7 @@ msgstr ""
 msgid "Follow"
 msgstr ""
 
-#: src/dialogs.py:90 src/window.py:488 src/window.ui:25
+#: src/dialogs.py:90 src/window.py:489 src/window.ui:25
 msgid "Quick Play Stream"
 msgstr ""
 
@@ -284,7 +284,7 @@ msgid "Chat"
 msgstr ""
 
 #: src/rows.py:135
-msgid "Pop-up Chat"
+msgid "Detached Chat"
 msgstr ""
 
 #: src/rows.py:136
@@ -384,16 +384,16 @@ msgstr ""
 msgid "{}h {}m"
 msgstr ""
 
-#: src/chat/chat_page.py:148
+#: src/chat/chat_page.py:149
 msgid "More messages below"
 msgstr ""
 
-#: src/chat/chat_page.py:172 src/chat/chat_window.py:32
+#: src/chat/chat_page.py:173 src/chat/chat_window.py:32
 #, python-brace-format
 msgid "Chat: {}"
 msgstr ""
 
-#: src/chat/chat_page.py:240
+#: src/chat/chat_page.py:250
 msgid "Detach chat"
 msgstr ""
 
@@ -414,7 +414,7 @@ msgstr ""
 msgid "No internet connection. Check your network and try again."
 msgstr ""
 
-#: src/vod_page.py:173 src/window.py:269
+#: src/vod_page.py:173 src/window.py:270
 #, python-brace-format
 msgid "Please wait {}s before refreshing"
 msgstr ""
@@ -444,104 +444,104 @@ msgstr ""
 msgid "Error playing VOD: player failed to start"
 msgstr ""
 
-#: src/window.py:206 src/window.py:285
+#: src/window.py:207 src/window.py:286
 msgid "Connection Error"
 msgstr ""
 
-#: src/window.py:208 src/window.py:287
+#: src/window.py:209 src/window.py:288
 msgid "Could not fetch streamer data. Please check your internet connection."
 msgstr ""
 
-#: src/window.py:218 src/window.py:297
+#: src/window.py:219 src/window.py:298
 msgid "API Rate Limit"
 msgstr ""
 
-#: src/window.py:220 src/window.py:299
+#: src/window.py:221 src/window.py:300
 msgid ""
 "Twitch API rate limit reached. Please wait a few minutes before refreshing "
 "again."
 msgstr ""
 
-#: src/window.py:226 src/window.py:234 src/window.py:305 src/window.py:313
+#: src/window.py:227 src/window.py:235 src/window.py:306 src/window.py:314
 msgid "API Error"
 msgstr ""
 
-#: src/window.py:227 src/window.py:306
+#: src/window.py:228 src/window.py:307
 #, python-brace-format
 msgid "HTTP error {} occurred while fetching streamer data."
 msgstr ""
 
-#: src/window.py:235 src/window.py:314
+#: src/window.py:236 src/window.py:315
 #, python-brace-format
 msgid "Failed to fetch streamer data: {}"
 msgstr ""
 
-#: src/window.py:260
+#: src/window.py:261
 msgid "API not available"
 msgstr ""
 
-#: src/window.py:320
+#: src/window.py:321
 msgid "Stream data refreshed"
 msgstr ""
 
-#: src/window.py:432
+#: src/window.py:433
 #, python-brace-format
 msgid "Now following {}"
 msgstr ""
 
-#: src/window.py:434
+#: src/window.py:435
 #, python-brace-format
 msgid "Added {} new streamers"
 msgstr ""
 
-#: src/window.py:438
+#: src/window.py:439
 #, python-brace-format
 msgid "Already following {}"
 msgstr ""
 
-#: src/window.py:441
+#: src/window.py:442
 #, python-brace-format
 msgid "Already following: {}"
 msgstr ""
 
-#: src/window.py:453
+#: src/window.py:454
 #, python-brace-format
 msgid "Error: {}"
 msgstr ""
 
-#: src/window.py:460
+#: src/window.py:461
 msgid "Error Saving Config"
 msgstr ""
 
-#: src/window.py:460
+#: src/window.py:461
 msgid "Could not save configuration"
 msgstr ""
 
-#: src/window.py:477
+#: src/window.py:478
 msgid "Application"
 msgstr ""
 
-#: src/window.py:478 src/preferences.ui:7
+#: src/window.py:479 src/preferences.ui:7
 msgid "Preferences"
 msgstr ""
 
-#: src/window.py:479
+#: src/window.py:480
 msgid "Show Shortcuts"
 msgstr ""
 
-#: src/window.py:480
+#: src/window.py:481
 msgid "Quit"
 msgstr ""
 
-#: src/window.py:484
+#: src/window.py:485
 msgid "Stream Management"
 msgstr ""
 
-#: src/window.py:486
+#: src/window.py:487
 msgid "Follow New Streamer"
 msgstr ""
 
-#: src/window.py:489 src/window.py:490
+#: src/window.py:490 src/window.py:491
 msgid "Refresh Streams"
 msgstr ""
 

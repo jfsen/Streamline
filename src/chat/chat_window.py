@@ -1,4 +1,4 @@
-"""Standalone chat window for pop-up / detached chat."""
+"""Standalone chat window for detached chat."""
 
 import gettext
 import logging

@@ -296,8 +296,8 @@ msgid "Chat"
 msgstr "Chat"
 
 #: src/rows.py:135
-msgid "Pop-up Chat"
-msgstr "Pop-up-Chat"
+msgid "Detached Chat"
+msgstr "Losgelöster Chat"
 
 #: src/rows.py:136
 msgid "Show VODs"
