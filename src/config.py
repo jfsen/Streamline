@@ -52,7 +52,7 @@ class ConfigManager:
         self.settings.set_string("theme", config.get("theme", "system"))
         self.settings.set_boolean("low-latency", config.get("low_latency", True))
         self.settings.set_boolean(
-            "chat-alternating-background", config.get("chat_alternating_bg", True)
+            "chat-alternating-background", config.get("chat_alternating_bg", False)
         )
         self.settings.set_boolean(
             "chat-pause-emotes", config.get("chat_pause_emotes", False)

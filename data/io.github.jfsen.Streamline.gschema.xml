@@ -48,7 +48,7 @@
 		      <description>Twitch API client secret for authentication</description>
 		    </key>
 		        <key name="chat-alternating-background" type="b">
-		          <default>true</default>
+		          <default>false</default>
 		          <summary>Alternating chat background</summary>
 		          <description
             >Show alternating background colors on chat messages</description>

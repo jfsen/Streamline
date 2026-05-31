@@ -106,7 +106,7 @@ var _moreMsg = MORE_MSG;
           var img = document.createElement('img');
           img.src = pm[i].url;
           img.className = 'emote';
-          img.style.height = '1.7em';
+          img.style.height = '1.6em';
           img.style.verticalAlign = 'middle';
           if (window._paused) img.style.visibility = 'hidden';
           div.appendChild(img);
@@ -163,9 +163,9 @@ class ChatPage(Adw.NavigationPage):
         self,
         parent,
         streamer,
-        alternating_bg=True,
+        alternating_bg=False,
         theme="system",
-        pause_emotes=True,
+        pause_emotes=False,
         twitch=None,
         enable_detach=False,
     ):
