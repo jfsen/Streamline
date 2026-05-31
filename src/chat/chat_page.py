@@ -98,13 +98,14 @@ var _moreMsg = MORE_MSG;
     if (emotes && emotes.length) {
       var pm = {};
       emotes.forEach(function(e) {
-        e.positions.forEach(function(p) { pm[p[0]] = {end: p[1], url: e.url}; });
+        e.positions.forEach(function(p) { pm[p[0]] = {end: p[1], url: e.url, name: e.name, source: e.source}; });
       });
       var i = 0, n = text.length;
       while (i < n) {
         if (pm[i]) {
           var img = document.createElement('img');
           img.src = pm[i].url;
+          img.title = (pm[i].name || 'Emote') + ' (' + (pm[i].source || '?') + ')';
           img.className = 'emote';
           img.style.height = '1.6em';
           img.style.verticalAlign = 'middle';
@@ -207,9 +208,18 @@ class ChatPage(Adw.NavigationPage):
             user_cache = getattr(twitch_api, "user_cache", {})
             user_id = user_cache.get(streamer, {}).get("id")
         self._third_party_emotes = ThirdPartyEmotes(user_id)
-        threading.Thread(target=self._third_party_emotes.load, daemon=True).start()
 
-        # WebKit view
+        # Load emotes first, then start IRC in the same thread
+        def _load_then_connect():
+            self._third_party_emotes.load()
+            self._chat = TwitchChat(
+                streamer,
+                on_message=self._on_message,
+                on_connected=self._on_connected,
+            )
+            self._chat.start()
+
+        threading.Thread(target=_load_then_connect, daemon=True).start()
         self._webview = WebKit.WebView()
         self._webview.set_vexpand(True)
         self._webview.set_hexpand(True)
@@ -249,14 +259,6 @@ class ChatPage(Adw.NavigationPage):
 
         self.connect("hidden", self._on_hidden)
         self.connect("map", self._on_map)
-
-        # Start IRC connection
-        self._chat = TwitchChat(
-            streamer,
-            on_message=self._on_message,
-            on_connected=self._on_connected,
-        )
-        self._chat.start()
 
     def _on_connected(self):
         logger.debug("Connected to chat for %s", self._streamer)

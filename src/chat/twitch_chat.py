@@ -94,6 +94,11 @@ class TwitchChat:
             return None
 
         tags_part = parts[0]
+        body = parts[1]
+        if " :" not in body:
+            return None
+        user, text = body.split(" :", 1)
+
         display_name = None
         color = "#9147ff"  # Twitch purple fallback
 
@@ -110,12 +115,7 @@ class TwitchChat:
                 display_name = raw.replace("\\s", " ")
             emotes_match = _EMOTES_RE.search(tags)
             if emotes_match:
-                emotes = _parse_emotes(emotes_match.group(1))
-
-        body = parts[1]
-        if " :" not in body:
-            return None
-        user, text = body.split(" :", 1)
+                emotes = _parse_emotes(emotes_match.group(1), text)
 
         if display_name is None:
             user_part = line.split("!", 1)[0] if "!" in line else ""
@@ -129,22 +129,27 @@ class TwitchChat:
         }
 
 
-def _parse_emotes(tag_value):
-    """Parse the emotes tag into a list of {id, url, positions}."""
+def _parse_emotes(tag_value, text):
+    """Parse the emotes tag into a list of {source, name, url, positions}."""
     result = []
     for emote in tag_value.split("/"):
         if ":" not in emote:
             continue
         emote_id, positions_str = emote.split(":", 1)
         positions = []
+        name = None
         for pos in positions_str.split(","):
             if "-" in pos:
                 start, end = pos.split("-", 1)
-                positions.append((int(start), int(end)))
+                start, end = int(start), int(end)
+                positions.append((start, end))
+                if name is None and start < len(text) and end < len(text):
+                    name = text[start : end + 1]
         if positions:
             result.append(
                 {
-                    "id": emote_id,
+                    "source": "Twitch",
+                    "name": name or emote_id,
                     "url": _EMOTE_CDN.format(id=emote_id),
                     "positions": positions,
                 }
