@@ -7,6 +7,8 @@ import threading
 
 from gi.repository import GLib
 
+from .config import IRC_HOST, IRC_PORT, TWITCH_EMOTE_CDN
+
 logger = logging.getLogger("IRCChat")
 
 # Twitch IRC tags for extracting display name and color
@@ -14,8 +16,6 @@ _TAG_RE = re.compile(r"@([^ ]+) ")
 _COLOR_RE = re.compile(r"color=#([0-9A-Fa-f]{6})")
 _DISPLAY_NAME_RE = re.compile(r"display-name=([^;]+)")
 _EMOTES_RE = re.compile(r"emotes=([^;]+)")
-
-_EMOTE_CDN = "https://static-cdn.jtvnw.net/emoticons/v2/{id}/default/dark/1.0"
 
 
 class TwitchChat:
@@ -45,9 +45,7 @@ class TwitchChat:
     def _connect(self):
         logger.debug("Connecting to IRC for #%s", self._channel)
         try:
-            self._sock = socket.create_connection(
-                ("irc.chat.twitch.tv", 6667), timeout=10
-            )
+            self._sock = socket.create_connection((IRC_HOST, IRC_PORT), timeout=10)
             self._sock.settimeout(None)
             self._send_raw("PASS", "justinfan12345")
             self._send_raw("NICK", "justinfan12345")
@@ -150,7 +148,7 @@ def _parse_emotes(tag_value, text):
                 {
                     "source": "Twitch",
                     "name": name or emote_id,
-                    "url": _EMOTE_CDN.format(id=emote_id),
+                    "url": TWITCH_EMOTE_CDN.format(id=emote_id),
                     "positions": positions,
                 }
             )

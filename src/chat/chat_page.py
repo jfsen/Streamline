@@ -11,6 +11,7 @@ gi.require_version("WebKit", "6.0")
 
 from gi.repository import Adw, Gdk, GLib, Gtk, WebKit
 
+from .config import STYLE as _CHAT_STYLE
 from .emotes import ThirdPartyEmotes
 from .twitch_chat import TwitchChat
 
@@ -22,19 +23,19 @@ _HTML = """<!DOCTYPE html>
   :root { }
   @font-face { font-family: 'Emoji'; src: local('Noto Color Emoji'); unicode-range: U+2600-26FF, U+2700-27BF, U+1F300-1F5FF, U+1F600-1F64F, U+1F680-1F6FF, U+1F900-1F9FF, U+1FA00-1FA6F, U+1FA70-1FAFF, U+231A-231B, U+2328, U+23CF, U+23E9-23F3, U+23F8-23FA, U+200D, U+FE0F; }
   body {
-    margin: 0; padding: 4px 8px;
+    margin: 0; padding: BODYPAD;
     background: transparent;
-    font: 15px Inter, Emoji, sans-serif;
+    font: FONTSIZE FONTFAMILY;
     overflow-wrap: break-word;
     color: COLORTEXT;
   }
-  .msg { padding: 4px 0; line-height: 1.4; }
-  .user { font-weight: 700; margin-right: 4px; }
+  .msg { padding: ROWPAD; line-height: LINEHEIGHT; }
+  .user { font-weight: USERWEIGHT; margin-right: USERMARGIN; }
   .text {}
   #more-msg {
-    position: fixed; bottom: 8px; left: 50%; transform: translateX(-50%);
-    padding: 4px 12px; border-radius: 999px; z-index: 99;
-    font: bold 13px Inter, sans-serif; cursor: pointer;
+    position: fixed; bottom: PILLBOTTOM; left: 50%; transform: translateX(-50%);
+    padding: PILLPAD; border-radius: 999px; z-index: 99;
+    font: PILLFONT; cursor: pointer;
     white-space: nowrap;
     background: COLORPILLBG; color: COLORPILLFG;
   }
@@ -42,12 +43,16 @@ _HTML = """<!DOCTYPE html>
 </style></head><body><div id="chat"></div>
 <script>
 var _moreMsg = MORE_MSG;
+var _scrollThresh = SCROLL_THRESH;
+var _maxMsgs = MAX_MSGS;
+var _cullChunk = CULL_CHUNK;
+var _emoteHeight = EMOTE_HEIGHT;
 (function() {
   var chat = document.getElementById('chat');
   var paused = false;
 
   window.addEventListener('scroll', function() {
-    var atBottom = window.innerHeight + window.scrollY >= document.body.scrollHeight - 30;
+    var atBottom = window.innerHeight + window.scrollY >= document.body.scrollHeight - _scrollThresh;
     if (atBottom) {
       paused = false;
       var btn = document.getElementById('more-msg');
@@ -107,7 +112,7 @@ var _moreMsg = MORE_MSG;
           img.src = pm[i].url;
           img.title = (pm[i].name || 'Emote') + ' (' + (pm[i].source || '?') + ')';
           img.className = 'emote';
-          img.style.height = '1.6em';
+          img.style.height = _emoteHeight;
           img.style.verticalAlign = 'middle';
           if (window._paused) img.style.visibility = 'hidden';
           div.appendChild(img);
@@ -136,21 +141,33 @@ var _moreMsg = MORE_MSG;
 </script></body></html>"""
 
 
-def _build_html(alternating_bg, row_color, dark):
+def _build_html(alternating_bg, dark):
     """Build the chat HTML with theme-aware colors."""
-    if dark:
-        html = _HTML.replace("COLORTEXT", "#dedede")
-        html = html.replace("COLORPILLBG", "rgba(255,255,255,0.18)")
-        html = html.replace("COLORPILLFG", "#ccc")
-    else:
-        html = _HTML.replace("COLORTEXT", "#2e2e2e")
-        html = html.replace("COLORPILLBG", "rgba(0,0,0,0.14)")
-        html = html.replace("COLORPILLFG", "#555")
+    s = _CHAT_STYLE
+    theme = s["dark"] if dark else s["light"]
+    html = _HTML
+    html = html.replace("COLORTEXT", theme["text_color"])
+    html = html.replace("COLORPILLBG", theme["pill_bg"])
+    html = html.replace("COLORPILLFG", theme["pill_fg"])
+    html = html.replace("FONTSIZE", s["font_size"])
+    html = html.replace("FONTFAMILY", s["font_family"])
+    html = html.replace("BODYPAD", s["body_padding"])
+    html = html.replace("ROWPAD", s["row_padding"])
+    html = html.replace("LINEHEIGHT", s["line_height"])
+    html = html.replace("USERWEIGHT", s["user_weight"])
+    html = html.replace("USERMARGIN", s["user_margin"])
+    html = html.replace("PILLFONT", s["pill_font"])
+    html = html.replace("PILLBOTTOM", s["pill_bottom"])
+    html = html.replace("PILLPAD", s["pill_padding"])
     html = html.replace("MORE_MSG", json.dumps(_("More messages below")))
+    html = html.replace("SCROLL_THRESH", str(s["scroll_threshold"]))
+    html = html.replace("MAX_MSGS", str(s["max_messages"]))
+    html = html.replace("CULL_CHUNK", str(s["cull_chunk"]))
+    html = html.replace("EMOTE_HEIGHT", json.dumps(s["emote_height"]))
     if alternating_bg:
         html = html.replace(
             "ROWCSS",
-            f".msg:nth-child(even) {{ background: {row_color}; }}",
+            f".msg:nth-child(even) {{ background: {theme['row_color']}; }}",
         )
     else:
         html = html.replace("ROWCSS", "")
@@ -190,14 +207,7 @@ class ChatPage(Adw.NavigationPage):
         self._focus_window = None
         self._focus_scheduled = False
         self._twitch = twitch
-
-        # Pick alternating row color based on theme
-        if theme == "light":
-            self._dark = False
-            self._row_color = "rgba(0,0,0,0.03)"
-        else:
-            self._dark = True
-            self._row_color = "rgba(255,255,255,0.04)"
+        self._dark = theme != "light"
 
         # Load BTTV/7TV emotes in background
         user_id = None
@@ -234,9 +244,7 @@ class ChatPage(Adw.NavigationPage):
         user_content.register_script_message_handler("chat")
         user_content.connect("script-message-received::chat", lambda *a: None)
 
-        self._webview.load_html(
-            _build_html(self._alternating_bg, self._row_color, self._dark), None
-        )
+        self._webview.load_html(_build_html(self._alternating_bg, self._dark), None)
 
         # Toolbar
         toolbar = Adw.ToolbarView()
@@ -307,10 +315,10 @@ class ChatPage(Adw.NavigationPage):
 
     def _on_message(self, msg):
         self._msg_count += 1
-        if self._msg_count > 500:
-            self._msg_count -= 50
+        if self._msg_count > _CHAT_STYLE["max_messages"]:
+            self._msg_count -= _CHAT_STYLE["cull_chunk"]
             self._webview.evaluate_javascript(
-                "var c=document.getElementById('chat');for(var i=0;i<50&&c.firstChild;i++)c.removeChild(c.firstChild)",
+                f"var c=document.getElementById('chat');for(var i=0;i<{_CHAT_STYLE['cull_chunk']}&&c.firstChild;i++)c.removeChild(c.firstChild)",
                 -1,
                 None,
                 None,
@@ -325,7 +333,9 @@ class ChatPage(Adw.NavigationPage):
         self._msg_batch.append((msg["user"], msg["text"], msg["color"], emotes))
 
         if self._batch_flush_id is None:
-            self._batch_flush_id = GLib.timeout_add(50, self._flush_messages)
+            self._batch_flush_id = GLib.timeout_add(
+                _CHAT_STYLE["flush_ms"], self._flush_messages
+            )
 
     def _flush_messages(self):
         """Inject all queued messages into the WebView in one IPC call."""

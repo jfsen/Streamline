@@ -9,19 +9,20 @@ from pathlib import Path
 import requests
 from gi.repository import GLib
 
-logger = logging.getLogger("Emotes")
+from .config import (
+    _BTTV_CHANNEL,
+    _BTTV_GLOBAL,
+    _FFZ_CHANNEL,
+    _FFZ_GLOBAL,
+    _SEVENTV_CHANNEL,
+    _SEVENTV_GLOBAL,
+    CACHE_TTL,
+)
 
-# ── API endpoints ───────────────────────────────────────────
-_BTTV_GLOBAL = "https://api.betterttv.net/3/cached/emotes/global"
-_BTTV_CHANNEL = "https://api.betterttv.net/3/cached/users/twitch/{user_id}"
-_SEVENTV_GLOBAL = "https://7tv.io/v3/emote-sets/global"
-_SEVENTV_CHANNEL = "https://7tv.io/v3/users/twitch/{user_id}"
-_FFZ_GLOBAL = "https://api.frankerfacez.com/v1/set/global"
-_FFZ_CHANNEL = "https://api.frankerfacez.com/v1/room/id/{user_id}"
+logger = logging.getLogger("Emotes")
 
 # ── Cache ───────────────────────────────────────────────────
 _CACHE_DIR = Path(GLib.get_user_cache_dir()) / "Streamline" / "emotes"
-_CACHE_TTL = 3600  # 1 hour
 
 
 def _cache_path(source, identifier):
@@ -37,7 +38,7 @@ def _load_cache(source, identifier):
         with open(path) as f:
             data = json.load(f)
         age = datetime.now(timezone.utc) - datetime.fromisoformat(data["ts"])
-        if age.total_seconds() > _CACHE_TTL:
+        if age.total_seconds() > CACHE_TTL:
             logger.debug("Cache expired: %s/%s", source, identifier)
             return None
         emotes = data["emotes"]
