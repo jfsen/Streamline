@@ -113,6 +113,7 @@
         <child>
           <object class="AdwPreferencesGroup">
             <property name="title" translatable="yes">Chat</property>
+            <property name="description" translatable="yes">Changes apply to newly opened chats</property>
             <child>
               <object class="AdwSwitchRow" id="chat_alternating_bg_switch">
                 <property name="title" translatable="yes">Alternating Background</property>

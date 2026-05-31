@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: streamline 3.2.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-05-31 14:13+0200\n"
+"POT-Creation-Date: 2026-05-31 16:01+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -127,7 +127,7 @@ msgstr ""
 msgid "Hide emotes on focus loss"
 msgstr ""
 
-#: data/io.github.jfsen.Streamline.gschema.xml:59 src/preferences.ui:125
+#: data/io.github.jfsen.Streamline.gschema.xml:59 src/preferences.ui:126
 msgid "Hide all emotes when the window loses focus to save resources"
 msgstr ""
 
@@ -187,11 +187,11 @@ msgid ""
 "You can get these at https://dev.twitch.tv/console/apps"
 msgstr ""
 
-#: src/dialogs.py:133 src/preferences.ui:137
+#: src/dialogs.py:133 src/preferences.ui:138
 msgid "Client ID"
 msgstr ""
 
-#: src/dialogs.py:139 src/preferences.ui:142
+#: src/dialogs.py:139 src/preferences.ui:143
 msgid "Client Secret"
 msgstr ""
 
@@ -384,16 +384,16 @@ msgstr ""
 msgid "{}h {}m"
 msgstr ""
 
-#: src/chat/chat_page.py:149
+#: src/chat/chat_page.py:162
 msgid "More messages below"
 msgstr ""
 
-#: src/chat/chat_page.py:173 src/chat/chat_window.py:32
+#: src/chat/chat_page.py:190 src/chat/chat_window.py:32
 #, python-brace-format
 msgid "Chat: {}"
 msgstr ""
 
-#: src/chat/chat_page.py:250
+#: src/chat/chat_page.py:265
 msgid "Detach chat"
 msgstr ""
 
@@ -669,23 +669,27 @@ msgstr ""
 msgid "Load a backup file to follow streamers"
 msgstr ""
 
-#: src/preferences.ui:118
-msgid "Alternating Background"
+#: src/preferences.ui:116
+msgid "Changes apply to newly opened chats"
 msgstr ""
 
 #: src/preferences.ui:119
+msgid "Alternating Background"
+msgstr ""
+
+#: src/preferences.ui:120
 msgid "Show subtle alternating background colors on chat messages"
 msgstr ""
 
-#: src/preferences.ui:124
+#: src/preferences.ui:125
 msgid "Hide Emotes on Focus Loss"
 msgstr ""
 
-#: src/preferences.ui:133
+#: src/preferences.ui:134
 msgid "Twitch API"
 msgstr ""
 
-#: src/preferences.ui:134
+#: src/preferences.ui:135
 msgid ""
 "Credentials are required to fetch stream data. You can get these at "
 "dev.twitch.tv/console/apps"
