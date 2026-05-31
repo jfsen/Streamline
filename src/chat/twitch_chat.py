@@ -7,7 +7,7 @@ import threading
 
 from gi.repository import GLib
 
-from .config import IRC_HOST, IRC_PORT, TWITCH_EMOTE_CDN
+from .config import FALLBACK_USER_COLOR, IRC_HOST, IRC_PORT, TWITCH_EMOTE_CDN
 
 logger = logging.getLogger("IRCChat")
 
@@ -98,7 +98,7 @@ class TwitchChat:
         user, text = body.split(" :", 1)
 
         display_name = None
-        color = "#9147ff"  # Twitch purple fallback
+        color = FALLBACK_USER_COLOR
 
         tag_match = _TAG_RE.match(tags_part)
         emotes = []

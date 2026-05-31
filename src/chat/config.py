@@ -36,6 +36,7 @@ STYLE = {
 
 IRC_HOST = "irc.chat.twitch.tv"
 IRC_PORT = 6667
+FALLBACK_USER_COLOR = "#9147ff"  # Twitch purple, used when IRC omits color tag
 
 # ── Emote CDNs ──────────────────────────────────────────────
 
