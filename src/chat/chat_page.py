@@ -153,7 +153,7 @@ var _cullChunk = CULL_CHUNK;
       while (i < n) {
         if (pm[i]) {
           var ed = pm[i];
-          html += '<img class="emote" src="' + ed.url + '" title="' + _esc((ed.name || 'Emote') + ' (' + (ed.source || '?') + ')') + '" decoding="async" loading="lazy">';
+          html += '<img class="emote" src="' + ed.url + '" title="' + _esc((ed.name || 'Emote') + ' (' + (ed.source || '?') + ')') + '">';
           i = ed.end + 1;
         } else {
           var end = i;
