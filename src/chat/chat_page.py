@@ -31,9 +31,11 @@ _HTML = """<!DOCTYPE html>
     overflow-wrap: break-word;
     color: COLORTEXT;
   }
-  .msg { padding: ROWPAD; line-height: LINEHEIGHT; }
+  .msg { padding: ROWPAD; line-height: LINEHEIGHT; contain: layout style paint; }
   .user { font-weight: USERWEIGHT; margin-right: USERMARGIN; }
   .text {}
+  .badge { display: inline-block; vertical-align: middle; margin-right: 2px; pointer-events: bounding-box; contain: layout style paint; }
+  .emote { vertical-align: middle; }
   #more-msg {
     position: fixed; bottom: PILLBOTTOM; left: 50%; transform: translateX(-50%);
     padding: PILLPAD; border-radius: 999px; z-index: 99;
@@ -108,70 +110,67 @@ var _badgeHeight = BADGE_HEIGHT;
     });
   });
 
-  window.chat = function(user, text, color, emotes, badges, action) {
-    var div = document.createElement('div');
-    div.className = 'msg';
-    if (action) div.style.fontStyle = 'italic';
-    if (badges && badges.length) {
-      badges.forEach(function(b) {
-        var name = b[0], id = b[1];
-        var svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-        svg.setAttribute('class', 'badge');
-        svg.setAttribute('width', _badgeHeight);
-        svg.setAttribute('height', _badgeHeight);
-        svg.style.verticalAlign = 'middle';
-        svg.style.marginRight = '2px';
-        svg.style.pointerEvents = 'bounding-box';
-        var title = document.createElementNS('http://www.w3.org/2000/svg', 'title');
-        title.textContent = name;
-        svg.appendChild(title);
-        var use = document.createElementNS('http://www.w3.org/2000/svg', 'use');
-        use.setAttributeNS('http://www.w3.org/1999/xlink', 'xlink:href', '#badge-' + id);
-        use.setAttribute('href', '#badge-' + id);
-        svg.appendChild(use);
-        div.appendChild(svg);
-      });
+  // Minimal HTML escaping for user-supplied text
+  function _esc(s) {
+    return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  // Cached badge HTML fragments — each [id,display] pair is built once
+  var _badgeTpl = {};
+  function _badgeHTML(id, display) {
+    var key = id + '|' + display;
+    if (!_badgeTpl[key]) {
+      _badgeTpl[key] = '<svg class="badge" width="' + _badgeHeight + '" height="' + _badgeHeight + '">'
+        + '<title>' + display + '</title>'
+        + '<use href="#badge-' + id + '"/>'
+        + '</svg>';
     }
-    var u = document.createElement('span');
-    u.className = 'user';
-    u.style.color = color;
-    u.textContent = action ? user : user + ':';
-    div.appendChild(u);
+    return _badgeTpl[key];
+  }
+
+  window.chat = function(user, text, color, emotes, badges, action) {
+    var html = '<div class="msg"' + (action ? ' style="font-style:italic"' : '') + '>';
+
+    // Badges
+    if (badges && badges.length) {
+      for (var bi = 0; bi < badges.length; bi++) {
+        html += _badgeHTML(badges[bi][1], badges[bi][0]);
+      }
+    }
+
+    // User name
+    html += '<span class="user" style="color:' + color + '">' + _esc(user) + (action ? '' : ':') + '</span>';
+
+    // Message body: interleave emote <img> tags with text <span> segments
     if (emotes && emotes.length) {
       var pm = {};
-      emotes.forEach(function(e) {
-        e.positions.forEach(function(p) { pm[p[0]] = {end: p[1], url: e.url, name: e.name, source: e.source}; });
-      });
+      for (var ei = 0; ei < emotes.length; ei++) {
+        var em = emotes[ei];
+        for (var pi = 0; pi < em.positions.length; pi++) {
+          var pos = em.positions[pi];
+          pm[pos[0]] = {end: pos[1], url: em.url, name: em.name, source: em.source};
+        }
+      }
       var i = 0, n = text.length;
       while (i < n) {
         if (pm[i]) {
-          var img = document.createElement('img');
-          img.src = pm[i].url;
-          img.title = (pm[i].name || 'Emote') + ' (' + (pm[i].source || '?') + ')';
-          img.className = 'emote';
-          img.style.height = _emoteHeight;
-          img.style.verticalAlign = 'middle';
-          if (window._paused) img.style.visibility = 'hidden';
-          div.appendChild(img);
-          i = pm[i].end + 1;
+          var ed = pm[i];
+          html += '<img class="emote" src="' + ed.url + '" title="' + _esc((ed.name || 'Emote') + ' (' + (ed.source || '?') + ')') + '" style="height:' + _emoteHeight + '" decoding="async" loading="lazy">';
+          i = ed.end + 1;
         } else {
           var end = i;
           while (end < n && !pm[end]) end++;
-          var t = document.createElement('span');
-          t.className = 'text';
-          t.textContent = text.substring(i, end);
-          div.appendChild(t);
+          html += '<span class="text">' + _esc(text.substring(i, end)) + '</span>';
           i = end;
         }
       }
     } else {
-      var t = document.createElement('span');
-      t.className = 'text';
-      t.textContent = text;
-      div.appendChild(t);
+      html += '<span class="text">' + _esc(text) + '</span>';
     }
-    chat.appendChild(div);
-    io.observe(div);
+
+    html += '</div>';
+    chat.insertAdjacentHTML('beforeend', html);
+    io.observe(chat.lastElementChild);
     _scrollToBottom();
   };
 })();
