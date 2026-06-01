@@ -404,47 +404,74 @@ class StreamlineWindow(Adw.ApplicationWindow):
         """Handle follow dialog callback with support for multiple streamers."""
         # Split input by commas and strip whitespace
         usernames = [name.strip().lower() for name in username.split(",")]
+        # Remove empty strings
+        usernames = [name for name in usernames if name]
 
-        # Track newly added streamers
-        added = []
-        already_following = []
+        if not usernames:
+            return
 
         # Convert all existing streamers to lowercase for comparison
         existing_streamers_lower = [s.lower() for s in self.all_streamers]
 
-        for name in usernames:
-            if not name:  # Skip empty names
-                continue
+        # Separate new candidates from already-followed ones
+        new_candidates = []
+        already_following = []
 
+        for name in usernames:
             if name not in existing_streamers_lower:
-                # Always add as lowercase
-                self.all_streamers.append(name)
-                self.add_offline_streamer(name)
-                added.append(name)
+                new_candidates.append(name)
             else:
-                # Find the original case version for display in the message
                 original_index = existing_streamers_lower.index(name)
                 already_following.append(self.all_streamers[original_index])
 
-        if added:
-            self.save_config()
-            # Fetch user IDs and display names in the background
-            if self.twitch is not None:
-                threading.Thread(
-                    target=self.twitch.get_users, args=(added,), daemon=True
-                ).start()
-            if len(added) == 1:
-                self.show_toast(_("Now following {}").format(added[0]))
+        # Validate new candidates against the Twitch API before adding
+        invalid = []
+        if new_candidates and self.twitch is not None:
+            try:
+                self.twitch.get_users(new_candidates)
+            except Exception:
+                # If API call fails, skip validation and add all candidates
+                pass
             else:
-                self.show_toast(_("Added {} new streamers").format(len(added)))
+                invalid = [
+                    name
+                    for name in new_candidates
+                    if name not in self.twitch.user_cache
+                ]
+                new_candidates = [
+                    name for name in new_candidates if name not in invalid
+                ]
 
-        if already_following:
-            if len(already_following) == 1:
-                self.show_toast(_("Already following {}").format(already_following[0]))
+        # Add valid new streamers
+        for name in new_candidates:
+            self.all_streamers.append(name)
+            self.add_offline_streamer(name)
+
+        if new_candidates:
+            self.save_config()
+
+        # Build a single consolidated toast.
+        # Priority: always report invalid names; only mention already-followed
+        # when it's the sole outcome (nothing added and nothing invalid).
+        parts = []
+        if new_candidates:
+            if len(new_candidates) == 1:
+                parts.append(_("Added {}").format(new_candidates[0]))
             else:
-                self.show_toast(
-                    _("Already following: {}").format(", ".join(already_following))
-                )
+                parts.append(_("Added {} streamers").format(len(new_candidates)))
+        if invalid:
+            if len(invalid) == 1:
+                parts.append(_("'{}' is invalid").format(invalid[0]))
+            else:
+                parts.append(_("{} invalid names").format(len(invalid)))
+        if already_following and not parts:
+            if len(already_following) == 1:
+                parts.append(_("Already following {}").format(already_following[0]))
+            else:
+                parts.append(_("Already following"))
+
+        if parts:
+            self.show_toast(" · ".join(parts), 4)
 
     def quick_play(self, *args):
         """Show dialog to quickly play a stream."""
