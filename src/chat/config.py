@@ -39,22 +39,6 @@ IRC_HOST = "irc.chat.twitch.tv"
 IRC_PORT = 6667
 FALLBACK_USER_COLOR = "#9147ff"  # Twitch purple, used when IRC omits color tag
 
-# ── Badges — rendered from src/chat/badges/*.svg ────────────
-
-BADGE_NAMES = {
-    "broadcaster",
-    "moderator",
-    "vip",
-    "subscriber",
-    "founder",
-    "partner",
-    "staff",
-    "admin",
-    "global_mod",
-    "no_audio",
-    "no_video",
-}
-
 # ── Emote CDNs ──────────────────────────────────────────────
 
 TWITCH_EMOTE_CDN = "https://static-cdn.jtvnw.net/emoticons/v2/{id}/default/dark/1.0"

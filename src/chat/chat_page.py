@@ -113,7 +113,8 @@ var _badgeHeight = BADGE_HEIGHT;
     div.className = 'msg';
     if (action) div.style.fontStyle = 'italic';
     if (badges && badges.length) {
-      badges.forEach(function(name) {
+      badges.forEach(function(b) {
+        var name = b[0], id = b[1];
         var svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
         svg.setAttribute('class', 'badge');
         svg.setAttribute('width', _badgeHeight);
@@ -125,8 +126,8 @@ var _badgeHeight = BADGE_HEIGHT;
         title.textContent = name;
         svg.appendChild(title);
         var use = document.createElementNS('http://www.w3.org/2000/svg', 'use');
-        use.setAttributeNS('http://www.w3.org/1999/xlink', 'xlink:href', '#badge-' + name);
-        use.setAttribute('href', '#badge-' + name);
+        use.setAttributeNS('http://www.w3.org/1999/xlink', 'xlink:href', '#badge-' + id);
+        use.setAttribute('href', '#badge-' + id);
         svg.appendChild(use);
         div.appendChild(svg);
       });

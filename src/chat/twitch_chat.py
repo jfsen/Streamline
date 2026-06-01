@@ -8,7 +8,6 @@ import threading
 from gi.repository import GLib
 
 from .config import (
-    BADGE_NAMES,
     FALLBACK_USER_COLOR,
     IRC_HOST,
     IRC_PORT,
@@ -16,6 +15,22 @@ from .config import (
 )
 
 logger = logging.getLogger("IRCChat")
+
+# Known badge names — only these are rendered from the IRC badges tag.
+# Keys are IRC badge IDs; values are the display name used in tooltips.
+_BADGE_NAMES = {
+    "broadcaster": "Broadcaster",
+    "moderator": "Moderator",
+    "vip": "VIP",
+    "subscriber": "Subscriber",
+    "founder": "Founder",
+    "partner": "Partner",
+    "staff": "Staff",
+    "admin": "Admin",
+    "global_mod": "Global Mod",
+    "no_audio": "No Audio",
+    "no_video": "No Video",
+}
 
 # Twitch IRC tags for extracting display name and color
 _TAG_RE = re.compile(r"@([^ ]+) ")
@@ -147,14 +162,15 @@ class TwitchChat:
 
 
 def _parse_badges(tag_value):
-    """Parse the badges tag into a list of badge names."""
+    """Parse the badges tag into a list of [display_name, raw_id] pairs."""
     result = []
     for badge in tag_value.split(","):
         badge = badge.strip()
         if "/" in badge:
             name, _version = badge.split("/", 1)
-            if name in BADGE_NAMES:
-                result.append(name)
+            display = _BADGE_NAMES.get(name)
+            if display:
+                result.append([display, name])
     return result
 
 
