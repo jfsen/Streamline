@@ -1,7 +1,6 @@
 """Chat page widget with embedded WebKit view."""
 
 import gettext
-import html
 import json
 import logging
 import re
@@ -44,19 +43,9 @@ _HTML = """<!DOCTYPE html>
     white-space: nowrap;
     background: COLORPILLBG; color: COLORPILLFG;
   }
-  #reconnect-banner {
-    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
-    padding: 6px 12px;
-    font: bold 13px Inter, sans-serif;
-    text-align: center;
-    background: rgba(239,180,65,0.92);
-    color: #1a1a1a;
-    display: none;
-  }
   ROWCSS
 </style></head><body>
 BADGE_SVGS
-<div id="reconnect-banner">RECONNECT_TEXT</div>
 <div id="chat"></div>
 <script>
 var _moreMsg = MORE_MSG;
@@ -213,35 +202,34 @@ def _build_html(alternating_bg, dark):
     """Build the chat HTML with theme-aware colors."""
     s = _CHAT_STYLE
     theme = s["dark"] if dark else s["light"]
-    page = _HTML
-    page = page.replace("COLORTEXT", theme["text_color"])
-    page = page.replace("COLORPILLBG", theme["pill_bg"])
-    page = page.replace("COLORPILLFG", theme["pill_fg"])
-    page = page.replace("FONTSIZE", s["font_size"])
-    page = page.replace("FONTFAMILY", s["font_family"])
-    page = page.replace("BODYTOPPAD", s["body_padding_top"])
-    page = page.replace("BODYHORIZPAD", s["body_padding_horiz"])
-    page = page.replace("ROWPAD", s["row_padding"])
-    page = page.replace("LINEHEIGHT", s["line_height"])
-    page = page.replace("USERWEIGHT", s["user_weight"])
-    page = page.replace("USERMARGIN", s["user_margin"])
-    page = page.replace("PILLFONT", s["pill_font"])
-    page = page.replace("PILLBOTTOM", s["pill_bottom"])
-    page = page.replace("PILLPAD", s["pill_padding"])
-    page = page.replace("MORE_MSG", json.dumps(_("More messages below")))
-    page = page.replace("RECONNECT_TEXT", html.escape(_("Reconnecting\u2026")))
-    page = page.replace("SCROLL_THRESH", str(s["scroll_threshold"]))
-    page = page.replace("MAX_MSGS", str(s["max_messages"]))
-    page = page.replace("CULL_CHUNK", str(s["cull_chunk"]))
-    page = page.replace("BADGE_SVGS", _badge_svg_defs())
+    html = _HTML
+    html = html.replace("COLORTEXT", theme["text_color"])
+    html = html.replace("COLORPILLBG", theme["pill_bg"])
+    html = html.replace("COLORPILLFG", theme["pill_fg"])
+    html = html.replace("FONTSIZE", s["font_size"])
+    html = html.replace("FONTFAMILY", s["font_family"])
+    html = html.replace("BODYTOPPAD", s["body_padding_top"])
+    html = html.replace("BODYHORIZPAD", s["body_padding_horiz"])
+    html = html.replace("ROWPAD", s["row_padding"])
+    html = html.replace("LINEHEIGHT", s["line_height"])
+    html = html.replace("USERWEIGHT", s["user_weight"])
+    html = html.replace("USERMARGIN", s["user_margin"])
+    html = html.replace("PILLFONT", s["pill_font"])
+    html = html.replace("PILLBOTTOM", s["pill_bottom"])
+    html = html.replace("PILLPAD", s["pill_padding"])
+    html = html.replace("MORE_MSG", json.dumps(_("More messages below")))
+    html = html.replace("SCROLL_THRESH", str(s["scroll_threshold"]))
+    html = html.replace("MAX_MSGS", str(s["max_messages"]))
+    html = html.replace("CULL_CHUNK", str(s["cull_chunk"]))
+    html = html.replace("BADGE_SVGS", _badge_svg_defs())
     if alternating_bg:
-        page = page.replace(
+        html = html.replace(
             "ROWCSS",
             f".msg:nth-child(even) {{ background: {theme['row_color']}; }}",
         )
     else:
-        page = page.replace("ROWCSS", "")
-    return page
+        html = html.replace("ROWCSS", "")
+    return html
 
 
 class ChatPage(Adw.NavigationPage):
@@ -294,7 +282,6 @@ class ChatPage(Adw.NavigationPage):
                 streamer,
                 on_message=self._on_message,
                 on_connected=self._on_connected,
-                on_disconnected=self._on_disconnected,
             )
             self._chat.start()
 
@@ -346,31 +333,6 @@ class ChatPage(Adw.NavigationPage):
 
     def _on_connected(self):
         logger.debug("Connected to chat for %s", self._streamer)
-        if self._webview:
-            self._webview.evaluate_javascript(
-                "var b=document.getElementById('reconnect-banner');"
-                "if(b)b.style.display='none';",
-                -1,
-                None,
-                None,
-                None,
-                None,
-                None,
-            )
-
-    def _on_disconnected(self):
-        logger.debug("Disconnected from chat for %s", self._streamer)
-        if self._webview:
-            self._webview.evaluate_javascript(
-                "var b=document.getElementById('reconnect-banner');"
-                "if(b)b.style.display='block';",
-                -1,
-                None,
-                None,
-                None,
-                None,
-                None,
-            )
 
     def _on_theme_changed(self, style_manager, _pspec):
         """Re-inject CSS colors when dark/light mode changes."""
@@ -413,11 +375,7 @@ class ChatPage(Adw.NavigationPage):
 
     def _on_suspend_changed(self, window, _pspec):
         """Clear emote image sources when the window is suspended
-        (minimised or on a different workspace), restoring them on resume.
-
-        The read timeout on the IRC socket (30 s) handles the system-sleep
-        case — if the server stops sending data after wake, the socket
-        naturally times out and the reconnect loop kicks in."""
+        (minimised or on a different workspace), restoring them on resume."""
         suspended = window.props.suspended
         logger.debug("Suspend changed: suspended=%s", suspended)
         if suspended:
