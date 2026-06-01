@@ -25,13 +25,13 @@ _HTML = """<!DOCTYPE html>
   :root { }
   @font-face { font-family: 'Emoji'; src: local('Noto Color Emoji'); unicode-range: U+2600-26FF, U+2700-27BF, U+1F300-1F5FF, U+1F600-1F64F, U+1F680-1F6FF, U+1F900-1F9FF, U+1FA00-1FA6F, U+1FA70-1FAFF, U+231A-231B, U+2328, U+23CF, U+23E9-23F3, U+23F8-23FA, U+200D, U+FE0F; }
   body {
-    margin: 0; padding: BODYPAD;
+    margin: 0; padding: BODYTOPPAD 0;
     background: transparent;
     font: FONTSIZE FONTFAMILY;
     overflow-wrap: break-word;
     color: COLORTEXT;
   }
-  .msg { padding: ROWPAD; line-height: LINEHEIGHT; contain: layout style paint; }
+  .msg { padding: ROWPAD BODYHORIZPAD; line-height: LINEHEIGHT; contain: layout style paint; }
   .user { font-weight: USERWEIGHT; margin-right: USERMARGIN; }
   .text {}
   .badge { display: inline-block; vertical-align: middle; margin-right: 2px; pointer-events: bounding-box; contain: layout style paint; }
@@ -52,8 +52,6 @@ var _moreMsg = MORE_MSG;
 var _scrollThresh = SCROLL_THRESH;
 var _maxMsgs = MAX_MSGS;
 var _cullChunk = CULL_CHUNK;
-var _emoteHeight = EMOTE_HEIGHT;
-var _badgeHeight = BADGE_HEIGHT;
 (function() {
   var chat = document.getElementById('chat');
   var paused = false;
@@ -120,7 +118,7 @@ var _badgeHeight = BADGE_HEIGHT;
   function _badgeHTML(id, display) {
     var key = id + '|' + display;
     if (!_badgeTpl[key]) {
-      _badgeTpl[key] = '<svg class="badge" width="' + _badgeHeight + '" height="' + _badgeHeight + '">'
+      _badgeTpl[key] = '<svg class="badge" width="18" height="18">'
         + '<title>' + display + '</title>'
         + '<use href="#badge-' + id + '"/>'
         + '</svg>';
@@ -155,7 +153,7 @@ var _badgeHeight = BADGE_HEIGHT;
       while (i < n) {
         if (pm[i]) {
           var ed = pm[i];
-          html += '<img class="emote" src="' + ed.url + '" title="' + _esc((ed.name || 'Emote') + ' (' + (ed.source || '?') + ')') + '" style="height:' + _emoteHeight + '" decoding="async" loading="lazy">';
+          html += '<img class="emote" src="' + ed.url + '" title="' + _esc((ed.name || 'Emote') + ' (' + (ed.source || '?') + ')') + '" decoding="async" loading="lazy">';
           i = ed.end + 1;
         } else {
           var end = i;
@@ -210,7 +208,8 @@ def _build_html(alternating_bg, dark):
     html = html.replace("COLORPILLFG", theme["pill_fg"])
     html = html.replace("FONTSIZE", s["font_size"])
     html = html.replace("FONTFAMILY", s["font_family"])
-    html = html.replace("BODYPAD", s["body_padding"])
+    html = html.replace("BODYTOPPAD", s["body_padding_top"])
+    html = html.replace("BODYHORIZPAD", s["body_padding_horiz"])
     html = html.replace("ROWPAD", s["row_padding"])
     html = html.replace("LINEHEIGHT", s["line_height"])
     html = html.replace("USERWEIGHT", s["user_weight"])
@@ -222,8 +221,6 @@ def _build_html(alternating_bg, dark):
     html = html.replace("SCROLL_THRESH", str(s["scroll_threshold"]))
     html = html.replace("MAX_MSGS", str(s["max_messages"]))
     html = html.replace("CULL_CHUNK", str(s["cull_chunk"]))
-    html = html.replace("EMOTE_HEIGHT", json.dumps(s["emote_height"]))
-    html = html.replace("BADGE_HEIGHT", json.dumps(s["badge_height"]))
     html = html.replace("BADGE_SVGS", _badge_svg_defs())
     if alternating_bg:
         html = html.replace(
