@@ -357,6 +357,10 @@ class ChatPage(Adw.NavigationPage):
                 None,
                 None,
             )
+        # Refresh third-party emotes on reconnect — the cache may have
+        # expired or the initial fetch may have failed during an outage.
+        if self._third_party_emotes:
+            threading.Thread(target=self._third_party_emotes.load, daemon=True).start()
 
     def _on_disconnected(self):
         logger.debug("Disconnected from chat for %s", self._streamer)
