@@ -304,6 +304,48 @@ class TwitchAPI:
 
         return online_streamers, offline_streamers, streamer_info
 
+    def get_users(self, logins):
+        """Fetch user IDs and display names for given logins.
+
+        Only makes API calls for logins not already cached. Invalid/nonexistent
+        usernames are silently skipped (the API simply omits them from the response).
+        """
+        uncached = [login for login in logins if login not in self.user_cache]
+        if not uncached:
+            return
+
+        self._ensure_access_token()
+
+        headers = {
+            "Client-ID": self.client_id,
+            "Authorization": f"Bearer {self.access_token}",
+        }
+
+        for i in range(0, len(uncached), 100):
+            batch = uncached[i : i + 100]
+            url_params = "&login=".join(batch)
+            url = f"https://api.twitch.tv/helix/users?login={url_params}"
+
+            try:
+                response = requests.get(url, headers=headers, timeout=10)
+                response.raise_for_status()
+                users = response.json()["data"]
+                for user in users:
+                    login = user["login"]
+                    self.user_cache[login] = {
+                        "id": user["id"],
+                        "name": user["display_name"],
+                    }
+                logger.debug(
+                    "Cached user info for %s/%s logins in batch",
+                    len(users),
+                    len(batch),
+                )
+            except requests.exceptions.RequestException as e:
+                logger.debug("Failed to fetch users batch: %s", str(e))
+
+        self._save_user_cache()
+
     def get_user_vods(self, username, limit=20):
         """Get recent VODs for a user."""
         start_time = time()
@@ -317,31 +359,16 @@ class TwitchAPI:
             "Authorization": f"Bearer {self.access_token}",
         }
 
-        # Try to get user ID from cache first
+        # Populate cache if needed
+        self.get_users([username])
+
+        # Try to get user ID from cache
         user_id = self.user_cache.get(username, {}).get("id")
-        if user_id:
-            logger.debug("Using cached user ID for %s: %s", username, user_id)
-
         if not user_id:
-            # If not in cache, fetch it from API
-            user_url = f"https://api.twitch.tv/helix/users?login={username}"
-            try:
-                response = requests.get(user_url, headers=headers, timeout=10)
-                response.raise_for_status()
-                user_data = response.json()["data"]
-                if not user_data:
-                    return []
+            logger.debug("Unknown user: %s", username)
+            return []
 
-                user_id = user_data[0]["id"]
-                self.user_cache[username] = {
-                    "id": user_id,
-                    "name": user_data[0].get("display_name", username),
-                }
-                self._save_user_cache()
-
-            except requests.exceptions.RequestException as e:
-                logger.debug("Failed to fetch user ID: %s", str(e))
-                raise
+        logger.debug("Using cached user ID for %s: %s", username, user_id)
 
         # Now get VODs
         vods_url = f"https://api.twitch.tv/helix/videos?user_id={user_id}&first={limit}&type=archive"

@@ -428,6 +428,11 @@ class StreamlineWindow(Adw.ApplicationWindow):
 
         if added:
             self.save_config()
+            # Fetch user IDs and display names in the background
+            if self.twitch is not None:
+                threading.Thread(
+                    target=self.twitch.get_users, args=(added,), daemon=True
+                ).start()
             if len(added) == 1:
                 self.show_toast(_("Now following {}").format(added[0]))
             else:
