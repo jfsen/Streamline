@@ -79,10 +79,21 @@ var _badgeHeight = BADGE_HEIGHT;
     }
   });
 
-  // Resume auto-scroll if images load and we're near the bottom
-  new MutationObserver(function() {
-    if (!paused) window.scrollTo(0, document.body.scrollHeight);
-  }).observe(chat, {childList: true, subtree: true});
+  // Debounced scroll-to-bottom: at most one layout read+write per frame.
+  // Called explicitly after message appends, image loads, and culling.
+  var _scrollRaf = 0;
+  function _scrollToBottom() {
+    if (paused || _scrollRaf) return;
+    _scrollRaf = requestAnimationFrame(function() {
+      window.scrollTo(0, document.body.scrollHeight);
+      _scrollRaf = 0;
+    });
+  }
+  // Capture-phase listener: image loads can grow height after the message
+  // was appended, so re-scroll when any <img> finishes loading.
+  chat.addEventListener('load', function(e) {
+    if (e.target.tagName === 'IMG') _scrollToBottom();
+  }, true);
 
   // Always hide emotes when scrolled out of view
   var io = new IntersectionObserver(function(entries) {
@@ -160,7 +171,7 @@ var _badgeHeight = BADGE_HEIGHT;
     }
     chat.appendChild(div);
     io.observe(div);
-    if (!paused) window.scrollTo(0, document.body.scrollHeight);
+    _scrollToBottom();
   };
 })();
 </script></body></html>"""
@@ -406,7 +417,7 @@ class ChatPage(Adw.NavigationPage):
         if self._msg_count > _CHAT_STYLE["max_messages"]:
             self._msg_count -= _CHAT_STYLE["cull_chunk"]
             self._webview.evaluate_javascript(
-                f"var c=document.getElementById('chat');for(var i=0;i<{_CHAT_STYLE['cull_chunk']}&&c.firstChild;i++)c.removeChild(c.firstChild)",
+                f"var c=document.getElementById('chat');for(var i=0;i<{_CHAT_STYLE['cull_chunk']}&&c.firstChild;i++)c.removeChild(c.firstChild);_scrollToBottom()",
                 -1,
                 None,
                 None,
