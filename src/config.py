@@ -1,8 +1,4 @@
-"""Centralised tunables for the Streamline application.
-
-Every constant documents *what* it controls and *where* it is
-consumed so you can trace the impact of a change without grepping.
-"""
+"""Centralised tunables for the Streamline application."""
 
 # ── Application ─────────────────────────────────────────────
 #
