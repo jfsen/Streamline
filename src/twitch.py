@@ -9,6 +9,17 @@ from time import time
 import requests
 from gi.repository import GLib
 
+from .config import (
+    STREAMS_CACHE_COOLDOWN,
+    TWITCH_API_BASE,
+    TWITCH_STREAMS_TIMEOUT,
+    TWITCH_TOKEN_TIMEOUT,
+    TWITCH_TOKEN_URL,
+    TWITCH_USERS_TIMEOUT,
+    TWITCH_VODS_TIMEOUT,
+    VOD_FETCH_LIMIT,
+)
+
 _ = gettext.gettext
 
 logger = logging.getLogger("Twitch")
@@ -31,7 +42,7 @@ class TwitchAPI:
         self._token_loaded = False
 
     def _get_access_token(self):
-        url = "https://id.twitch.tv/oauth2/token"
+        url = TWITCH_TOKEN_URL
         logger.debug("Requesting access token from %s", url)
         params = {
             "client_id": self.client_id,
@@ -39,7 +50,7 @@ class TwitchAPI:
             "grant_type": "client_credentials",
         }
         try:
-            response = requests.post(url, params=params, timeout=10)
+            response = requests.post(url, params=params, timeout=TWITCH_TOKEN_TIMEOUT)
             response.raise_for_status()
             data = response.json()
             self.access_token = data["access_token"]
@@ -155,7 +166,9 @@ class TwitchAPI:
             # Check if cache is expired (1 minute)
             cache_time = datetime.fromisoformat(cache_data["timestamp"])
             now = datetime.now(timezone.utc)
-            seconds_until_refresh = 60 - (now - cache_time).total_seconds()  # TIMER
+            seconds_until_refresh = (
+                STREAMS_CACHE_COOLDOWN - (now - cache_time).total_seconds()
+            )
 
             if seconds_until_refresh > 0:
                 return cache_data["data"], int(seconds_until_refresh)
@@ -245,10 +258,12 @@ class TwitchAPI:
             batch = usernames[i : i + 100]
             logger.debug("Processing batch %s (%s users)", i // 100 + 1, len(batch))
             user_logins = "&user_login=".join(batch)
-            url = f"https://api.twitch.tv/helix/streams?user_login={user_logins}"
+            url = f"{TWITCH_API_BASE}/streams?user_login={user_logins}"
 
             try:
-                response = requests.get(url, headers=headers, timeout=30)
+                response = requests.get(
+                    url, headers=headers, timeout=TWITCH_STREAMS_TIMEOUT
+                )
                 response.raise_for_status()
                 data = response.json()
 
@@ -324,10 +339,12 @@ class TwitchAPI:
         for i in range(0, len(uncached), 100):
             batch = uncached[i : i + 100]
             url_params = "&login=".join(batch)
-            url = f"https://api.twitch.tv/helix/users?login={url_params}"
+            url = f"{TWITCH_API_BASE}/users?login={url_params}"
 
             try:
-                response = requests.get(url, headers=headers, timeout=10)
+                response = requests.get(
+                    url, headers=headers, timeout=TWITCH_USERS_TIMEOUT
+                )
                 response.raise_for_status()
                 users = response.json()["data"]
                 for user in users:
@@ -346,7 +363,7 @@ class TwitchAPI:
 
         self._save_user_cache()
 
-    def get_user_vods(self, username, limit=20):
+    def get_user_vods(self, username, limit=VOD_FETCH_LIMIT):
         """Get recent VODs for a user."""
         start_time = time()
         logger.debug("Fetching VODs for %s", username)
@@ -371,9 +388,13 @@ class TwitchAPI:
         logger.debug("Using cached user ID for %s: %s", username, user_id)
 
         # Now get VODs
-        vods_url = f"https://api.twitch.tv/helix/videos?user_id={user_id}&first={limit}&type=archive"
+        vods_url = (
+            f"{TWITCH_API_BASE}/videos?user_id={user_id}&first={limit}&type=archive"
+        )
         try:
-            response = requests.get(vods_url, headers=headers, timeout=15)
+            response = requests.get(
+                vods_url, headers=headers, timeout=TWITCH_VODS_TIMEOUT
+            )
             response.raise_for_status()
             vods = response.json()["data"]
 

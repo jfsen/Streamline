@@ -3,13 +3,10 @@ import logging
 
 from gi.repository import Adw, Gio, Gtk
 
+from .config import PLAYER_KEYS, QUALITY_KEYS, THEME_KEYS
+
 _ = gettext.gettext
 logger = logging.getLogger("Preferences")
-
-# Key-name lists for combo ↔ GSettings string mapping.
-_PLAYER_KEYS = ["mpv", "vlc", "custom"]
-_QUALITY_KEYS = ["High", "Medium", "Low", "Custom"]
-_THEME_KEYS = ["system", "light", "dark", "bronze", "anthracite", "red"]
 
 
 @Gtk.Template(resource_path="/io/github/jfsen/Streamline/preferences.ui")
@@ -49,9 +46,9 @@ class StreamlinePreferences(Adw.PreferencesDialog):
 
         # ── Combo rows — widget ↔ GSettings (manual two-way sync) ──
         for key, row, keys in (
-            ("player-type", self.player_row, _PLAYER_KEYS),
-            ("stream-quality", self.quality_row, _QUALITY_KEYS),
-            ("theme", self.theme_row, _THEME_KEYS),
+            ("player-type", self.player_row, PLAYER_KEYS),
+            ("stream-quality", self.quality_row, QUALITY_KEYS),
+            ("theme", self.theme_row, THEME_KEYS),
         ):
             # Widget → GSettings
             row.connect(

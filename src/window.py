@@ -35,6 +35,14 @@ gi.require_version("Gtk", "4.0")
 from gi.repository import Adw, Gio, GLib, Gtk
 
 from .chat.chat_page import ChatPage
+from .config import (
+    DEFAULT_HEIGHT,
+    DEFAULT_WIDTH,
+    MIN_HEIGHT,
+    MIN_WIDTH,
+    RESOURCE_BASE,
+    THEME_CSS,
+)
 from .dialogs import StreamlineDialogs
 from .preferences import StreamlinePreferences
 from .rows import StreamerRowManager
@@ -74,10 +82,10 @@ class StreamlineWindow(Adw.ApplicationWindow):
         self.settings.connect("changed::theme", lambda s, k: self._apply_theme())
 
         # Set minimum window size
-        self.set_size_request(320, 400)
+        self.set_size_request(MIN_WIDTH, MIN_HEIGHT)
 
         # Default to a compact window
-        self.set_default_size(360, 700)
+        self.set_default_size(DEFAULT_WIDTH, DEFAULT_HEIGHT)
 
         # Initialize dialogs manager (lightweight)
         self.dialogs = StreamlineDialogs(self)
@@ -369,13 +377,6 @@ class StreamlineWindow(Adw.ApplicationWindow):
                 self.get_display(), self._theme_css_provider
             )
             self._theme_css_provider = None
-
-        _RESOURCE_BASE = "/io/github/jfsen/Streamline/css"
-        THEME_CSS = {
-            "bronze": f"{_RESOURCE_BASE}/bronze.css",
-            "anthracite": f"{_RESOURCE_BASE}/anthracite.css",
-            "red": f"{_RESOURCE_BASE}/red.css",
-        }
 
         if theme in THEME_CSS:
             self.style_manager.set_color_scheme(Adw.ColorScheme.FORCE_DARK)

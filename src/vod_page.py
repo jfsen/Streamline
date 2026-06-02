@@ -10,6 +10,8 @@ from weakref import proxy
 import requests
 from gi.repository import Adw, GLib, Gtk
 
+from .config import VOD_CACHE_TTL, VOD_REFRESH_COOLDOWN
+
 _ = gettext.gettext
 
 logger = logging.getLogger("VODPage")
@@ -78,7 +80,7 @@ class VODPage(Adw.NavigationPage):
             # Check if cache is expired (1 hour)
             cache_time = datetime.fromisoformat(cache_data["timestamp"])
             now = datetime.now(timezone.utc)
-            if (now - cache_time).total_seconds() > 3600:
+            if (now - cache_time).total_seconds() > VOD_CACHE_TTL:
                 return None
 
             return cache_data["vods"]
@@ -167,7 +169,7 @@ class VODPage(Adw.NavigationPage):
         if cache_path.exists():
             mtime = datetime.fromtimestamp(cache_path.stat().st_mtime, tz=timezone.utc)
             now = datetime.now(timezone.utc)
-            remaining = 60 - (now - mtime).total_seconds()
+            remaining = VOD_REFRESH_COOLDOWN - (now - mtime).total_seconds()
             if remaining > 0:
                 self.show_toast(
                     _("Please wait {}s before refreshing").format(int(remaining))

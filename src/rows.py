@@ -3,6 +3,8 @@ from html import unescape
 
 from gi.repository import Adw, Gio, GLib, Gtk
 
+from .config import PILL_FADE_MS, PILL_SHOW_MS, RESOURCE_BASE, ROW_HIGHLIGHT_MS
+
 _ = gettext.gettext
 
 
@@ -34,9 +36,7 @@ class StreamerRowManager:
             return
         cls._CSS_LOADED = True
         css_provider = Gtk.CssProvider()
-        css_provider.load_from_resource(
-            "/io/github/jfsen/Streamline/css/streamline.css"
-        )
+        css_provider.load_from_resource(f"{RESOURCE_BASE}/css/streamline.css")
         Gtk.StyleContext.add_provider_for_display(
             display, css_provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
         )
@@ -233,7 +233,7 @@ class StreamerRowManager:
             row = self.create_row(streamer, streamer_info.get(streamer, {}))
             if streamer in new_online:
                 row.add_css_class("just-went-online")
-                GLib.timeout_add(4000, self._clear_highlight, row)
+                GLib.timeout_add(ROW_HIGHLIGHT_MS, self._clear_highlight, row)
             self.online_list.append(row)
             self.streamer_rows[streamer] = row
 
@@ -277,12 +277,12 @@ class StreamerRowManager:
         # Phase 1: show for 3s, then start fading
         if self._pill_timeout_id:
             GLib.source_remove(self._pill_timeout_id)
-        self._pill_timeout_id = GLib.timeout_add(3000, self._start_pill_fade)
+        self._pill_timeout_id = GLib.timeout_add(PILL_SHOW_MS, self._start_pill_fade)
 
     def _start_pill_fade(self):
         """Begin fade-out, then hide after 1s."""
         self._pill_box.add_css_class("fading")
-        self._pill_timeout_id = GLib.timeout_add(1000, self._hide_pill)
+        self._pill_timeout_id = GLib.timeout_add(PILL_FADE_MS, self._hide_pill)
         return GLib.SOURCE_REMOVE
 
     def _hide_pill(self):

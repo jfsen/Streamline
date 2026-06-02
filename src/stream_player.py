@@ -5,6 +5,8 @@ import threading
 
 from gi.repository import GLib
 
+from .config import QUALITY_PRESETS, STREAMLINK_CMD
+
 _ = gettext.gettext
 
 logger = logging.getLogger("StreamPlayer")
@@ -28,8 +30,8 @@ class StreamPlayer:
             # Show initial toast message
             self.window.show_toast(_("Connecting..."), 1)
 
-            # Build streamlink command with flatpak-spawn
-            cmd = ["flatpak-spawn", "--host", "streamlink"]
+            # Build streamlink command
+            cmd = list(STREAMLINK_CMD)
 
             # Add streamlink options based on content type
             if is_vod:
@@ -40,25 +42,11 @@ class StreamPlayer:
                     cmd.append("--twitch-low-latency")
 
             # Get quality string from preset or use custom
-            quality_presets = {
-                "High": "1080p60,1080p,best,720p60,720p",
-                "Medium": "720p,480p,720p60,best",
-                "Low": "360p,480p,worst",
-                "Custom": self.window.custom_quality,
-            }
-
-            quality = quality_presets.get(self.window.stream_quality, "best")
-
-            logger.debug(
-                "Quality setting: %s -> %s", self.window.stream_quality, quality
-            )
-
-            # Always ensure 'best' is available as a final fallback, unless
-            # the user set a Custom quality — they know what they want.
-            if (
-                quality_presets.get(self.window.stream_quality)
-                != self.window.custom_quality
-            ):
+            if self.window.stream_quality == "Custom":
+                quality = self.window.custom_quality
+            else:
+                quality = QUALITY_PRESETS.get(self.window.stream_quality, "best")
+                # Always ensure 'best' is available as a final fallback
                 if not quality.endswith("best") and ",best" not in quality:
                     quality += ",best"
 
