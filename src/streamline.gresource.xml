@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8" ?>
 <gresources>
   <gresource prefix="/io/github/jfsen/Streamline">
     <file preprocess="xml-stripblanks">window.ui</file>
@@ -7,6 +7,6 @@
     <file>css/streamline.css</file>
     <file>css/bronze.css</file>
     <file>css/anthracite.css</file>
-    <file>css/red.css</file>
+    <file>css/justin.css</file>
   </gresource>
 </gresources>

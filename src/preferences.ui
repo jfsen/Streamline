@@ -1,7 +1,7 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8" ?>
 <interface>
-  <requires lib="gtk" version="4.0"/>
-  <requires lib="libadwaita" version="1.0"/>
+  <requires lib="gtk" version="4.0" />
+  <requires lib="libadwaita" version="1.0" />
 
   <template class="StreamlinePreferences" parent="AdwPreferencesDialog">
     <property name="title" translatable="yes">Preferences</property>
@@ -14,7 +14,10 @@
             <child>
               <object class="AdwComboRow" id="theme_row">
                 <property name="title" translatable="yes">Style</property>
-                <property name="subtitle" translatable="yes">Change the color scheme</property>
+                <property
+                                    name="subtitle"
+                                    translatable="yes"
+                                >Change the color scheme</property>
                 <property name="model">
                   <object class="GtkStringList">
                     <items>
@@ -23,7 +26,7 @@
                       <item translatable="yes">Dark</item>
                       <item translatable="yes">Bronze</item>
                       <item translatable="yes">Anthracite</item>
-                      <item translatable="yes">Red</item>
+                      <item translatable="yes">Justin</item>
                     </items>
                   </object>
                 </property>
@@ -37,13 +40,22 @@
             <property name="title" translatable="yes">Player</property>
             <child>
               <object class="AdwComboRow" id="player_row">
-                <property name="title" translatable="yes">Media Player</property>
-                <property name="subtitle" translatable="yes">The video player used to watch streams</property>
+                <property
+                                    name="title"
+                                    translatable="yes"
+                                >Media Player</property>
+                <property
+                                    name="subtitle"
+                                    translatable="yes"
+                                >The video player used to watch streams</property>
               </object>
             </child>
             <child>
               <object class="AdwEntryRow" id="custom_player_row">
-                <property name="title" translatable="yes">Custom Player Command</property>
+                <property
+                                    name="title"
+                                    translatable="yes"
+                                >Custom Player Command</property>
                 <property name="visible">False</property>
               </object>
             </child>
@@ -55,20 +67,35 @@
             <property name="title" translatable="yes">Quality</property>
             <child>
               <object class="AdwComboRow" id="quality_row">
-                <property name="title" translatable="yes">Stream Quality</property>
-                <property name="subtitle" translatable="yes">Higher quality uses more bandwidth</property>
+                <property
+                                    name="title"
+                                    translatable="yes"
+                                >Stream Quality</property>
+                <property
+                                    name="subtitle"
+                                    translatable="yes"
+                                >Higher quality uses more bandwidth</property>
               </object>
             </child>
             <child>
               <object class="AdwEntryRow" id="custom_quality_row">
-                <property name="title" translatable="yes">Custom Quality</property>
+                <property
+                                    name="title"
+                                    translatable="yes"
+                                >Custom Quality</property>
                 <property name="visible">False</property>
               </object>
             </child>
             <child>
               <object class="AdwSwitchRow" id="low_latency_switch">
-                <property name="title" translatable="yes">Low Latency Mode</property>
-                <property name="subtitle" translatable="yes">Reduces stream delay but may cause buffering on slower connections</property>
+                <property
+                                    name="title"
+                                    translatable="yes"
+                                >Low Latency Mode</property>
+                <property
+                                    name="subtitle"
+                                    translatable="yes"
+                                >Reduces stream delay but may cause buffering on slower connections</property>
               </object>
             </child>
           </object>
@@ -80,13 +107,16 @@
             <child>
               <object class="AdwActionRow">
                 <property name="title" translatable="yes">Export List</property>
-                <property name="subtitle" translatable="yes">Save your followed streamers for backup</property>
+                <property
+                                    name="subtitle"
+                                    translatable="yes"
+                                >Save your followed streamers for backup</property>
                 <child>
                   <object class="GtkButton" id="export_button">
                     <property name="valign">center</property>
                     <property name="icon-name">document-save-symbolic</property>
                     <style>
-                      <class name="flat"/>
+                      <class name="flat" />
                     </style>
                   </object>
                 </child>
@@ -95,13 +125,16 @@
             <child>
               <object class="AdwActionRow">
                 <property name="title" translatable="yes">Import List</property>
-                <property name="subtitle" translatable="yes">Load a backup file to follow streamers</property>
+                <property
+                                    name="subtitle"
+                                    translatable="yes"
+                                >Load a backup file to follow streamers</property>
                 <child>
                   <object class="GtkButton" id="import_button">
                     <property name="valign">center</property>
                     <property name="icon-name">document-open-symbolic</property>
                     <style>
-                      <class name="flat"/>
+                      <class name="flat" />
                     </style>
                   </object>
                 </child>
@@ -113,17 +146,35 @@
         <child>
           <object class="AdwPreferencesGroup">
             <property name="title" translatable="yes">Chat</property>
-            <property name="description" translatable="yes">Changes apply to newly opened chats</property>
+            <property
+                            name="description"
+                            translatable="yes"
+                        >Changes apply to newly opened chats</property>
             <child>
               <object class="AdwSwitchRow" id="chat_alternating_bg_switch">
-                <property name="title" translatable="yes">Alternating Background</property>
-                <property name="subtitle" translatable="yes">Show subtle alternating background colors on chat messages</property>
+                <property
+                                    name="title"
+                                    translatable="yes"
+                                >Alternating Background</property>
+                <property
+                                    name="subtitle"
+                                    translatable="yes"
+                                >Show subtle alternating background colors on chat messages</property>
               </object>
             </child>
             <child>
-              <object class="AdwSwitchRow" id="chat_disable_emote_animations_switch">
-                <property name="title" translatable="yes">Disable Emote Animations</property>
-                <property name="subtitle" translatable="yes">Use static emote images to reduce resource usage</property>
+              <object
+                                class="AdwSwitchRow"
+                                id="chat_disable_emote_animations_switch"
+                            >
+                <property
+                                    name="title"
+                                    translatable="yes"
+                                >Disable Emote Animations</property>
+                <property
+                                    name="subtitle"
+                                    translatable="yes"
+                                >Use static emote images to reduce resource usage</property>
               </object>
             </child>
           </object>
@@ -132,7 +183,10 @@
         <child>
           <object class="AdwPreferencesGroup">
             <property name="title" translatable="yes">Twitch API</property>
-            <property name="description" translatable="yes">Credentials are required to fetch stream data. You can get these at dev.twitch.tv/console/apps</property>
+            <property
+                            name="description"
+                            translatable="yes"
+                        >Credentials are required to fetch stream data. You can get these at dev.twitch.tv/console/apps</property>
             <child>
               <object class="AdwEntryRow" id="client_id_row">
                 <property name="title" translatable="yes">Client ID</property>
@@ -140,7 +194,10 @@
             </child>
             <child>
               <object class="AdwEntryRow" id="client_secret_row">
-                <property name="title" translatable="yes">Client Secret</property>
+                <property
+                                    name="title"
+                                    translatable="yes"
+                                >Client Secret</property>
               </object>
             </child>
           </object>

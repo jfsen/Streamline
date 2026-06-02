@@ -31,7 +31,7 @@ RESOURCE_BASE = "/io/github/jfsen/Streamline"
 # Ordered lists drive the combo rows in the preferences dialog.
 # Consumer:  preferences.py  (combo row models)
 
-THEME_KEYS = ["system", "light", "dark", "bronze", "anthracite", "red"]
+THEME_KEYS = ["system", "light", "dark", "bronze", "anthracite", "justin"]
 
 # Maps a theme key to its custom CSS stylesheet (bundled via GResource).
 # Themes *not* listed here use Adwaita's built-in light / dark palettes.
@@ -39,7 +39,7 @@ THEME_KEYS = ["system", "light", "dark", "bronze", "anthracite", "red"]
 THEME_CSS = {
     "bronze": f"{RESOURCE_BASE}/css/bronze.css",
     "anthracite": f"{RESOURCE_BASE}/css/anthracite.css",
-    "red": f"{RESOURCE_BASE}/css/red.css",
+    "justin": f"{RESOURCE_BASE}/css/justin.css",
 }
 
 # ── Player ──────────────────────────────────────────────────

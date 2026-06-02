@@ -1,0 +1,34 @@
+/* Justin (muted purple) theme for Streamline */
+@define-color accent_bg_color #9b7ec4;
+@define-color accent_fg_color #f7f1fa;
+@define-color accent_color #a890d0;
+@define-color window_bg_color #1a1622;
+@define-color window_fg_color #dbd6e4;
+@define-color headerbar_bg_color #201c2a;
+@define-color headerbar_fg_color #dbd6e4;
+@define-color popover_bg_color #262230;
+@define-color popover_fg_color #dbd6e4;
+@define-color view_bg_color #1a1622;
+@define-color view_fg_color #dbd6e4;
+@define-color card_bg_color #262230;
+@define-color card_fg_color #dbd6e4;
+@define-color sidebar_bg_color #1e1a26;
+@define-color sidebar_fg_color #dbd6e4;
+@define-color sidebar_backdrop_color #1a1622;
+@define-color button_bg_color #2d2936;
+@define-color button_fg_color #dbd6e4;
+@define-color button_hover_bg_color #383442;
+@define-color destructive_bg_color #aa5050;
+@define-color destructive_fg_color #f7f1fa;
+@define-color success_bg_color #528858;
+@define-color warning_bg_color #aa9648;
+@define-color error_bg_color #aa5050;
+@define-color border_color #383442;
+
+textview text selection {
+    background-color: rgba(155, 126, 196, 0.4);
+}
+
+entry selection {
+    background-color: rgba(155, 126, 196, 0.4);
+}

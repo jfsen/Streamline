@@ -1,0 +1,34 @@
+/* Twitch (muted purple) theme for Streamline */
+@define-color accent_bg_color #7b6f9e;
+@define-color accent_fg_color #f0edf5;
+@define-color accent_color #8e82b0;
+@define-color window_bg_color #121116;
+@define-color window_fg_color #d4d0db;
+@define-color headerbar_bg_color #18161c;
+@define-color headerbar_fg_color #d4d0db;
+@define-color popover_bg_color #1e1c23;
+@define-color popover_fg_color #d4d0db;
+@define-color view_bg_color #121116;
+@define-color view_fg_color #d4d0db;
+@define-color card_bg_color #1e1c23;
+@define-color card_fg_color #d4d0db;
+@define-color sidebar_bg_color #16141a;
+@define-color sidebar_fg_color #d4d0db;
+@define-color sidebar_backdrop_color #121116;
+@define-color button_bg_color #242228;
+@define-color button_fg_color #d4d0db;
+@define-color button_hover_bg_color #2e2b33;
+@define-color destructive_bg_color #a34444;
+@define-color destructive_fg_color #f0edf5;
+@define-color success_bg_color #4a7a4a;
+@define-color warning_bg_color #9e8a3e;
+@define-color error_bg_color #a34444;
+@define-color border_color #2e2b33;
+
+textview text selection {
+    background-color: rgba(123, 111, 158, 0.4);
+}
+
+entry selection {
+    background-color: rgba(123, 111, 158, 0.4);
+}
