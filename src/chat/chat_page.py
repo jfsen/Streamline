@@ -227,8 +227,8 @@ def _build_html(alternating_bg, dark, disable_emote_animations=False):
     html = html.replace("PILLPAD", s["pill_padding"])
     html = html.replace("MORE_MSG", json.dumps(_("More messages below")))
     html = html.replace("SCROLL_THRESH", str(s["scroll_threshold"]))
-    html = html.replace("MAX_MSGS", str(s["max_messages"]))
-    html = html.replace("CULL_CHUNK", str(s["cull_chunk"]))
+    html = html.replace("MAX_MSGS", str(MAX_MESSAGES))
+    html = html.replace("CULL_CHUNK", str(CULL_CHUNK))
     html = html.replace("BADGE_SVGS", _badge_svg_defs())
     if alternating_bg:
         html = html.replace(
