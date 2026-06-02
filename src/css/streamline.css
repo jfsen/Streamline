@@ -134,9 +134,8 @@ list.boxed-list.streamer-list > row button.flat:hover {
 
 .offline-stream-button {
     opacity: 0.5;
-    transition: opacity 200ms ease;
 }
 
 list.boxed-list.streamer-list > row:hover .offline-stream-button {
-    opacity: 0.85;
+    opacity: 0.5;
 }
