@@ -13,10 +13,9 @@ STYLE = {
     "line_height": "1.4",
     "user_weight": "700",
     "user_margin": "4px",
-    # --- "more messages" pill ----------------------------------------
-    "pill_font": "bold 13px Inter, sans-serif",
-    "pill_bottom": "8px",
-    "pill_padding": "4px 12px",
+    # --- "more messages" banner --------------------------------------
+    "banner_font": "bold 14px Inter, sans-serif",
+    "banner_padding": "8px 12px",
     # --- body --------------------------------------------------------
     "body_padding_top": "4px",
     "body_padding_horiz": "8px",
@@ -27,14 +26,14 @@ STYLE = {
     # --- colour palettes (dark / light) ------------------------------
     "dark": {
         "text_color": "#dedede",
-        "pill_bg": "rgba(255,255,255,0.18)",
-        "pill_fg": "#ccc",
-        "row_color": "rgba(255,255,255,0.04)",  # alternating-bg stripes
+        "banner_bg": "rgba(0,0,0,0.60)",
+        "banner_fg": "#C7C7C7",
+        "row_color": "rgba(255,255,255,0.03)",  # alternating-bg stripes
     },
     "light": {
         "text_color": "#2e2e2e",
-        "pill_bg": "rgba(0,0,0,0.14)",
-        "pill_fg": "#555",
+        "banner_bg": "rgba(255,255,255,0.70)",
+        "banner_fg": "#121212",
         "row_color": "rgba(0,0,0,0.03)",  # alternating-bg stripes
     },
 }

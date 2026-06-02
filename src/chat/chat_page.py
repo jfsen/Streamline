@@ -45,11 +45,11 @@ _HTML = """<!DOCTYPE html>
   .badge { display: inline-block; vertical-align: middle; margin-right: 2px; pointer-events: bounding-box; contain: layout style paint; }
   .emote { vertical-align: middle; }
   #more-msg {
-    position: fixed; bottom: PILLBOTTOM; left: 50%; transform: translateX(-50%);
-    padding: PILLPAD; border-radius: 999px; z-index: 99;
-    font: PILLFONT; cursor: pointer;
-    white-space: nowrap;
-    background: COLORPILLBG; color: COLORPILLFG;
+    position: fixed; bottom: 0; left: 0; right: 0;
+    padding: BANNERPAD; text-align: center; z-index: 99;
+    font: BANNERFONT; cursor: pointer;
+    background: COLORBANNERBG; color: COLORBANNERFG;
+    border-top: 1px solid transparent;
   }
   ROWCSS
 </style></head><body>
@@ -212,8 +212,8 @@ def _build_html(alternating_bg, dark, disable_emote_animations=False):
     theme = s["dark"] if dark else s["light"]
     html = _HTML
     html = html.replace("COLORTEXT", theme["text_color"])
-    html = html.replace("COLORPILLBG", theme["pill_bg"])
-    html = html.replace("COLORPILLFG", theme["pill_fg"])
+    html = html.replace("COLORBANNERBG", theme["banner_bg"])
+    html = html.replace("COLORBANNERFG", theme["banner_fg"])
     html = html.replace("FONTSIZE", s["font_size"])
     html = html.replace("FONTFAMILY", s["font_family"])
     html = html.replace("BODYTOPPAD", s["body_padding_top"])
@@ -222,9 +222,8 @@ def _build_html(alternating_bg, dark, disable_emote_animations=False):
     html = html.replace("LINEHEIGHT", s["line_height"])
     html = html.replace("USERWEIGHT", s["user_weight"])
     html = html.replace("USERMARGIN", s["user_margin"])
-    html = html.replace("PILLFONT", s["pill_font"])
-    html = html.replace("PILLBOTTOM", s["pill_bottom"])
-    html = html.replace("PILLPAD", s["pill_padding"])
+    html = html.replace("BANNERFONT", s["banner_font"])
+    html = html.replace("BANNERPAD", s["banner_padding"])
     html = html.replace("MORE_MSG", json.dumps(_("More messages below")))
     html = html.replace("SCROLL_THRESH", str(s["scroll_threshold"]))
     html = html.replace("MAX_MSGS", str(MAX_MESSAGES))
@@ -378,7 +377,7 @@ class ChatPage(Adw.NavigationPage):
         js = (
             f"document.body.style.color='{theme['text_color']}';"
             f"var p=document.getElementById('more-msg');"
-            f"if(p){{p.style.background='{theme['pill_bg']}';p.style.color='{theme['pill_fg']}'}}"
+            f"if(p){{p.style.background='{theme['banner_bg']}';p.style.color='{theme['banner_fg']}'}}"
         )
         if self._alternating_bg:
             js += (
