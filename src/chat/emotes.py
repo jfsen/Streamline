@@ -25,13 +25,14 @@ logger = logging.getLogger("Emotes")
 _CACHE_DIR = Path(GLib.get_user_cache_dir()) / "Streamline" / "emotes"
 
 
-def _cache_path(source, identifier):
+def _cache_path(source, identifier, prefer_static=False):
     _CACHE_DIR.mkdir(parents=True, exist_ok=True)
-    return _CACHE_DIR / f"{source}-{identifier}.json"
+    suffix = "-static" if prefer_static else ""
+    return _CACHE_DIR / f"{source}-{identifier}{suffix}.json"
 
 
-def _load_cache(source, identifier):
-    path = _cache_path(source, identifier)
+def _load_cache(source, identifier, prefer_static=False):
+    path = _cache_path(source, identifier, prefer_static)
     if not path.exists():
         return None
     try:
@@ -52,9 +53,9 @@ def _load_cache(source, identifier):
         return None
 
 
-def _save_cache(source, identifier, emotes):
+def _save_cache(source, identifier, emotes, prefer_static=False):
     try:
-        with open(_cache_path(source, identifier), "w") as f:
+        with open(_cache_path(source, identifier, prefer_static), "w") as f:
             json.dump(
                 {
                     "ts": datetime.now(timezone.utc).isoformat(),
@@ -89,13 +90,13 @@ def _bttv_url(emote_id, prefer_static):
 
 
 def _fetch_bttv_global(prefer_static=False):
-    cached = _load_cache("bttv", "global")
+    cached = _load_cache("bttv", "global", prefer_static)
     if cached is not None:
         return cached
     logger.debug("Cache miss: bttv/global, fetching")
     data = _fetch_json(_BTTV_GLOBAL)
     if not data:
-        _save_cache("bttv", "global", {})
+        _save_cache("bttv", "global", {}, prefer_static)
         return {}
     emotes = {
         e["code"]: {
@@ -105,18 +106,18 @@ def _fetch_bttv_global(prefer_static=False):
         for e in data
         if e.get("code")
     }
-    _save_cache("bttv", "global", emotes)
+    _save_cache("bttv", "global", emotes, prefer_static)
     return emotes
 
 
 def _fetch_bttv_channel(user_id, prefer_static=False):
-    cached = _load_cache("bttv", user_id)
+    cached = _load_cache("bttv", user_id, prefer_static)
     if cached is not None:
         return cached
     logger.debug("Cache miss: bttv/%s, fetching", user_id)
     data = _fetch_json(_BTTV_CHANNEL.format(user_id=user_id))
     if not data:
-        _save_cache("bttv", user_id, {})
+        _save_cache("bttv", user_id, {}, prefer_static)
         return {}
     shared = data.get("sharedEmotes", [])
     channel = data.get("channelEmotes", [])
@@ -128,7 +129,7 @@ def _fetch_bttv_channel(user_id, prefer_static=False):
                 "url": _bttv_url(e["id"], prefer_static),
                 "source": "BTTV",
             }
-    _save_cache("bttv", user_id, emotes)
+    _save_cache("bttv", user_id, emotes, prefer_static)
     return emotes
 
 
@@ -150,13 +151,13 @@ def _pick_7tv_file(files, prefer_static):
 
 
 def _fetch_7tv_global(prefer_static=False):
-    cached = _load_cache("7tv", "global")
+    cached = _load_cache("7tv", "global", prefer_static)
     if cached is not None:
         return cached
     logger.debug("Cache miss: 7tv/global, fetching")
     data = _fetch_json(_SEVENTV_GLOBAL)
     if not data:
-        _save_cache("7tv", "global", {})
+        _save_cache("7tv", "global", {}, prefer_static)
         return {}
     emotes = {}
     for e in data.get("emotes", []):
@@ -170,18 +171,18 @@ def _fetch_7tv_global(prefer_static=False):
                 "url": f"https:{host.get('url', '//cdn.7tv.app/emote')}/{url}",
                 "source": "7TV",
             }
-    _save_cache("7tv", "global", emotes)
+    _save_cache("7tv", "global", emotes, prefer_static)
     return emotes
 
 
 def _fetch_7tv_channel(user_id, prefer_static=False):
-    cached = _load_cache("7tv", user_id)
+    cached = _load_cache("7tv", user_id, prefer_static)
     if cached is not None:
         return cached
     logger.debug("Cache miss: 7tv/%s, fetching", user_id)
     data = _fetch_json(_SEVENTV_CHANNEL.format(user_id=user_id))
     if not data:
-        _save_cache("7tv", user_id, {})
+        _save_cache("7tv", user_id, {}, prefer_static)
         return {}
     emotes = {}
     for es in data.get("emote_set", {}).get("emotes", []):
@@ -195,19 +196,19 @@ def _fetch_7tv_channel(user_id, prefer_static=False):
                 "url": f"https:{host.get('url', '//cdn.7tv.app/emote')}/{url}",
                 "source": "7TV",
             }
-    _save_cache("7tv", user_id, emotes)
+    _save_cache("7tv", user_id, emotes, prefer_static)
     return emotes
 
 
-def _fetch_ffz_global():
+def _fetch_ffz_global(prefer_static=False):
     """Fetch FFZ global emotes."""
-    cached = _load_cache("ffz", "global")
+    cached = _load_cache("ffz", "global", prefer_static)
     if cached is not None:
         return cached
     logger.debug("Cache miss: ffz/global, fetching")
     data = _fetch_json(_FFZ_GLOBAL)
     if not data:
-        _save_cache("ffz", "global", {})
+        _save_cache("ffz", "global", {}, prefer_static)
         return {}
     emotes = {}
     for set_id in data.get("default_sets", []):
@@ -219,19 +220,19 @@ def _fetch_ffz_global():
                     "url": f"https://cdn.frankerfacez.com/emoticon/{eid}/1",
                     "source": "FFZ",
                 }
-    _save_cache("ffz", "global", emotes)
+    _save_cache("ffz", "global", emotes, prefer_static)
     return emotes
 
 
-def _fetch_ffz_channel(user_id):
+def _fetch_ffz_channel(user_id, prefer_static=False):
     """Fetch FFZ channel emotes."""
-    cached = _load_cache("ffz", user_id)
+    cached = _load_cache("ffz", user_id, prefer_static)
     if cached is not None:
         return cached
     logger.debug("Cache miss: ffz/%s, fetching", user_id)
     data = _fetch_json(_FFZ_CHANNEL.format(user_id=user_id))
     if not data:
-        _save_cache("ffz", user_id, {})
+        _save_cache("ffz", user_id, {}, prefer_static)
         return {}
     emotes = {}
     room = data.get("room", {})
@@ -245,7 +246,7 @@ def _fetch_ffz_channel(user_id):
                     "url": f"https://cdn.frankerfacez.com/emoticon/{eid}/1",
                     "source": "FFZ",
                 }
-    _save_cache("ffz", user_id, emotes)
+    _save_cache("ffz", user_id, emotes, prefer_static)
     return emotes
 
 
@@ -270,12 +271,12 @@ class ThirdPartyEmotes:
         """
         ps = self._prefer_static
         fetchers = [
-            _fetch_ffz_global,
+            lambda: _fetch_ffz_global(ps),
             lambda: _fetch_7tv_global(ps),
             lambda: _fetch_bttv_global(ps),
         ]
         if self._user_id:
-            fetchers.append(lambda: _fetch_ffz_channel(self._user_id))
+            fetchers.append(lambda: _fetch_ffz_channel(self._user_id, ps))
             fetchers.append(lambda: _fetch_7tv_channel(self._user_id, ps))
             fetchers.append(lambda: _fetch_bttv_channel(self._user_id, ps))
 
