@@ -13,7 +13,15 @@ gi.require_version("WebKit", "6.0")
 
 from gi.repository import Adw, Gdk, GLib, Gtk, WebKit
 
-from .config import STYLE as _CHAT_STYLE
+from .config import (
+    CULL_CHUNK,
+    FLUSH_MS,
+    MAX_MESSAGES,
+    SUSPEND_WEB_TIMEOUT,
+)
+from .config import (
+    STYLE as _CHAT_STYLE,
+)
 from .emotes import ThirdPartyEmotes
 from .twitch_chat import TwitchChat
 
@@ -412,9 +420,10 @@ class ChatPage(Adw.NavigationPage):
                 self._on_suspend_done,
                 ("emotes-cleared",),
             )
-            # Phase 2: schedule deep-suspend after 60s
+            # Phase 2: schedule deep-suspend after configured delay
             self._suspend_web_timeout_id = GLib.timeout_add_seconds(
-                60, self._suspend_web_process
+                SUSPEND_WEB_TIMEOUT,
+                self._suspend_web_process,
             )
         else:
             if self._web_process_suspended:
@@ -444,10 +453,10 @@ class ChatPage(Adw.NavigationPage):
 
     def _on_message(self, msg):
         self._msg_count += 1
-        if self._msg_count > _CHAT_STYLE["max_messages"]:
-            self._msg_count -= _CHAT_STYLE["cull_chunk"]
+        if self._msg_count > MAX_MESSAGES:
+            self._msg_count -= CULL_CHUNK
             self._webview.evaluate_javascript(
-                f"var c=document.getElementById('chat');for(var i=0;i<{_CHAT_STYLE['cull_chunk']}&&c.firstChild;i++)c.removeChild(c.firstChild);_scrollToBottom()",
+                f"var c=document.getElementById('chat');for(var i=0;i<{CULL_CHUNK}&&c.firstChild;i++)c.removeChild(c.firstChild);_scrollToBottom()",
                 -1,
                 None,
                 None,
@@ -471,9 +480,7 @@ class ChatPage(Adw.NavigationPage):
         )
 
         if self._batch_flush_id is None:
-            self._batch_flush_id = GLib.timeout_add(
-                _CHAT_STYLE["flush_ms"], self._flush_messages
-            )
+            self._batch_flush_id = GLib.timeout_add(FLUSH_MS, self._flush_messages)
 
     def _flush_messages(self):
         """Inject all queued messages into the WebView in one IPC call."""
