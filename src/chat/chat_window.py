@@ -30,7 +30,7 @@ class ChatWindow(Adw.Window):
         super().__init__(
             title=_("Chat: {}").format(streamer),
         )
-        self.set_default_size(340, 600)
+        self.set_default_size(360, 520)
 
         if transient_for:
             self.set_transient_for(transient_for)
