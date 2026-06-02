@@ -63,9 +63,18 @@ FLUSH_MS = 300
 # ~180 MB of memory.
 SUSPEND_WEB_TIMEOUT = 300
 
-# Emote API cache lifetime in seconds.  Responses from BTTV, 7TV
-# and FFZ are cached on disk for this duration.
-CACHE_TTL = 3600  # 1 hour
+# ── Emote caches ───────────────────────────────────────────
+#
+# Per-service, per-scope cache lifetimes in seconds.
+# ``global`` covers site-wide emotes; ``channel`` covers
+# emotes specific to a streamer.
+# Consumer:  emotes.py  (_load_cache)
+
+EMOTE_CACHE_TTL = {
+    "bttv": {"global": 86400, "channel": 3600},
+    "7tv": {"global": 86400, "channel": 3600},
+    "ffz": {"global": 86400, "channel": 3600},
+}
 
 # ── IRC ─────────────────────────────────────────────────────
 #

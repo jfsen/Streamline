@@ -1,7 +1,7 @@
 from .chat_page import ChatPage
 from .chat_window import ChatWindow
 from .config import (
-    CACHE_TTL,
+    EMOTE_CACHE_TTL,
     FALLBACK_USER_COLOR,
     IRC_HOST,
     IRC_PORT,

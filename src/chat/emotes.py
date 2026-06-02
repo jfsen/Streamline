@@ -16,7 +16,7 @@ from .config import (
     _FFZ_GLOBAL,
     _SEVENTV_CHANNEL,
     _SEVENTV_GLOBAL,
-    CACHE_TTL,
+    EMOTE_CACHE_TTL,
 )
 
 logger = logging.getLogger("Emotes")
@@ -39,7 +39,8 @@ def _load_cache(source, identifier, prefer_static=False):
         with open(path) as f:
             data = json.load(f)
         age = datetime.now(timezone.utc) - datetime.fromisoformat(data["ts"])
-        if age.total_seconds() > CACHE_TTL:
+        scope = "global" if identifier == "global" else "channel"
+        if age.total_seconds() > EMOTE_CACHE_TTL[source][scope]:
             logger.debug("Cache expired: %s/%s", source, identifier)
             return None
         emotes = data["emotes"]
@@ -134,16 +135,19 @@ def _fetch_bttv_channel(user_id, prefer_static=False):
 def _pick_7tv_file(files, prefer_static):
     """Pick the best file from 7TV's files array.
 
-    When prefer_static is True, skip animated formats (GIF, APNG, animated WEBP/AVIF).
-    Otherwise use the first file (typically the highest quality animated version).
+    When prefer_static is True, prefer ``static_name`` when available,
+    then fall back to files with ``frame_count == 0``.
+    Otherwise use the first file (typically the highest quality
+    animated version).
     """
     if not files:
         return None
     if prefer_static:
-        animated_formats = {"GIF", "APNG"}
         for f in files:
-            fmt = (f.get("format") or "").upper()
-            if fmt not in animated_formats:
+            if f.get("static_name"):
+                return f["static_name"]
+        for f in files:
+            if not f.get("frame_count"):
                 return f["name"]
     return files[0]["name"]
 
