@@ -124,11 +124,14 @@ class TwitchChat:
             return None
         user, text = body.split(" :", 1)
 
-        # Detect CTCP ACTION (/me) — IRC convention used by Twitch
+        # Detect CTCP ACTION (/me) — IRC convention used by Twitch.
+        # Save the offset so emote positions can be adjusted after parsing,
+        # since the IRC tag references the original (pre-strip) text.
         action = False
+        action_offset = 0
         if text.startswith("\x01ACTION ") and text.endswith("\x01"):
             action = True
-            text = text[8:-1]  # strip \x01ACTION and trailing \x01
+            action_offset = len("\x01ACTION ")
 
         display_name = None
         color = FALLBACK_USER_COLOR
@@ -157,6 +160,14 @@ class TwitchChat:
         if display_name is None:
             user_part = line.split("!", 1)[0] if "!" in line else ""
             display_name = user_part.lstrip(":").strip()
+
+        # Strip ACTION wrapper from display text and adjust emote positions
+        if action:
+            text = text[action_offset:-1]
+            for em in emotes:
+                em["positions"] = [
+                    (s - action_offset, e - action_offset) for s, e in em["positions"]
+                ]
 
         return {
             "user": display_name or user.strip(),
