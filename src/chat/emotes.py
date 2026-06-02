@@ -95,9 +95,8 @@ def _fetch_bttv_global(prefer_static=False):
         return cached
     logger.debug("Cache miss: bttv/global, fetching")
     data = _fetch_json(_BTTV_GLOBAL)
-    if not data:
-        _save_cache("bttv", "global", {}, prefer_static)
-        return {}
+    if data is None:
+        return {}  # API error — don't overwrite any existing cache
     emotes = {
         e["code"]: {
             "url": _bttv_url(e["id"], prefer_static),
@@ -116,9 +115,8 @@ def _fetch_bttv_channel(user_id, prefer_static=False):
         return cached
     logger.debug("Cache miss: bttv/%s, fetching", user_id)
     data = _fetch_json(_BTTV_CHANNEL.format(user_id=user_id))
-    if not data:
-        _save_cache("bttv", user_id, {}, prefer_static)
-        return {}
+    if data is None:
+        return {}  # API error — don't overwrite any existing cache
     shared = data.get("sharedEmotes", [])
     channel = data.get("channelEmotes", [])
     emotes = {}
@@ -156,9 +154,8 @@ def _fetch_7tv_global(prefer_static=False):
         return cached
     logger.debug("Cache miss: 7tv/global, fetching")
     data = _fetch_json(_SEVENTV_GLOBAL)
-    if not data:
-        _save_cache("7tv", "global", {}, prefer_static)
-        return {}
+    if data is None:
+        return {}  # API error — don't overwrite any existing cache
     emotes = {}
     for e in data.get("emotes", []):
         name = e.get("name")
@@ -181,9 +178,8 @@ def _fetch_7tv_channel(user_id, prefer_static=False):
         return cached
     logger.debug("Cache miss: 7tv/%s, fetching", user_id)
     data = _fetch_json(_SEVENTV_CHANNEL.format(user_id=user_id))
-    if not data:
-        _save_cache("7tv", user_id, {}, prefer_static)
-        return {}
+    if data is None:
+        return {}  # API error — don't overwrite any existing cache
     emotes = {}
     for es in data.get("emote_set", {}).get("emotes", []):
         name = es.get("name")
@@ -207,9 +203,8 @@ def _fetch_ffz_global(prefer_static=False):
         return cached
     logger.debug("Cache miss: ffz/global, fetching")
     data = _fetch_json(_FFZ_GLOBAL)
-    if not data:
-        _save_cache("ffz", "global", {}, prefer_static)
-        return {}
+    if data is None:
+        return {}  # API error — don't overwrite any existing cache
     emotes = {}
     for set_id in data.get("default_sets", []):
         for e in data.get("sets", {}).get(str(set_id), {}).get("emoticons", []):
@@ -231,9 +226,8 @@ def _fetch_ffz_channel(user_id, prefer_static=False):
         return cached
     logger.debug("Cache miss: ffz/%s, fetching", user_id)
     data = _fetch_json(_FFZ_CHANNEL.format(user_id=user_id))
-    if not data:
-        _save_cache("ffz", user_id, {}, prefer_static)
-        return {}
+    if data is None:
+        return {}  # API error — don't overwrite any existing cache
     emotes = {}
     room = data.get("room", {})
     room_set = room.get("set")
