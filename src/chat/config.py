@@ -41,6 +41,9 @@ FALLBACK_USER_COLOR = "#9147ff"  # Twitch purple, used when IRC omits color tag
 # ── Emote CDNs ──────────────────────────────────────────────
 
 TWITCH_EMOTE_CDN = "https://static-cdn.jtvnw.net/emoticons/v2/{id}/default/dark/1.0"
+TWITCH_EMOTE_CDN_STATIC = (
+    "https://static-cdn.jtvnw.net/emoticons/v2/{id}/static/light/1.0"
+)
 
 # ── Emote API endpoints ─────────────────────────────────────
 

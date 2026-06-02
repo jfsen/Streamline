@@ -158,6 +158,9 @@ class StreamlineWindow(Adw.ApplicationWindow):
         self.theme = config.get("theme", "system")
         self.low_latency = config.get("low_latency", True)
         self.chat_alternating_bg = config.get("chat_alternating_bg", False)
+        self.chat_disable_emote_animations = config.get(
+            "chat_disable_emote_animations", False
+        )
 
     def _init_twitch_api(self):
         """Initialize the Twitch API with current credentials.
@@ -565,8 +568,9 @@ class StreamlineWindow(Adw.ApplicationWindow):
         page = ChatPage(
             self,
             streamer,
-            self.chat_alternating_bg,
-            self.theme,
+            alternating_bg=self.chat_alternating_bg,
+            disable_emote_animations=self.chat_disable_emote_animations,
+            theme=self.theme,
             twitch=self.twitch,
             enable_detach=True,
         )
@@ -595,6 +599,7 @@ class StreamlineWindow(Adw.ApplicationWindow):
             twitch=self.twitch,
             streamer=streamer,
             alternating_bg=self.chat_alternating_bg,
+            disable_emote_animations=self.chat_disable_emote_animations,
             theme=self.theme,
             transient_for=self,
         )

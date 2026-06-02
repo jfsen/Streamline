@@ -5,8 +5,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: streamline 3.2.0\n"
-"Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-05-31 16:01+0200\n"
+"Report-Msgid-Bugs-To: https://github.com/jfsen/Streamline/issues\n"
+"POT-Creation-Date: 2026-06-02 12:54+0200\n"
 "PO-Revision-Date: 2026-05-30 00:23+0200\n"
 "Last-Translator: jfsen\n"
 "Language-Team: none\n"
@@ -131,11 +131,19 @@ msgstr "Abwechselnde Hintergrundfarben in Chat-Nachrichten anzeigen"
 msgid "Hide emotes on focus loss"
 msgstr "Emotes bei Fokusverlust ausblenden"
 
-#: data/io.github.jfsen.Streamline.gschema.xml:59 src/preferences.ui:126
+#: data/io.github.jfsen.Streamline.gschema.xml:59
 msgid "Hide all emotes when the window loses focus to save resources"
 msgstr ""
 "Alle Emotes ausblenden, wenn das Fenster den Fokus verliert, um Ressourcen "
 "zu sparen"
+
+#: data/io.github.jfsen.Streamline.gschema.xml:63
+msgid "Disable emote animations"
+msgstr "Emote-Animationen deaktivieren"
+
+#: data/io.github.jfsen.Streamline.gschema.xml:64
+msgid "Use static emote images to reduce CPU and GPU usage"
+msgstr "Statische Emote-Bilder verwenden, um CPU- und GPU-Auslastung zu reduzieren"
 
 #: src/dialogs.py:39
 msgid "OK"
@@ -170,7 +178,7 @@ msgstr "Gib Twitch-Benutzernamen ein (mehrere mit Kommas trennen):"
 msgid "Follow"
 msgstr "Folgen"
 
-#: src/dialogs.py:90 src/window.py:489 src/window.ui:25
+#: src/dialogs.py:90 src/window.py:523 src/window.ui:25
 msgid "Quick Play Stream"
 msgstr "Stream-Schnellstart"
 
@@ -209,7 +217,6 @@ msgstr "Client-Secret"
 msgid "Save"
 msgstr "Speichern"
 
-#. Translators: Replace "translator-credits" with your name/username, and optionally an email or URL.
 #: src/main.py:80
 msgid "translator-credits"
 msgstr "jfsen"
@@ -230,35 +237,35 @@ msgstr "Mittel"
 msgid "Low"
 msgstr "Niedrig"
 
-#: src/preferences.py:213
+#: src/preferences.py:214
 #, python-brace-format
 msgid "Streamers list saved to {}"
 msgstr "Streamer-Liste gespeichert unter {}"
 
-#: src/preferences.py:217
+#: src/preferences.py:218
 #, python-brace-format
 msgid "Error saving file: {}"
 msgstr "Fehler beim Speichern der Datei: {}"
 
-#: src/preferences.py:256
+#: src/preferences.py:257
 msgid "No streamer names found in file"
 msgstr "Keine Streamer-Namen in der Datei gefunden"
 
-#: src/preferences.py:272
+#: src/preferences.py:273
 #, python-brace-format
 msgid "Added {} streamer(s) ({} already followed)"
 msgstr "{} Streamer hinzugefügt ({} wird bereits gefolgt)"
 
-#: src/preferences.py:279
+#: src/preferences.py:280
 #, python-brace-format
 msgid "Added {} streamer(s)"
 msgstr "{} Streamer hinzugefügt"
 
-#: src/preferences.py:282
+#: src/preferences.py:283
 msgid "All streamers already followed"
 msgstr "Allen Streamern wird bereits gefolgt"
 
-#: src/preferences.py:286
+#: src/preferences.py:287
 #, python-brace-format
 msgid "Error importing file: {}"
 msgstr "Fehler beim Importieren der Datei: {}"
@@ -366,60 +373,60 @@ msgstr ""
 msgid "Missing Player"
 msgstr "Fehlender Player"
 
-#: src/twitch.py:389
+#: src/twitch.py:416
 msgid "Just now"
 msgstr "Gerade eben"
 
-#: src/twitch.py:391
+#: src/twitch.py:418
 #, python-brace-format
 msgid "{}m ago"
 msgstr "vor {} Min."
 
-#: src/twitch.py:395
+#: src/twitch.py:422
 #, python-brace-format
 msgid "{}h ago"
 msgstr "vor {} Std."
 
-#: src/twitch.py:399
+#: src/twitch.py:426
 #, python-brace-format
 msgid "{}d ago"
 msgstr "vor {} T."
 
-#: src/twitch.py:402
+#: src/twitch.py:429
 #, python-brace-format
 msgid "{}w ago"
 msgstr "vor {} Wo."
 
-#: src/twitch.py:412
+#: src/twitch.py:439
 #, python-brace-format
 msgid "{}h"
 msgstr "{} Std."
 
-#: src/twitch.py:414
+#: src/twitch.py:441
 #, python-brace-format
 msgid "{}m"
 msgstr "{} Min."
 
-#: src/twitch.py:418
+#: src/twitch.py:445
 #, python-brace-format
 msgid "{}s"
 msgstr "{} Sek."
 
-#: src/twitch.py:428
+#: src/twitch.py:455
 #, python-brace-format
 msgid "{}h {}m"
 msgstr "{} Std. {} Min."
 
-#: src/chat/chat_page.py:162
+#: src/chat/chat_page.py:220
 msgid "More messages below"
 msgstr "Weitere Nachrichten unten"
 
-#: src/chat/chat_page.py:190 src/chat/chat_window.py:32
+#: src/chat/chat_page.py:248 src/chat/chat_window.py:32
 #, python-brace-format
 msgid "Chat: {}"
 msgstr "Chat: {}"
 
-#: src/chat/chat_page.py:265
+#: src/chat/chat_page.py:336
 msgid "Detach chat"
 msgstr "Chat ausgliedern"
 
@@ -441,7 +448,7 @@ msgid "No internet connection. Check your network and try again."
 msgstr ""
 "Keine Internetverbindung. Überprüfe dein Netzwerk und versuche es erneut."
 
-#: src/vod_page.py:173 src/window.py:270
+#: src/vod_page.py:173 src/window.py:272
 #, python-brace-format
 msgid "Please wait {}s before refreshing"
 msgstr "Bitte warte {} s vor dem Aktualisieren"
@@ -471,21 +478,21 @@ msgstr "Starte VOD: {}"
 msgid "Error playing VOD: player failed to start"
 msgstr "Fehler beim Abspielen des VODs: Player konnte nicht gestartet werden"
 
-#: src/window.py:207 src/window.py:286
+#: src/window.py:209 src/window.py:288
 msgid "Connection Error"
 msgstr "Verbindungsfehler"
 
-#: src/window.py:209 src/window.py:288
+#: src/window.py:211 src/window.py:290
 msgid "Could not fetch streamer data. Please check your internet connection."
 msgstr ""
 "Konnte Streamer-Daten nicht abrufen. Bitte überprüfe deine "
 "Internetverbindung."
 
-#: src/window.py:219 src/window.py:298
+#: src/window.py:221 src/window.py:300
 msgid "API Rate Limit"
 msgstr "API-Ratenlimit"
 
-#: src/window.py:221 src/window.py:300
+#: src/window.py:223 src/window.py:302
 msgid ""
 "Twitch API rate limit reached. Please wait a few minutes before refreshing "
 "again."
@@ -493,86 +500,96 @@ msgstr ""
 "Twitch-API-Ratenlimit erreicht. Bitte warte ein paar Minuten, bevor du "
 "erneut aktualisierst."
 
-#: src/window.py:227 src/window.py:235 src/window.py:306 src/window.py:314
+#: src/window.py:229 src/window.py:237 src/window.py:308 src/window.py:316
 msgid "API Error"
 msgstr "API-Fehler"
 
-#: src/window.py:228 src/window.py:307
+#: src/window.py:230 src/window.py:309
 #, python-brace-format
 msgid "HTTP error {} occurred while fetching streamer data."
 msgstr "HTTP-Fehler {} beim Abrufen der Streamer-Daten."
 
-#: src/window.py:236 src/window.py:315
+#: src/window.py:238 src/window.py:317
 #, python-brace-format
 msgid "Failed to fetch streamer data: {}"
 msgstr "Konnte Streamer-Daten nicht abrufen: {}"
 
-#: src/window.py:261
+#: src/window.py:263
 msgid "API not available"
 msgstr "API nicht verfügbar"
 
-#: src/window.py:321
+#: src/window.py:323
 msgid "Stream data refreshed"
 msgstr "Stream-Daten aktualisiert"
 
-#: src/window.py:433
+#: src/window.py:462
 #, python-brace-format
-msgid "Now following {}"
-msgstr "Folgst jetzt {}"
+msgid "Added {}"
+msgstr ""
 
-#: src/window.py:435
+#: src/window.py:464
+#, fuzzy, python-brace-format
+msgid "Added {} streamers"
+msgstr "{} Streamer hinzugefügt"
+
+#: src/window.py:467
 #, python-brace-format
-msgid "Added {} new streamers"
-msgstr "{} neue Streamer hinzugefügt"
+msgid "'{}' is invalid"
+msgstr ""
 
-#: src/window.py:439
+#: src/window.py:469
+#, python-brace-format
+msgid "{} invalid names"
+msgstr ""
+
+#: src/window.py:472
 #, python-brace-format
 msgid "Already following {}"
 msgstr "Folgst {} bereits"
 
-#: src/window.py:442
-#, python-brace-format
-msgid "Already following: {}"
-msgstr "Bereits gefolgt: {}"
+#: src/window.py:474
+#, fuzzy
+msgid "Already following"
+msgstr "Folgst {} bereits"
 
-#: src/window.py:454
+#: src/window.py:488
 #, python-brace-format
 msgid "Error: {}"
 msgstr "Fehler: {}"
 
-#: src/window.py:461
+#: src/window.py:495
 msgid "Error Saving Config"
 msgstr "Fehler beim Speichern der Konfiguration"
 
-#: src/window.py:461
+#: src/window.py:495
 msgid "Could not save configuration"
 msgstr "Konnte Konfiguration nicht speichern"
 
-#: src/window.py:478
+#: src/window.py:512
 msgid "Application"
 msgstr "Anwendung"
 
-#: src/window.py:479 src/preferences.ui:7
+#: src/window.py:513 src/preferences.ui:7
 msgid "Preferences"
 msgstr "Einstellungen"
 
-#: src/window.py:480
+#: src/window.py:514
 msgid "Show Shortcuts"
 msgstr "Tastenkürzel anzeigen"
 
-#: src/window.py:481
+#: src/window.py:515
 msgid "Quit"
 msgstr "Beenden"
 
-#: src/window.py:485
+#: src/window.py:519
 msgid "Stream Management"
 msgstr "Stream-Verwaltung"
 
-#: src/window.py:487
+#: src/window.py:521
 msgid "Follow New Streamer"
 msgstr "Neuem Streamer folgen"
 
-#: src/window.py:490 src/window.py:491
+#: src/window.py:524 src/window.py:525
 msgid "Refresh Streams"
 msgstr "Streams aktualisieren"
 
@@ -715,8 +732,12 @@ msgid "Show subtle alternating background colors on chat messages"
 msgstr "Dezente abwechselnde Hintergrundfarben in Chat-Nachrichten"
 
 #: src/preferences.ui:125
-msgid "Hide Emotes on Focus Loss"
-msgstr "Emotes bei Fokusverlust ausblenden"
+msgid "Disable Emote Animations"
+msgstr "Emote-Animationen deaktivieren"
+
+#: src/preferences.ui:126
+msgid "Use static emote images to reduce resource usage"
+msgstr "Statische Emote-Bilder verwenden, um Ressourcen zu schonen"
 
 #: src/preferences.ui:134
 msgid "Twitch API"
@@ -737,3 +758,18 @@ msgstr "VODs"
 #: src/vod_page.ui:23
 msgid "Refresh VODs"
 msgstr "VODs aktualisieren"
+
+#, python-brace-format
+#~ msgid "Now following {}"
+#~ msgstr "Folgst jetzt {}"
+
+#, python-brace-format
+#~ msgid "Added {} new streamers"
+#~ msgstr "{} neue Streamer hinzugefügt"
+
+#, python-brace-format
+#~ msgid "Already following: {}"
+#~ msgstr "Bereits gefolgt: {}"
+
+#~ msgid "Hide Emotes on Focus Loss"
+#~ msgstr "Emotes bei Fokusverlust ausblenden"

@@ -120,6 +120,12 @@
                 <property name="subtitle" translatable="yes">Show subtle alternating background colors on chat messages</property>
               </object>
             </child>
+            <child>
+              <object class="AdwSwitchRow" id="chat_disable_emote_animations_switch">
+                <property name="title" translatable="yes">Disable Emote Animations</property>
+                <property name="subtitle" translatable="yes">Use static emote images to reduce resource usage</property>
+              </object>
+            </child>
           </object>
         </child>
 

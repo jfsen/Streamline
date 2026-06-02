@@ -58,5 +58,10 @@
 		          <summary>Hide emotes on focus loss</summary>
 		          <description>Hide all emotes when the window loses focus to save resources</description>
 		        </key>
-	</schema>
+		        <key name="chat-disable-emote-animations" type="b">
+		          <default>false</default>
+		          <summary>Disable emote animations</summary>
+		          <description>Use static emote images to reduce CPU and GPU usage</description>
+		        </key>
+			</schema>
 </schemalist>

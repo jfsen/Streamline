@@ -198,7 +198,7 @@ def _badge_svg_defs():
     return "\n".join(parts)
 
 
-def _build_html(alternating_bg, dark):
+def _build_html(alternating_bg, dark, disable_emote_animations=False):
     """Build the chat HTML with theme-aware colors."""
     s = _CHAT_STYLE
     theme = s["dark"] if dark else s["light"]
@@ -240,6 +240,7 @@ class ChatPage(Adw.NavigationPage):
         parent,
         streamer,
         alternating_bg=False,
+        disable_emote_animations=False,
         theme="system",
         twitch=None,
         enable_detach=False,
@@ -257,6 +258,7 @@ class ChatPage(Adw.NavigationPage):
         self._msg_count = 0
         self._third_party_emotes = None
         self._alternating_bg = alternating_bg
+        self._disable_emote_animations = disable_emote_animations
         self._msg_batch = []
         self._batch_flush_id = None
         self._suspend_signal_id = None
@@ -275,7 +277,10 @@ class ChatPage(Adw.NavigationPage):
         if twitch_api is not None:
             user_cache = getattr(twitch_api, "user_cache", {})
             user_id = user_cache.get(streamer, {}).get("id")
-        self._third_party_emotes = ThirdPartyEmotes(user_id)
+        self._third_party_emotes = ThirdPartyEmotes(
+            user_id,
+            prefer_static=self._disable_emote_animations,
+        )
 
         # Load emotes first, then start IRC in the same thread
         def _load_then_connect():
@@ -284,6 +289,7 @@ class ChatPage(Adw.NavigationPage):
                 streamer,
                 on_message=self._on_message,
                 on_connected=self._on_connected,
+                prefer_static_emotes=self._disable_emote_animations,
             )
             self._chat.start()
 
@@ -302,7 +308,14 @@ class ChatPage(Adw.NavigationPage):
         user_content.register_script_message_handler("chat")
         user_content.connect("script-message-received::chat", lambda *a: None)
 
-        self._webview.load_html(_build_html(self._alternating_bg, self._dark), None)
+        self._webview.load_html(
+            _build_html(
+                self._alternating_bg,
+                self._dark,
+                self._disable_emote_animations,
+            ),
+            None,
+        )
 
         # Block context menu (Reload blanks load_html pages; Ctrl+C still works)
         self._webview.connect("context-menu", lambda *a: True)
@@ -547,6 +560,7 @@ class ChatPage(Adw.NavigationPage):
             twitch=getattr(parent, "twitch", None),
             streamer=self._streamer,
             alternating_bg=self._alternating_bg,
+            disable_emote_animations=self._disable_emote_animations,
             theme=getattr(parent, "theme", "system"),
             transient_for=root,
         )

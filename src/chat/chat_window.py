@@ -24,6 +24,7 @@ class ChatWindow(Adw.Window):
         twitch,
         streamer,
         alternating_bg=False,
+        disable_emote_animations=False,
         theme="system",
         transient_for=None,
     ):
@@ -39,6 +40,7 @@ class ChatWindow(Adw.Window):
             parent=None,
             streamer=streamer,
             alternating_bg=alternating_bg,
+            disable_emote_animations=disable_emote_animations,
             theme=theme,
             twitch=twitch,
             enable_detach=False,

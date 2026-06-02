@@ -12,12 +12,14 @@ from .config import (
     IRC_HOST,
     IRC_PORT,
     TWITCH_EMOTE_CDN,
+    TWITCH_EMOTE_CDN_STATIC,
 )
 
 logger = logging.getLogger("IRCChat")
 
 # Known badge names — only these are rendered from the IRC badges tag.
 # Keys are IRC badge IDs; values are the display name used in tooltips.
+# Not included: "bits"
 _BADGE_NAMES = {
     "broadcaster": "Broadcaster",
     "moderator": "Moderator",
@@ -43,10 +45,13 @@ _BADGES_RE = re.compile(r"badges=([^;]+)")
 class TwitchChat:
     """Connects to Twitch IRC and emits messages via a callback."""
 
-    def __init__(self, channel, on_message, on_connected=None):
+    def __init__(
+        self, channel, on_message, on_connected=None, prefer_static_emotes=False
+    ):
         self._channel = channel.lstrip("#").lower()
         self._on_message = on_message
         self._on_connected = on_connected
+        self._prefer_static_emotes = prefer_static_emotes
         self._sock = None
         self._running = False
 
@@ -142,7 +147,9 @@ class TwitchChat:
                 display_name = raw.replace("\\s", " ")
             emotes_match = _EMOTES_RE.search(tags)
             if emotes_match:
-                emotes = _parse_emotes(emotes_match.group(1), text)
+                emotes = _parse_emotes(
+                    emotes_match.group(1), text, self._prefer_static_emotes
+                )
             badges_match = _BADGES_RE.search(tags)
             if badges_match:
                 badges = _parse_badges(badges_match.group(1))
@@ -174,8 +181,12 @@ def _parse_badges(tag_value):
     return result
 
 
-def _parse_emotes(tag_value, text):
+def _parse_emotes(tag_value, text, prefer_static=False):
     """Parse the emotes tag into a list of {source, name, url, positions}."""
+    if prefer_static:
+        cdn = TWITCH_EMOTE_CDN_STATIC
+    else:
+        cdn = TWITCH_EMOTE_CDN
     result = []
     for emote in tag_value.split("/"):
         if ":" not in emote:
@@ -195,7 +206,7 @@ def _parse_emotes(tag_value, text):
                 {
                     "source": "Twitch",
                     "name": name or emote_id,
-                    "url": TWITCH_EMOTE_CDN.format(id=emote_id),
+                    "url": cdn.format(id=emote_id),
                     "positions": positions,
                 }
             )

@@ -31,6 +31,9 @@ class ConfigManager:
             "chat_alternating_bg": self.settings.get_boolean(
                 "chat-alternating-background"
             ),
+            "chat_disable_emote_animations": self.settings.get_boolean(
+                "chat-disable-emote-animations"
+            ),
         }
 
     def save(self, config):
@@ -53,6 +56,10 @@ class ConfigManager:
         self.settings.set_boolean(
             "chat-alternating-background", config.get("chat_alternating_bg", False)
         )
+        self.settings.set_boolean(
+            "chat-disable-emote-animations",
+            config.get("chat_disable_emote_animations", False),
+        )
         try:
             self.settings.apply()
             return True
@@ -73,4 +80,5 @@ class ConfigManager:
             "theme": window.theme,
             "low_latency": window.low_latency,
             "chat_alternating_bg": window.chat_alternating_bg,
+            "chat_disable_emote_animations": window.chat_disable_emote_animations,
         }

@@ -80,7 +80,15 @@ def _fetch_json(url):
         return None
 
 
-def _fetch_bttv_global():
+def _bttv_url(emote_id, prefer_static):
+    """Build a BTTV emote URL. Append .png to force static when requested."""
+    url = f"https://cdn.betterttv.net/emote/{emote_id}/1x"
+    if prefer_static:
+        url += ".png"
+    return url
+
+
+def _fetch_bttv_global(prefer_static=False):
     cached = _load_cache("bttv", "global")
     if cached is not None:
         return cached
@@ -91,7 +99,7 @@ def _fetch_bttv_global():
         return {}
     emotes = {
         e["code"]: {
-            "url": f"https://cdn.betterttv.net/emote/{e['id']}/1x",
+            "url": _bttv_url(e["id"], prefer_static),
             "source": "BTTV",
         }
         for e in data
@@ -101,7 +109,7 @@ def _fetch_bttv_global():
     return emotes
 
 
-def _fetch_bttv_channel(user_id):
+def _fetch_bttv_channel(user_id, prefer_static=False):
     cached = _load_cache("bttv", user_id)
     if cached is not None:
         return cached
@@ -117,14 +125,31 @@ def _fetch_bttv_channel(user_id):
         code = e.get("code")
         if code:
             emotes[code] = {
-                "url": f"https://cdn.betterttv.net/emote/{e['id']}/1x",
+                "url": _bttv_url(e["id"], prefer_static),
                 "source": "BTTV",
             }
     _save_cache("bttv", user_id, emotes)
     return emotes
 
 
-def _fetch_7tv_global():
+def _pick_7tv_file(files, prefer_static):
+    """Pick the best file from 7TV's files array.
+
+    When prefer_static is True, skip animated formats (GIF, APNG, animated WEBP/AVIF).
+    Otherwise use the first file (typically the highest quality animated version).
+    """
+    if not files:
+        return None
+    if prefer_static:
+        animated_formats = {"GIF", "APNG"}
+        for f in files:
+            fmt = (f.get("format") or "").upper()
+            if fmt not in animated_formats:
+                return f["name"]
+    return files[0]["name"]
+
+
+def _fetch_7tv_global(prefer_static=False):
     cached = _load_cache("7tv", "global")
     if cached is not None:
         return cached
@@ -140,7 +165,7 @@ def _fetch_7tv_global():
         if name and emote_id:
             host = e.get("data", {}).get("host", {})
             files = host.get("files", [])
-            url = files[0]["name"] if files else f"{emote_id}/1x.webp"
+            url = _pick_7tv_file(files, prefer_static) or f"{emote_id}/1x.webp"
             emotes[name] = {
                 "url": f"https:{host.get('url', '//cdn.7tv.app/emote')}/{url}",
                 "source": "7TV",
@@ -149,7 +174,7 @@ def _fetch_7tv_global():
     return emotes
 
 
-def _fetch_7tv_channel(user_id):
+def _fetch_7tv_channel(user_id, prefer_static=False):
     cached = _load_cache("7tv", user_id)
     if cached is not None:
         return cached
@@ -165,7 +190,7 @@ def _fetch_7tv_channel(user_id):
         if name and emote_id:
             host = es.get("data", {}).get("host", {})
             files = host.get("files", [])
-            url = files[0]["name"] if files else f"{emote_id}/1x.webp"
+            url = _pick_7tv_file(files, prefer_static) or f"{emote_id}/1x.webp"
             emotes[name] = {
                 "url": f"https:{host.get('url', '//cdn.7tv.app/emote')}/{url}",
                 "source": "7TV",
@@ -230,8 +255,9 @@ def _fetch_ffz_channel(user_id):
 class ThirdPartyEmotes:
     """Fetches and caches BTTV/7TV/FFZ emotes for a channel."""
 
-    def __init__(self, user_id):
+    def __init__(self, user_id, prefer_static=False):
         self._user_id = user_id
+        self._prefer_static = prefer_static
         self._emotes = {}  # name → url
         self._trie = {}
         self._lock = threading.Lock()
@@ -242,11 +268,16 @@ class ThirdPartyEmotes:
         Order matters for priority: later updates overwrite earlier ones.
         Priority (lowest→highest): FFZ < 7TV < BTTV, channel > global.
         """
-        fetchers = [_fetch_ffz_global, _fetch_7tv_global, _fetch_bttv_global]
+        ps = self._prefer_static
+        fetchers = [
+            _fetch_ffz_global,
+            lambda: _fetch_7tv_global(ps),
+            lambda: _fetch_bttv_global(ps),
+        ]
         if self._user_id:
             fetchers.append(lambda: _fetch_ffz_channel(self._user_id))
-            fetchers.append(lambda: _fetch_7tv_channel(self._user_id))
-            fetchers.append(lambda: _fetch_bttv_channel(self._user_id))
+            fetchers.append(lambda: _fetch_7tv_channel(self._user_id, ps))
+            fetchers.append(lambda: _fetch_bttv_channel(self._user_id, ps))
 
         threads = []
         for fetch in fetchers:
