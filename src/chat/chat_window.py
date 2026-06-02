@@ -23,13 +23,14 @@ class ChatWindow(Adw.Window):
         self,
         twitch,
         streamer,
+        display_name=None,
         alternating_bg=False,
         disable_emote_animations=False,
         theme="system",
         transient_for=None,
     ):
         super().__init__(
-            title=_("Chat: {}").format(streamer),
+            title=_("Chat: {}").format(display_name or streamer),
         )
         self.set_default_size(360, 520)
 
@@ -39,6 +40,7 @@ class ChatWindow(Adw.Window):
         self._chat_page = ChatPage(
             parent=None,
             streamer=streamer,
+            display_name=display_name,
             alternating_bg=alternating_bg,
             disable_emote_animations=disable_emote_animations,
             theme=theme,

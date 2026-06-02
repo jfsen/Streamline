@@ -577,10 +577,17 @@ class StreamlineWindow(Adw.ApplicationWindow):
                 self.navigation_view.push(existing)
             return
 
+        # Resolve display name from user cache
+        display_name = streamer
+        if self.twitch is not None:
+            user_data = self.twitch.user_cache.get(streamer, {})
+            display_name = user_data.get("name", streamer)
+
         logger.debug("Opening chat page for %s", streamer)
         page = ChatPage(
             self,
             streamer,
+            display_name=display_name,
             alternating_bg=self.chat_alternating_bg,
             disable_emote_animations=self.chat_disable_emote_animations,
             theme=self.theme,
@@ -608,9 +615,16 @@ class StreamlineWindow(Adw.ApplicationWindow):
         logger.debug("Opening chat popup for %s", streamer)
         from .chat.chat_window import ChatWindow
 
+        # Resolve display name from user cache
+        display_name = streamer
+        if self.twitch is not None:
+            user_data = self.twitch.user_cache.get(streamer, {})
+            display_name = user_data.get("name", streamer)
+
         popup = ChatWindow(
             twitch=self.twitch,
             streamer=streamer,
+            display_name=display_name,
             alternating_bg=self.chat_alternating_bg,
             disable_emote_animations=self.chat_disable_emote_animations,
             theme=self.theme,

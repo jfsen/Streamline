@@ -247,13 +247,14 @@ class ChatPage(Adw.NavigationPage):
         self,
         parent,
         streamer,
+        display_name=None,
         alternating_bg=False,
         disable_emote_animations=False,
         theme="system",
         twitch=None,
         enable_detach=False,
     ):
-        super().__init__(title=_("Chat: {}").format(streamer))
+        super().__init__(title=_("Chat: {}").format(display_name or streamer))
 
         from weakref import proxy
 
