@@ -42,26 +42,29 @@
 			<summary>Twitch Client ID</summary>
 			<description>Twitch API client ID for authentication</description>
 		</key>
-		    <key name="twitch-client-secret" type="s">
-		      <default>''</default>
-		      <summary>Twitch Client Secret</summary>
-		      <description>Twitch API client secret for authentication</description>
-		    </key>
-		        <key name="chat-alternating-background" type="b">
-		          <default>false</default>
-		          <summary>Alternating chat background</summary>
-		          <description
+	    <key name="twitch-client-secret" type="s">
+            <default>''</default>
+            <summary>Twitch Client Secret</summary>
+            <description
+            >Twitch API client secret for authentication</description>
+	    </key>
+        <key name="chat-alternating-background" type="b">
+            <default>false</default>
+            <summary>Alternating chat background</summary>
+            <description
             >Show alternating background colors on chat messages</description>
-		        </key>
-		        <key name="chat-pause-emotes" type="b">
-		          <default>false</default>
-		          <summary>Hide emotes on focus loss</summary>
-		          <description>Hide all emotes when the window loses focus to save resources</description>
-		        </key>
-		        <key name="chat-disable-emote-animations" type="b">
-		          <default>false</default>
-		          <summary>Disable emote animations</summary>
-		          <description>Use static emote images to reduce CPU and GPU usage</description>
-		        </key>
-			</schema>
+        </key>
+        <key name="chat-pause-emotes" type="b">
+            <default>false</default>
+            <summary>Hide emotes on focus loss</summary>
+            <description
+            >Hide all emotes when the window loses focus to save resources</description>
+        </key>
+        <key name="chat-disable-emote-animations" type="b">
+            <default>false</default>
+            <summary>Disable emote animations</summary>
+            <description
+            >Use static emote images to reduce CPU and GPU usage</description>
+        </key>
+	</schema>
 </schemalist>
