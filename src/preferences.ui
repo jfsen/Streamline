@@ -24,9 +24,9 @@
                       <item translatable="yes">System</item>
                       <item translatable="yes">Light</item>
                       <item translatable="yes">Dark</item>
-                      <item translatable="yes">Bronze</item>
                       <item translatable="yes">Anthracite</item>
                       <item translatable="yes">Justin</item>
+                      <item translatable="yes">Oxide</item>
                     </items>
                   </object>
                 </property>

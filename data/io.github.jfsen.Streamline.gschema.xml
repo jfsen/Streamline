@@ -25,8 +25,8 @@
 			<default>'system'</default>
 			<summary>Theme</summary>
 			<description
-            >The application theme (system, light, dark, bronze, anthracite, justin)</description>
-		</key>
+            >The application theme (system, light, dark, anthracite, justin, oxide)</description>
+			</key>
 		<key name="low-latency" type="b">
 			<default>true</default>
 			<summary>Low latency mode</summary>

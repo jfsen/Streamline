@@ -5,8 +5,8 @@
     <file preprocess="xml-stripblanks">preferences.ui</file>
     <file preprocess="xml-stripblanks">vod_page.ui</file>
     <file>css/streamline.css</file>
-    <file>css/bronze.css</file>
     <file>css/anthracite.css</file>
     <file>css/justin.css</file>
+    <file>css/oxide.css</file>
   </gresource>
 </gresources>
