@@ -240,6 +240,17 @@ def _build_html(alternating_bg, dark, disable_emote_animations=False):
     return html
 
 
+def _to_js_positions(text, positions):
+    """Convert Python code-point positions to JavaScript UTF-16 code-unit
+    positions so ``text.substring(start, end)`` slices correctly."""
+    result = []
+    for start, end in positions:
+        js_start = len(text[:start].encode("utf-16-le")) // 2
+        js_end = len(text[: end + 1].encode("utf-16-le")) // 2 - 1
+        result.append((js_start, js_end))
+    return result
+
+
 class ChatPage(Adw.NavigationPage):
     """A read-only Twitch chat page using an IRC connection."""
 
@@ -469,6 +480,9 @@ class ChatPage(Adw.NavigationPage):
         emotes = list(msg["emotes"])
         if self._third_party_emotes:
             emotes.extend(self._third_party_emotes.find_emotes(msg["text"]))
+        # Convert Python code-point positions to JS UTF-16 code-unit positions
+        for em in emotes:
+            em["positions"] = _to_js_positions(msg["text"], em["positions"])
         self._msg_batch.append(
             (
                 msg["user"],
