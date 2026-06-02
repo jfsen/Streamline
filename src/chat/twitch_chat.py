@@ -45,12 +45,9 @@ _BADGES_RE = re.compile(r"badges=([^;]+)")
 class TwitchChat:
     """Connects to Twitch IRC and emits messages via a callback."""
 
-    def __init__(
-        self, channel, on_message, on_connected=None, prefer_static_emotes=False
-    ):
+    def __init__(self, channel, on_message, prefer_static_emotes=False):
         self._channel = channel.lstrip("#").lower()
         self._on_message = on_message
-        self._on_connected = on_connected
         self._prefer_static_emotes = prefer_static_emotes
         self._sock = None
         self._running = False
@@ -79,9 +76,6 @@ class TwitchChat:
             self._send_raw("JOIN", f"#{self._channel}")
             self._send_raw("CAP REQ", "twitch.tv/tags")
             logger.debug("Joined #%s", self._channel)
-
-            if self._on_connected:
-                GLib.idle_add(self._on_connected)
 
             buf = b""
             while self._running:

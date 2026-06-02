@@ -17,7 +17,6 @@ from .config import (
     CULL_CHUNK,
     FLUSH_MS,
     MAX_MESSAGES,
-    SUSPEND_WEB_TIMEOUT,
 )
 from .config import (
     STYLE as _CHAT_STYLE,
@@ -283,8 +282,6 @@ class ChatPage(Adw.NavigationPage):
         self._suspend_signal_id = None
         self._suspend_window = None
         self._suspend_scheduled = False
-        self._suspend_web_timeout_id = None
-        self._web_process_suspended = False
         self._twitch = twitch
         self._dark = theme != "light"
 
@@ -307,7 +304,6 @@ class ChatPage(Adw.NavigationPage):
             self._chat = TwitchChat(
                 streamer,
                 on_message=self._on_message,
-                on_connected=self._on_connected,
                 prefer_static_emotes=self._disable_emote_animations,
             )
             self._chat.start()
@@ -365,9 +361,6 @@ class ChatPage(Adw.NavigationPage):
         self.connect("hidden", self._on_hidden)
         self.connect("map", self._on_map)
 
-    def _on_connected(self):
-        logger.debug("Connected to chat for %s", self._streamer)
-
     def _on_theme_changed(self, style_manager, _pspec):
         """Re-inject CSS colors when dark/light mode changes."""
         if not self._webview:
@@ -409,58 +402,30 @@ class ChatPage(Adw.NavigationPage):
 
     def _on_suspend_changed(self, window, _pspec):
         """When the window is suspended (minimised or on a different workspace),
-        clear emote src attributes to free image memory. If it stays suspended
-        for 60 seconds, terminate the entire web process (~180 MB).
-        On resume, restore emotes or re-spawn the web process accordingly."""
+        clear emote src attributes to free image memory. On resume, restore them."""
         suspended = window.props.suspended
         logger.debug("Suspend changed: suspended=%s", suspended)
 
-        # Cancel any pending deep-suspend timeout on either transition
-        if self._suspend_web_timeout_id is not None:
-            GLib.source_remove(self._suspend_web_timeout_id)
-            self._suspend_web_timeout_id = None
-
         if suspended:
-            # Phase 1: immediately clear emote srcs to drop bitmap memory
             self._webview.evaluate_javascript(
                 "var imgs=document.querySelectorAll('img.emote');var n=0;for(var i=0;i<imgs.length;i++){if(imgs[i].src){imgs[i].dataset.src=imgs[i].src;imgs[i].src='';n++}};n",
                 -1,
                 None,
                 None,
                 None,
-                self._on_suspend_done,
-                ("emotes-cleared",),
-            )
-            # Phase 2: schedule deep-suspend after configured delay
-            self._suspend_web_timeout_id = GLib.timeout_add_seconds(
-                SUSPEND_WEB_TIMEOUT,
-                self._suspend_web_process,
+                None,
+                None,
             )
         else:
-            if self._web_process_suspended:
-                # Web process was killed — reload everything
-                self._resume_web_process()
-            else:
-                # Web process still alive — just restore emotes
-                self._webview.evaluate_javascript(
-                    "var imgs=document.querySelectorAll('img.emote');var n=0;for(var i=0;i<imgs.length;i++){if(!imgs[i].src&&imgs[i].dataset.src){imgs[i].src=imgs[i].dataset.src;n++}};n",
-                    -1,
-                    None,
-                    None,
-                    None,
-                    self._on_suspend_done,
-                    ("emotes-restored",),
-                )
-
-    def _on_suspend_done(self, source, result, action):
-        """Log the result of a suspend/resume JS evaluation."""
-        action = action[0] if isinstance(action, tuple) else action
-        try:
-            js_value = self._webview.evaluate_javascript_finish(result)
-            count = js_value.to_int32()
-            logger.debug("Suspend %s: %d emotes affected", action, count)
-        except Exception as e:
-            logger.debug("Suspend %s: could not read result (%s)", action, e)
+            self._webview.evaluate_javascript(
+                "var imgs=document.querySelectorAll('img.emote');var n=0;for(var i=0;i<imgs.length;i++){if(!imgs[i].src&&imgs[i].dataset.src){imgs[i].src=imgs[i].dataset.src;n++}};n",
+                -1,
+                None,
+                None,
+                None,
+                None,
+                None,
+            )
 
     def _on_message(self, msg):
         self._msg_count += 1
@@ -515,31 +480,6 @@ class ChatPage(Adw.NavigationPage):
         )
         return GLib.SOURCE_REMOVE
 
-    def _suspend_web_process(self):
-        """Terminate the web process to free ~180 MB. Called as a GLib timeout."""
-        self._suspend_web_timeout_id = None
-        if self._webview:
-            try:
-                self._webview.terminate_web_process()
-                self._web_process_suspended = True
-                logger.debug("Deep-suspended web process for %s", self._streamer)
-            except Exception:
-                pass
-        return GLib.SOURCE_REMOVE
-
-    def _resume_web_process(self):
-        """Reload HTML content to re-spawn the web process after deep suspend."""
-        if self._webview:
-            self._webview.load_html(
-                _build_html(
-                    self._alternating_bg,
-                    self._dark,
-                    self._disable_emote_animations,
-                ),
-                None,
-            )
-            self._web_process_suspended = False
-
     def cleanup(self):
         """Stop chat and release resources. Idempotent."""
         if self._style_manager is not None:
@@ -549,9 +489,6 @@ class ChatPage(Adw.NavigationPage):
             self._suspend_window.disconnect(self._suspend_signal_id)
             self._suspend_signal_id = None
             self._suspend_window = None
-        if self._suspend_web_timeout_id is not None:
-            GLib.source_remove(self._suspend_web_timeout_id)
-            self._suspend_web_timeout_id = None
         if self._batch_flush_id is not None:
             GLib.source_remove(self._batch_flush_id)
             self._flush_messages()

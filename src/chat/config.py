@@ -57,11 +57,6 @@ CULL_CHUNK = 100
 # cost of perceived latency.
 FLUSH_MS = 300
 
-# Seconds the window must remain suspended (minimised / on another
-# workspace) before the entire WebKit web process is killed to free
-# ~180 MB of memory.
-SUSPEND_WEB_TIMEOUT = 300
-
 # ── Emote caches ───────────────────────────────────────────
 #
 # Per-service, per-scope cache lifetimes in seconds.
