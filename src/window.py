@@ -29,12 +29,12 @@ import requests
 logger = logging.getLogger("Window")
 
 gi.require_version("Adw", "1")
+gi.require_version("Gio", "2.0")
 gi.require_version("Gtk", "4.0")
 
-from gi.repository import Adw, GLib, Gtk
+from gi.repository import Adw, Gio, GLib, Gtk
 
 from .chat.chat_page import ChatPage
-from .config import ConfigManager
 from .dialogs import StreamlineDialogs
 from .preferences import StreamlinePreferences
 from .rows import StreamerRowManager
@@ -59,12 +59,9 @@ class StreamlineWindow(Adw.ApplicationWindow):
 
         # ── Phase 1: fast setup so the window presents immediately ──
 
-        # Initialize config manager first
-        self.config_manager = ConfigManager()
-        self.config = self.config_manager.load()
-
-        # Initialize all attributes from config
-        self._initialize_from_config(self.config)
+        # Initialize GSettings and populate attributes
+        self.settings = Gio.Settings.new("io.github.jfsen.Streamline")
+        self._initialize_from_config()
 
         # Store CSS provider for theme overrides
         self._theme_css_provider = None
@@ -72,8 +69,9 @@ class StreamlineWindow(Adw.ApplicationWindow):
         # Get and store style manager reference
         self.style_manager = Adw.StyleManager.get_default()
 
-        # Apply the current theme (handles bronze via CSS, otherwise normal Adw)
+        # Apply the current theme and react to theme changes from bindings
         self._apply_theme()
+        self.settings.connect("changed::theme", lambda s, k: self._apply_theme())
 
         # Set minimum window size
         self.set_size_request(320, 400)
@@ -146,20 +144,22 @@ class StreamlineWindow(Adw.ApplicationWindow):
 
         return GLib.SOURCE_REMOVE
 
-    def _initialize_from_config(self, config):
-        """Initialize all attributes from config in one pass"""
-        self.client_id = config.get("twitch_client_id", "")
-        self.client_secret = config.get("twitch_client_secret", "")
-        self.player_type = config.get("player_type", "mpv")
-        self.custom_player_path = config.get("custom_player_path", "")
-        self.all_streamers = config.get("streamers", [])
-        self.stream_quality = config.get("stream_quality", "High")
-        self.custom_quality = config.get("custom_quality", "best")
-        self.theme = config.get("theme", "system")
-        self.low_latency = config.get("low_latency", True)
-        self.chat_alternating_bg = config.get("chat_alternating_bg", False)
-        self.chat_disable_emote_animations = config.get(
-            "chat_disable_emote_animations", False
+    def _initialize_from_config(self):
+        """Populate window attributes from GSettings."""
+        self.client_id = self.settings.get_string("twitch-client-id")
+        self.client_secret = self.settings.get_string("twitch-client-secret")
+        self.player_type = self.settings.get_string("player-type")
+        self.custom_player_path = self.settings.get_string("custom-player-path")
+        self.all_streamers = list(self.settings.get_value("streamers"))
+        self.stream_quality = self.settings.get_string("stream-quality")
+        self.custom_quality = self.settings.get_string("custom-quality")
+        self.theme = self.settings.get_string("theme")
+        self.low_latency = self.settings.get_boolean("low-latency")
+        self.chat_alternating_bg = self.settings.get_boolean(
+            "chat-alternating-background"
+        )
+        self.chat_disable_emote_animations = self.settings.get_boolean(
+            "chat-disable-emote-animations"
         )
 
     def _init_twitch_api(self):
@@ -253,6 +253,8 @@ class StreamlineWindow(Adw.ApplicationWindow):
         """Handle credentials submitted by user."""
         self.client_id = client_id
         self.client_secret = client_secret
+        self.settings.set_string("twitch-client-id", client_id)
+        self.settings.set_string("twitch-client-secret", client_secret)
         self.save_config()
         self._credentials_prompt_shown = False
         self._init_twitch_api()
@@ -359,7 +361,8 @@ class StreamlineWindow(Adw.ApplicationWindow):
 
     def _apply_theme(self):
         """Apply the current theme, including custom CSS themes if selected."""
-        logger.debug("Applying theme: %s", self.theme)
+        theme = self.settings.get_string("theme")
+        logger.debug("Applying theme: %s", theme)
         # Remove any previously applied custom theme CSS
         if self._theme_css_provider is not None:
             Gtk.StyleContext.remove_provider_for_display(
@@ -374,12 +377,12 @@ class StreamlineWindow(Adw.ApplicationWindow):
             "red": f"{_RESOURCE_BASE}/red.css",
         }
 
-        if self.theme in THEME_CSS:
+        if theme in THEME_CSS:
             self.style_manager.set_color_scheme(Adw.ColorScheme.FORCE_DARK)
-            self._load_theme_css(THEME_CSS[self.theme])
-        elif self.theme == "light":
+            self._load_theme_css(THEME_CSS[theme])
+        elif theme == "light":
             self.style_manager.set_color_scheme(Adw.ColorScheme.FORCE_LIGHT)
-        elif self.theme == "dark":
+        elif theme == "dark":
             self.style_manager.set_color_scheme(Adw.ColorScheme.FORCE_DARK)
         else:
             self.style_manager.set_color_scheme(Adw.ColorScheme.DEFAULT)
@@ -396,6 +399,7 @@ class StreamlineWindow(Adw.ApplicationWindow):
     def _handle_unfollow(self, dialog, response, streamer):
         """Handle unfollow action."""
         self.all_streamers.remove(streamer)
+        self.settings.set_value("streamers", GLib.Variant("as", self.all_streamers))
         self.save_config()
         self.remove_streamer_row(streamer)
 
@@ -451,6 +455,7 @@ class StreamlineWindow(Adw.ApplicationWindow):
             self.add_offline_streamer(name)
 
         if new_candidates:
+            self.settings.set_value("streamers", GLib.Variant("as", self.all_streamers))
             self.save_config()
 
         # Build a single consolidated toast.
@@ -488,21 +493,28 @@ class StreamlineWindow(Adw.ApplicationWindow):
             self.show_toast(_("Error: {}").format(str(e)), 4)
 
     def save_config(self):
-        """Save current configuration to file."""
-        config = self.config_manager.create_config_dict(self)
-        if not self.config_manager.save(config):
+        """Commit any pending GSettings changes to disk."""
+        try:
+            self.settings.apply()
+        except Exception as e:
+            logger.debug("Failed to save settings: %s", e)
             self.dialogs.show_error_dialog(
                 _("Error Saving Config"), _("Could not save configuration")
             )
 
     def show_preferences(self, *args):
-        """Show preferences dialog."""
+        """Show preferences dialog. Re-syncs cached attrs from GSettings on close,
+        since bindings in the dialog write directly to GSettings."""
         if not self._preferences:
             prefs = StreamlinePreferences(self)
-            prefs.connect("closed", lambda w: setattr(self, "_preferences", None))
+            prefs.connect("closed", self._on_preferences_closed)
             self._preferences = prefs
 
         self._preferences.present(self)
+
+    def _on_preferences_closed(self, dialog):
+        self._preferences = None
+        self._initialize_from_config()
 
     def show_shortcuts(self, *args):
         """Show keyboard shortcuts dialog."""

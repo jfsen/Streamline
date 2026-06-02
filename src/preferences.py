@@ -1,10 +1,15 @@
 import gettext
 import logging
 
-from gi.repository import Adw, GLib, Gtk
+from gi.repository import Adw, Gio, Gtk
 
 _ = gettext.gettext
 logger = logging.getLogger("Preferences")
+
+# Key-name lists for combo ↔ GSettings string mapping.
+_PLAYER_KEYS = ["mpv", "vlc", "custom"]
+_QUALITY_KEYS = ["High", "Medium", "Low", "Custom"]
+_THEME_KEYS = ["system", "light", "dark", "bronze", "anthracite", "red"]
 
 
 @Gtk.Template(resource_path="/io/github/jfsen/Streamline/preferences.ui")
@@ -31,150 +36,82 @@ class StreamlinePreferences(Adw.PreferencesDialog):
     chat_alternating_bg_switch = Gtk.Template.Child()
     chat_disable_emote_animations_switch = Gtk.Template.Child()
 
-    # Mapping of preset names to their stream quality strings
-    _QUALITY_KEYS = ("High", "Medium", "Low", "Custom")
-    _THEME_KEYS = ("system", "light", "dark", "bronze", "anthracite", "red")
-
     def __init__(self, parent, **kwargs):
         super().__init__(**kwargs)
         self.parent = parent
-        self._save_debounce_id = None
+        settings = parent.settings
 
-        # Build models
-        player_model = Gtk.StringList.new(["MPV", "VLC", _("Custom")])
-        quality_labels = (_("High"), _("Medium"), _("Low"), _("Custom"))
-        quality_model = Gtk.StringList.new(list(quality_labels))
-
-        # ── Set up all rows in one pass ──
-
-        # Player
-        self.player_row.set_model(player_model)
-        self._select_by_value(
-            self.player_row, ("mpv", "vlc", "custom"), parent.player_type
+        # ── Combo row models (labels only — values live in GSettings) ──
+        self.player_row.set_model(Gtk.StringList.new(["MPV", "VLC", _("Custom")]))
+        self.quality_row.set_model(
+            Gtk.StringList.new([_("High"), _("Medium"), _("Low"), _("Custom")])
         )
-        self.player_row.connect("notify::selected", self._on_player_changed)
 
-        self.custom_player_row.set_text(parent.custom_player_path)
-        self.custom_player_row.set_visible(parent.player_type == "custom")
-        self.custom_player_row.connect("notify::text", self._on_custom_path_changed)
+        # ── Combo rows — widget ↔ GSettings (manual two-way sync) ──
+        for key, row, keys in (
+            ("player-type", self.player_row, _PLAYER_KEYS),
+            ("stream-quality", self.quality_row, _QUALITY_KEYS),
+            ("theme", self.theme_row, _THEME_KEYS),
+        ):
+            # Widget → GSettings
+            row.connect(
+                "notify::selected",
+                self._on_combo_changed,
+                settings,
+                key,
+                keys,
+            )
+            # GSettings → widget (initial)
+            try:
+                row.set_selected(keys.index(settings.get_string(key)))
+            except ValueError:
+                row.set_selected(0)
 
-        # Quality
-        self.quality_row.set_model(quality_model)
-        self._select_by_value(
-            self.quality_row, self._QUALITY_KEYS, parent.stream_quality
-        )
-        self.quality_row.connect("notify::selected", self._on_quality_changed)
+        # ── Entry bindings (string ↔ string, direct match) ──
+        for key, row in (
+            ("custom-player-path", self.custom_player_row),
+            ("custom-quality", self.custom_quality_row),
+            ("twitch-client-id", self.client_id_row),
+            ("twitch-client-secret", self.client_secret_row),
+        ):
+            settings.bind(key, row, "text", Gio.SettingsBindFlags.DEFAULT)
 
-        self.custom_quality_row.set_text(parent.custom_quality)
-        self.custom_quality_row.set_visible(parent.stream_quality == "Custom")
-        self.custom_quality_row.connect("notify::text", self._on_custom_quality_changed)
+        # ── Switch bindings (boolean ↔ boolean, direct match) ──
+        for key, row in (
+            ("low-latency", self.low_latency_switch),
+            ("chat-alternating-background", self.chat_alternating_bg_switch),
+            (
+                "chat-disable-emote-animations",
+                self.chat_disable_emote_animations_switch,
+            ),
+        ):
+            settings.bind(key, row, "active", Gio.SettingsBindFlags.DEFAULT)
 
-        # Low latency
-        self.low_latency_switch.set_active(parent.low_latency)
-        self.low_latency_switch.connect("notify::active", self._on_low_latency_toggled)
+        # ── Conditional visibility (custom-path / custom-quality) ──
+        settings.connect("changed::player-type", self._sync_visibility)
+        settings.connect("changed::stream-quality", self._sync_visibility)
+        self._sync_visibility(settings, None)
 
-        # Export / Import
+        # ── Export / Import (non-settings functionality) ──
         self.export_button.connect("clicked", self._on_export_clicked)
         self.import_button.connect("clicked", self._on_import_clicked)
 
-        # Theme
-        self._select_by_value(self.theme_row, self._THEME_KEYS, parent.theme)
-        self.theme_row.connect("notify::selected", self._on_theme_changed)
-
-        # Account — credentials
-        self.client_id_row.set_text(parent.client_id)
-        self.client_id_row.connect("notify::text", self._on_client_id_changed)
-        self.client_secret_row.set_text(parent.client_secret)
-        self.client_secret_row.connect("notify::text", self._on_client_secret_changed)
-
-        # Chat
-        self.chat_alternating_bg_switch.set_active(parent.chat_alternating_bg)
-        self.chat_alternating_bg_switch.connect(
-            "notify::active", self._on_chat_alternating_bg_toggled
-        )
-        self.chat_disable_emote_animations_switch.set_active(
-            parent.chat_disable_emote_animations
-        )
-        self.chat_disable_emote_animations_switch.connect(
-            "notify::active", self._on_chat_disable_emote_animations_toggled
-        )
-
-    # ── Helpers ──────────────────────────────────────────────
+    # ── Visibility helpers ───────────────────────────────────
 
     @staticmethod
-    def _select_by_value(combo_row, values, current):
-        """Set combo row selection by matching a value string, defaulting to 0."""
-        try:
-            combo_row.set_selected(values.index(current))
-        except ValueError:
-            combo_row.set_selected(0)
-
-    def _debounced_save(self):
-        """Schedule a save after 300ms of inactivity on text fields."""
-        if self._save_debounce_id:
-            GLib.source_remove(self._save_debounce_id)
-        self._save_debounce_id = GLib.timeout_add(300, self._do_save)
-
-    def _do_save(self):
-        """Actually persist the config."""
-        self.parent.save_config()
-        self._save_debounce_id = None
-        return GLib.SOURCE_REMOVE
-
-    def _on_player_changed(self, row, *_):
-        types = ("mpv", "vlc", "custom")
+    def _on_combo_changed(row, _pspec, settings, key, keys):
+        """Widget → GSettings: write combo selection back to the schema."""
         idx = row.get_selected()
-        if idx < 0 or idx >= len(types):
-            return
-        selected = types[idx]
-        self.parent.player_type = selected
-        self.custom_player_row.set_visible(selected == "custom")
-        self.parent.save_config()
+        if 0 <= idx < len(keys):
+            settings.set_string(key, keys[idx])
 
-    def _on_custom_path_changed(self, row, *_):
-        self.parent.custom_player_path = row.get_text()
-        self._debounced_save()
-
-    def _on_quality_changed(self, row, *_):
-        idx = row.get_selected()
-        if idx < 0 or idx >= len(self._QUALITY_KEYS):
-            return
-        selected = self._QUALITY_KEYS[idx]
-        self.parent.stream_quality = selected
-        self.custom_quality_row.set_visible(selected == "Custom")
-        self.parent.save_config()
-
-    def _on_custom_quality_changed(self, entry, *_):
-        self.parent.custom_quality = entry.get_text()
-        self._debounced_save()
-
-    def _on_low_latency_toggled(self, switch_row, *_):
-        self.parent.low_latency = switch_row.get_active()
-        self.parent.save_config()
-
-    def _on_theme_changed(self, row, *_):
-        idx = row.get_selected()
-        if idx < 0 or idx >= len(self._THEME_KEYS):
-            return
-        self.parent.theme = self._THEME_KEYS[idx]
-        self.parent._apply_theme()
-        self.parent.save_config()
-
-    def _on_client_id_changed(self, entry, *_):
-        self.parent.client_id = entry.get_text()
-        self._debounced_save()
-
-    def _on_client_secret_changed(self, entry, *_):
-        self.parent.client_secret = entry.get_text()
-        self._debounced_save()
-
-    def _on_chat_alternating_bg_toggled(self, switch, *_):
-        self.parent.chat_alternating_bg = switch.get_active()
-        self.parent.save_config()
-
-    def _on_chat_disable_emote_animations_toggled(self, switch, *_):
-        self.parent.chat_disable_emote_animations = switch.get_active()
-        self.parent.save_config()
+    def _sync_visibility(self, settings, _key):
+        self.custom_player_row.set_visible(
+            settings.get_string("player-type") == "custom"
+        )
+        self.custom_quality_row.set_visible(
+            settings.get_string("stream-quality") == "Custom"
+        )
 
     # ── Export streamers ─────────────────────────────────────
 

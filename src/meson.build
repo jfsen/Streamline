@@ -37,7 +37,6 @@ streamline_sources = [
     'stream_player.py',
     'vod_page.py',
     'dialogs.py',
-    'config.py',
     'rows.py',
 
 ]
