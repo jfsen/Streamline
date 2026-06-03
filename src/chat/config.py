@@ -19,10 +19,6 @@ STYLE = {
     # --- body --------------------------------------------------------
     "body_padding_top": "4px",
     "body_padding_horiz": "8px",
-    # --- auto-scroll -------------------------------------------------
-    # Distance (px) from the bottom at which the view is considered
-    # “at the bottom” and new messages auto-scroll.
-    "scroll_threshold": 30,
     # --- colour palettes (dark / light) ------------------------------
     "dark": {
         "text_color": "#dedede",

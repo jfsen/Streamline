@@ -56,7 +56,6 @@ BADGE_SVGS
 <div id="chat"></div>
 <script>
 var _moreMsg = MORE_MSG;
-var _scrollThresh = SCROLL_THRESH;
 var _maxMsgs = MAX_MSGS;
 var _cullChunk = CULL_CHUNK;
 
@@ -94,8 +93,7 @@ function clampColor(hex, dark) {
   var paused = false;
 
   window.addEventListener('scroll', function() {
-    var atBottom = window.innerHeight + window.scrollY >= document.body.scrollHeight - _scrollThresh;
-    if (atBottom) {
+    if (window.innerHeight + window.scrollY >= document.body.scrollHeight) {
       paused = false;
       var btn = document.getElementById('more-msg');
       if (btn) btn.style.display = 'none';
@@ -104,27 +102,28 @@ function clampColor(hex, dark) {
 
   // ── Pause auto-scroll on any explicit user gesture ───────
   function _pauseOnInteraction() {
+    // Don't pause if we're already at the bottom (avoid overscroll false-positives)
+    if (window.innerHeight + window.scrollY >= document.body.scrollHeight) return;
     paused = true;
-    // Show the "More messages below" banner if we're not at the bottom
-    var atBottom = window.innerHeight + window.scrollY >= document.body.scrollHeight - _scrollThresh;
-    if (!atBottom) {
-      var btn = document.getElementById('more-msg');
-      if (!btn) {
-        btn = document.createElement('div');
-        btn.id = 'more-msg';
-        btn.textContent = _moreMsg;
-        btn.onclick = function() {
-          paused = false;
-          window.scrollTo(0, document.body.scrollHeight);
-        };
-        document.body.appendChild(btn);
-      }
-      btn.style.display = 'block';
+    var btn = document.getElementById('more-msg');
+    if (!btn) {
+      btn = document.createElement('div');
+      btn.id = 'more-msg';
+      btn.textContent = _moreMsg;
+      btn.onclick = function() {
+        paused = false;
+        window.scrollTo(0, document.body.scrollHeight);
+      };
+      document.body.appendChild(btn);
     }
+    btn.style.display = 'block';
   }
   document.addEventListener('wheel', _pauseOnInteraction, {passive: true});
   document.addEventListener('touchstart', _pauseOnInteraction, {passive: true});
   document.addEventListener('pointerdown', _pauseOnInteraction, {passive: true});
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'ArrowUp') _pauseOnInteraction();
+  }, {passive: true});
 
   // Debounced scroll-to-bottom: at most one layout read+write per frame.
   // Called explicitly after message appends, image loads, and culling.
@@ -259,7 +258,6 @@ def _build_html(alternating_bg, dark, disable_emote_animations=False):
     html = html.replace("BANNERFONT", s["banner_font"])
     html = html.replace("BANNERPAD", s["banner_padding"])
     html = html.replace("MORE_MSG", json.dumps(_("More messages below")))
-    html = html.replace("SCROLL_THRESH", str(s["scroll_threshold"]))
     html = html.replace("MAX_MSGS", str(MAX_MESSAGES))
     html = html.replace("CULL_CHUNK", str(CULL_CHUNK))
     html = html.replace("BODYCLASS", "dark" if dark else "light")
