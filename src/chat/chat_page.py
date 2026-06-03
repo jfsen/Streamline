@@ -99,8 +99,15 @@ function clampColor(hex, dark) {
       paused = false;
       var btn = document.getElementById('more-msg');
       if (btn) btn.style.display = 'none';
-    } else if (!paused) {
-      paused = true;
+    }
+  });
+
+  // ── Pause auto-scroll on any explicit user gesture ───────
+  function _pauseOnInteraction() {
+    paused = true;
+    // Show the "More messages below" banner if we're not at the bottom
+    var atBottom = window.innerHeight + window.scrollY >= document.body.scrollHeight - _scrollThresh;
+    if (!atBottom) {
       var btn = document.getElementById('more-msg');
       if (!btn) {
         btn = document.createElement('div');
@@ -114,7 +121,10 @@ function clampColor(hex, dark) {
       }
       btn.style.display = 'block';
     }
-  });
+  }
+  document.addEventListener('wheel', _pauseOnInteraction, {passive: true});
+  document.addEventListener('touchstart', _pauseOnInteraction, {passive: true});
+  document.addEventListener('pointerdown', _pauseOnInteraction, {passive: true});
 
   // Debounced scroll-to-bottom: at most one layout read+write per frame.
   // Called explicitly after message appends, image loads, and culling.
@@ -126,12 +136,6 @@ function clampColor(hex, dark) {
       _scrollRaf = 0;
     });
   }
-  // Capture-phase listener: image loads can grow height after the message
-  // was appended, so re-scroll when any <img> finishes loading.
-  chat.addEventListener('load', function(e) {
-    if (e.target.tagName === 'IMG') _scrollToBottom();
-  }, true);
-
   // Always hide emotes when scrolled out of view
   var io = new IntersectionObserver(function(entries) {
     entries.forEach(function(e) {
