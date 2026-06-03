@@ -51,7 +51,7 @@ _HTML = """<!DOCTYPE html>
     border-top: 1px solid transparent;
   }
   ROWCSS
-</style></head><body>
+</style></head><body class="BODYCLASS">
 BADGE_SVGS
 <div id="chat"></div>
 <script>
@@ -59,6 +59,36 @@ var _moreMsg = MORE_MSG;
 var _scrollThresh = SCROLL_THRESH;
 var _maxMsgs = MAX_MSGS;
 var _cullChunk = CULL_CHUNK;
+
+// ── HSL colour utilities for legible user names ────────────
+function hexToHSL(hex) {
+  var r = parseInt(hex.slice(1,3),16)/255, g = parseInt(hex.slice(3,5),16)/255, b = parseInt(hex.slice(5,7),16)/255;
+  var max = Math.max(r,g,b), min = Math.min(r,g,b), l = (max+min)/2;
+  if (max === min) return {h:0, s:0, l:l};
+  var d = max - min, s = l > 0.5 ? d/(2-max-min) : d/(max+min);
+  var h;
+  if (max === r) h = ((g-b)/d + (g<b ? 6 : 0)) / 6;
+  else if (max === g) h = ((b-r)/d + 2) / 6;
+  else h = ((r-g)/d + 4) / 6;
+  return {h:h, s:s, l:l};
+}
+function hslToHex(h,s,l) {
+  var c = (1 - Math.abs(2*l-1)) * s, x = c * (1 - Math.abs((h*6)%2-1)), m = l - c/2;
+  var r,g,b;
+  if (h < 1/6) {r=c;g=x;b=0}
+  else if (h < 2/6) {r=x;g=c;b=0}
+  else if (h < 3/6) {r=0;g=c;b=x}
+  else if (h < 4/6) {r=0;g=x;b=c}
+  else if (h < 5/6) {r=x;g=0;b=c}
+  else {r=c;g=0;b=x}
+  return '#' + [r,g,b].map(function(v){return Math.round((v+m)*255).toString(16).padStart(2,'0')}).join('');
+}
+function clampColor(hex, dark) {
+  var hsl = hexToHSL(hex);
+  hsl.l = dark ? Math.max(hsl.l, 0.78) : Math.min(hsl.l, 0.28);
+  return hslToHex(hsl.h, hsl.s, hsl.l);
+}
+
 (function() {
   var chat = document.getElementById('chat');
   var paused = false;
@@ -143,8 +173,9 @@ var _cullChunk = CULL_CHUNK;
       }
     }
 
-    // User name
-    html += '<span class="user" style="color:' + color + '">' + _esc(user) + (action ? '' : ':') + '</span>';
+    // User name (clamp colour for legibility, store original for theme-switching)
+    var clamped = clampColor(color, document.body.classList.contains('dark'));
+    html += '<span class="user" data-original-color="' + color + '" style="color:' + clamped + '">' + _esc(user) + (action ? '' : ':') + '</span>';
 
     // Message body: interleave emote <img> tags with text <span> segments
     if (emotes && emotes.length) {
@@ -227,6 +258,7 @@ def _build_html(alternating_bg, dark, disable_emote_animations=False):
     html = html.replace("SCROLL_THRESH", str(s["scroll_threshold"]))
     html = html.replace("MAX_MSGS", str(MAX_MESSAGES))
     html = html.replace("CULL_CHUNK", str(CULL_CHUNK))
+    html = html.replace("BODYCLASS", "dark" if dark else "light")
     html = html.replace("BADGE_SVGS", _badge_svg_defs())
     if alternating_bg:
         html = html.replace(
@@ -362,7 +394,7 @@ class ChatPage(Adw.NavigationPage):
         self.connect("map", self._on_map)
 
     def _on_theme_changed(self, style_manager, _pspec):
-        """Re-inject CSS colors when dark/light mode changes."""
+        """Re-inject CSS colors and re-clamp user name colours when dark/light mode changes."""
         if not self._webview:
             return
         dark = style_manager.get_dark()
@@ -381,6 +413,13 @@ class ChatPage(Adw.NavigationPage):
                 f"if(old)old.remove();"
                 f"document.head.appendChild(s);"
             )
+        # Update body class and re-clamp all existing user name colours
+        js += (
+            f"document.body.className='{'dark' if dark else 'light'}';"
+            f"document.querySelectorAll('.user').forEach(function(el){{"
+            f"  el.style.color = clampColor(el.dataset.originalColor, {'true' if dark else 'false'});"
+            f"}});"
+        )
         self._webview.evaluate_javascript(js, -1, None, None, None, None, None)
 
     def _on_map(self, _widget):
