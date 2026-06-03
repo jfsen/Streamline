@@ -284,6 +284,25 @@
                     });
                 });
 
+                // ── _cullOldest ─────────────────────────────────────────
+                // DOM culling entry point — called from Python via
+                // evaluate_javascript().  Removes the oldest `count`
+                // .msg rows, unobserving each from the IntersectionObserver
+                // first so they don't leak.  Adjusts scroll position to
+                // prevent visual jumps.
+
+                window._cullOldest = function (count) {
+                    var c = document.getElementById("chat");
+                    var rh = 0; // removed height (scroll compensation)
+                    for (var i = 0; i < count && c.firstChild; i++) {
+                        rh += c.firstChild.offsetHeight || 0;
+                        io.unobserve(c.firstChild);
+                        c.removeChild(c.firstChild);
+                    }
+                    window.scrollTo(0, Math.max(0, window.scrollY - rh));
+                    _scrollToBottom();
+                };
+
                 // ── _esc ────────────────────────────────────────────────
                 // Minimal HTML entity escaping for user-supplied text
                 // (names and message bodies).
