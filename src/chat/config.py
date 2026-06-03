@@ -46,11 +46,11 @@ STYLE = {
 # Consumers:  chat_page.py  (all four),  emotes.py  (CACHE_TTL)
 
 # Messages beyond this count trigger culling from the DOM.
-MAX_MESSAGES = 500
+MAX_MESSAGES = 750
 
 # Number of oldest messages removed in one pass when MAX_MESSAGES
 # is exceeded.
-CULL_CHUNK = 100
+CULL_CHUNK = 50
 
 # Incoming messages are batched for this many milliseconds before
 # a single DOM injection.  Higher values improve throughput at the

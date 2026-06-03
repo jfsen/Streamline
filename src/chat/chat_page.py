@@ -471,7 +471,7 @@ class ChatPage(Adw.NavigationPage):
         if self._msg_count > MAX_MESSAGES:
             self._msg_count -= CULL_CHUNK
             self._webview.evaluate_javascript(
-                f"var c=document.getElementById('chat');for(var i=0;i<{CULL_CHUNK}&&c.firstChild;i++)c.removeChild(c.firstChild);_scrollToBottom()",
+                f"var c=document.getElementById('chat');var rh=0;for(var i=0;i<{CULL_CHUNK}&&c.firstChild;i++){{rh+=c.firstChild.offsetHeight||0;c.removeChild(c.firstChild);}}window.scrollTo(0,Math.max(0,window.scrollY-rh));_scrollToBottom()",
                 -1,
                 None,
                 None,
