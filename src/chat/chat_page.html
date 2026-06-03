@@ -1,0 +1,425 @@
+<!doctype html>
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <!--
+          Placeholder tokens (e.g. COLORTEXT, FONTSIZE, ROWCSS) are replaced at
+          runtime by chat_page._build_html() in Python.  The template should not
+          be valid HTML / CSS until that replacement happens.
+        -->
+        <style>
+            /*
+             * Force the system's Noto Color Emoji font for Unicode emoji
+             * codepoints (distinct from <img>-based Twitch/third-party emotes).
+             * The unicode-range covers the Common Variant Selectors (ZWJ, VS16)
+             * plus all current emoji blocks.
+             */
+            @font-face {
+                font-family: 'Emoji';
+                src: local('Noto Color Emoji');
+                unicode-range:
+                    U+200D,
+                    U+FE0F,
+                    U+231A-231B,
+                    U+2328,
+                    U+23CF,
+                    U+23E9-23FA,
+                    U+2600-27BF,
+                    U+1F300-1FAFF;
+            }
+
+            body {
+                margin: 0;
+                padding: BODYTOPPAD 0;
+                background: transparent;
+                font: FONTSIZE FONTFAMILY;
+                overflow-wrap: break-word;
+                color: COLORTEXT;
+            }
+
+            .msg {
+                padding: ROWPAD BODYHORIZPAD;
+                line-height: LINEHEIGHT;
+                contain: layout style paint;   /* isolate each row for layout performance */
+            }
+
+            .user {
+                font-weight: USERWEIGHT;
+                margin-right: USERMARGIN;
+            }
+
+            .badge {
+                display: inline-block;
+                vertical-align: middle;
+                margin-right: 2px;
+                pointer-events: bounding-box;
+                contain: layout style paint;
+            }
+
+            .emote {
+                vertical-align: middle;
+            }
+
+            /* "More messages below" banner — fixed to the bottom of the viewport */
+            #more-msg {
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                padding: BANNERPAD;
+                text-align: center;
+                z-index: 99;
+                font: BANNERFONT;
+                cursor: pointer;
+                background: COLORBANNERBG;
+                color: COLORBANNERFG;
+                border-top: 1px solid transparent;
+            }
+
+            ROWCSS
+        </style>
+    </head>
+
+    <body class="BODYCLASS">
+        BADGE_SVGS
+        <div id="chat"></div>
+
+        <script>
+            // Localised banner text, injected by Python's gettext.
+            var _moreMsg = MORE_MSG;
+
+            // ─────────────────────────────────────────────────────────────
+            //  HSL colour utilities — used to clamp Twitch username colours
+            //  so they remain legible against both dark and light backgrounds.
+            // ─────────────────────────────────────────────────────────────
+
+            function hexToHSL(hex) {
+                // Normalise 0-255, find min / max / lightness.
+                var r = parseInt(hex.slice(1, 3), 16) / 255,
+                    g = parseInt(hex.slice(3, 5), 16) / 255,
+                    b = parseInt(hex.slice(5, 7), 16) / 255;
+
+                var max = Math.max(r, g, b),
+                    min = Math.min(r, g, b),
+                    l = (max + min) / 2;
+
+                if (max === min) return { h: 0, s: 0, l: l }; // achromatic (gray)
+
+                var d = max - min,
+                    s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+
+                // Hue is derived from whichever RGB channel is dominant.
+                var h;
+                if (max === r)
+                    h = ((g - b) / d + (g < b ? 6 : 0)) / 6; // red dominant
+                else if (max === g)
+                    h = ((b - r) / d + 2) / 6; // green dominant
+                else h = ((r - g) / d + 4) / 6; // blue dominant
+
+                return { h: h, s: s, l: l };
+            }
+
+            function hslToHex(h, s, l) {
+                // Standard HSL → RGB algorithm.
+                var c = (1 - Math.abs(2 * l - 1)) * s,
+                    x = c * (1 - Math.abs(((h * 6) % 2) - 1)),
+                    m = l - c / 2;
+
+                var r, g, b;
+                if (h < 1 / 6) {
+                    r = c;
+                    g = x;
+                    b = 0;
+                } else if (h < 2 / 6) {
+                    r = x;
+                    g = c;
+                    b = 0;
+                } else if (h < 3 / 6) {
+                    r = 0;
+                    g = c;
+                    b = x;
+                } else if (h < 4 / 6) {
+                    r = 0;
+                    g = x;
+                    b = c;
+                } else if (h < 5 / 6) {
+                    r = x;
+                    g = 0;
+                    b = c;
+                } else {
+                    r = c;
+                    g = 0;
+                    b = x;
+                }
+
+                return (
+                    "#" +
+                    [r, g, b]
+                        .map(function (v) {
+                            return Math.round((v + m) * 255)
+                                .toString(16)
+                                .padStart(2, "0");
+                        })
+                        .join("")
+                );
+            }
+
+            function clampColor(hex, dark) {
+                // Clamp lightness so the name is always readable against the
+                // current background: ≥78% L for dark themes, ≤28% L for light.
+                var hsl = hexToHSL(hex);
+                hsl.l = dark ? Math.max(hsl.l, 0.78) : Math.min(hsl.l, 0.28);
+                return hslToHex(hsl.h, hsl.s, hsl.l);
+            }
+
+            // ─────────────────────────────────────────────────────────────
+            //  Main IIFE — sets up auto-scroll behaviour, emote culling,
+            //  message rendering, and the public window.chat() API used by
+            //  the Python side via evaluate_javascript().
+            // ─────────────────────────────────────────────────────────────
+
+            (function () {
+                var chat = document.getElementById("chat");
+                var paused = false; // true when the user has scrolled up
+
+                // ── scroll event ────────────────────────────────────────
+                // When the viewport reaches the absolute bottom (whether via
+                // user scroll or programmatic scroll from _scrollToBottom /
+                // banner click), clear the paused state and hide the banner.
+
+                window.addEventListener("scroll", function () {
+                    if (
+                        window.innerHeight + window.scrollY >=
+                        document.body.scrollHeight
+                    ) {
+                        paused = false;
+                        var btn = document.getElementById("more-msg");
+                        if (btn) btn.style.display = "none";
+                    }
+                });
+
+                // ── _pauseOnInteraction ─────────────────────────────────
+                // Called on any explicit user gesture (wheel, touch, pointer,
+                // mouse-down, arrow-up key).  Sets the paused state and shows
+                // the "More messages below" banner — unless the user is
+                // already at the absolute bottom (avoids overscroll triggers).
+
+                function _pauseOnInteraction() {
+                    if (
+                        window.innerHeight + window.scrollY >=
+                        document.body.scrollHeight
+                    )
+                        return;
+
+                    paused = true;
+
+                    var btn = document.getElementById("more-msg");
+                    if (!btn) {
+                        btn = document.createElement("div");
+                        btn.id = "more-msg";
+                        btn.textContent = _moreMsg;
+                        btn.onclick = function () {
+                            paused = false;
+                            window.scrollTo(0, document.body.scrollHeight);
+                        };
+                        document.body.appendChild(btn);
+                    }
+                    btn.style.display = "block";
+                }
+
+                document.addEventListener("wheel", _pauseOnInteraction, {
+                    passive: true,
+                });
+                document.addEventListener("touchstart", _pauseOnInteraction, {
+                    passive: true,
+                });
+                document.addEventListener("pointerdown", _pauseOnInteraction, {
+                    passive: true,
+                });
+                document.addEventListener("mousedown", _pauseOnInteraction, {
+                    passive: true,
+                });
+                document.addEventListener(
+                    "keydown",
+                    function (e) {
+                        if (e.key === "ArrowUp") _pauseOnInteraction();
+                    },
+                    { passive: true },
+                );
+
+                // ── _scrollToBottom ─────────────────────────────────────
+                // Debounced (one layout read + write per frame) scroll to
+                // the bottom.  Skips if paused or already pending.
+                // Called after message appends, image loads, and DOM culling.
+
+                var _scrollRaf = 0;
+                function _scrollToBottom() {
+                    if (paused || _scrollRaf) return;
+                    _scrollRaf = requestAnimationFrame(function () {
+                        window.scrollTo(0, document.body.scrollHeight);
+                        _scrollRaf = 0;
+                    });
+                }
+
+                // ── Emote lazy-loading ──────────────────────────────────
+                // Emote <img> tags are unloaded (src → data-src) when they
+                // scroll out of view to save memory; restored on re-entry.
+
+                var io = new IntersectionObserver(function (entries) {
+                    entries.forEach(function (e) {
+                        e.target
+                            .querySelectorAll("img.emote")
+                            .forEach(function (img) {
+                                if (e.isIntersecting) {
+                                    if (img.dataset.src) {
+                                        img.src = img.dataset.src;
+                                    }
+                                } else {
+                                    if (img.src) {
+                                        img.dataset.src = img.src;
+                                        img.src = "";
+                                    }
+                                }
+                            });
+                    });
+                });
+
+                // ── _esc ────────────────────────────────────────────────
+                // Minimal HTML entity escaping for user-supplied text
+                // (names and message bodies).
+
+                function _esc(s) {
+                    return s
+                        .replace(/&/g, "&amp;")
+                        .replace(/</g, "&lt;")
+                        .replace(/>/g, "&gt;")
+                        .replace(/"/g, "&quot;");
+                }
+
+                // ── _badgeHTML ──────────────────────────────────────────
+                // Cached badge <svg> fragments — each [id, display] pair
+                // is built once and reused.
+
+                var _badgeTpl = {};
+                function _badgeHTML(id, display) {
+                    var key = id + "|" + display;
+                    if (!_badgeTpl[key]) {
+                        _badgeTpl[key] =
+                            '<svg class="badge" width="18" height="18">' +
+                            "<title>" +
+                            display +
+                            "</title>" +
+                            '<use href="#badge-' +
+                            id +
+                            '"/>' +
+                            "</svg>";
+                    }
+                    return _badgeTpl[key];
+                }
+
+                // ── window.chat ─────────────────────────────────────────
+                // Public API called from Python via evaluate_javascript().
+                // Builds a .msg row consisting of: badges, a colour-clamped
+                // username, and the message text interleaved with <img> emotes.
+
+                window.chat = function (
+                    user,
+                    text,
+                    color,
+                    emotes,
+                    badges,
+                    action,
+                ) {
+                    var html =
+                        '<div class="msg"' +
+                        (action ? ' style="font-style:italic"' : "") +
+                        ">";
+
+                    // Badges (broadcaster, moderator, VIP, …)
+                    if (badges && badges.length) {
+                        for (var bi = 0; bi < badges.length; bi++) {
+                            html += _badgeHTML(badges[bi][1], badges[bi][0]);
+                        }
+                    }
+
+                    // Username — clamp colour for legibility against the
+                    // current background.  Store the original colour in a
+                    // data-attribute so _on_theme_changed() (Python) can
+                    // re-clamp all names in-place when the theme toggles.
+                    var clamped = clampColor(
+                        color,
+                        document.body.classList.contains("dark"),
+                    );
+                    html +=
+                        '<span class="user"' +
+                        ' data-original-color="' +
+                        color +
+                        '"' +
+                        ' style="color:' +
+                        clamped +
+                        '">' +
+                        _esc(user) +
+                        (action ? "" : ":") +
+                        "</span>";
+
+                    // Message body — interleave emote <img> elements with
+                    // text <span> segments based on positional map built
+                    // from the Python-side emote data.
+                    if (emotes && emotes.length) {
+                        // Build a fast lookup: byte offset → emote info.
+                        var pm = {};
+                        for (var ei = 0; ei < emotes.length; ei++) {
+                            var em = emotes[ei];
+                            for (var pi = 0; pi < em.positions.length; pi++) {
+                                var pos = em.positions[pi];
+                                pm[pos[0]] = {
+                                    end: pos[1],
+                                    url: em.url,
+                                    name: em.name,
+                                    source: em.source,
+                                };
+                            }
+                        }
+                        var i = 0,
+                            n = text.length;
+                        while (i < n) {
+                            if (pm[i]) {
+                                var ed = pm[i];
+                                html +=
+                                    '<img class="emote"' +
+                                    ' src="' +
+                                    ed.url +
+                                    '"' +
+                                    ' title="' +
+                                    _esc(
+                                        (ed.name || "Emote") +
+                                            " (" +
+                                            (ed.source || "?") +
+                                            ")",
+                                    ) +
+                                    '"' +
+                                    ">";
+                                i = ed.end + 1; // skip past the emote codepoints
+                            } else {
+                                var end = i;
+                                while (end < n && !pm[end]) end++;
+                                html +=
+                                    '<span class="text">' +
+                                    _esc(text.substring(i, end)) +
+                                    "</span>";
+                                i = end;
+                            }
+                        }
+                    } else {
+                        html += '<span class="text">' + _esc(text) + "</span>";
+                    }
+
+                    html += "</div>";
+                    chat.insertAdjacentHTML("beforeend", html);
+                    io.observe(chat.lastElementChild); // track for lazy unloading
+                    _scrollToBottom();
+                };
+            })();
+        </script>
+    </body>
+</html>
