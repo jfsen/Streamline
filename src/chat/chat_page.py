@@ -243,33 +243,33 @@ def _build_html(alternating_bg, dark, disable_emote_animations=False):
     """Build the chat HTML with theme-aware colors."""
     s = _CHAT_STYLE
     theme = s["dark"] if dark else s["light"]
-    html = _HTML
-    html = html.replace("COLORTEXT", theme["text_color"])
-    html = html.replace("COLORBANNERBG", theme["banner_bg"])
-    html = html.replace("COLORBANNERFG", theme["banner_fg"])
-    html = html.replace("FONTSIZE", s["font_size"])
-    html = html.replace("FONTFAMILY", s["font_family"])
-    html = html.replace("BODYTOPPAD", s["body_padding_top"])
-    html = html.replace("BODYHORIZPAD", s["body_padding_horiz"])
-    html = html.replace("ROWPAD", s["row_padding"])
-    html = html.replace("LINEHEIGHT", s["line_height"])
-    html = html.replace("USERWEIGHT", s["user_weight"])
-    html = html.replace("USERMARGIN", s["user_margin"])
-    html = html.replace("BANNERFONT", s["banner_font"])
-    html = html.replace("BANNERPAD", s["banner_padding"])
-    html = html.replace("MORE_MSG", json.dumps(_("More messages below")))
-    html = html.replace("MAX_MSGS", str(MAX_MESSAGES))
-    html = html.replace("CULL_CHUNK", str(CULL_CHUNK))
-    html = html.replace("BODYCLASS", "dark" if dark else "light")
-    html = html.replace("BADGE_SVGS", _badge_svg_defs())
+    page = _HTML
+    page = page.replace("COLORTEXT", theme["text_color"])
+    page = page.replace("COLORBANNERBG", theme["banner_bg"])
+    page = page.replace("COLORBANNERFG", theme["banner_fg"])
+    page = page.replace("FONTSIZE", s["font_size"])
+    page = page.replace("FONTFAMILY", s["font_family"])
+    page = page.replace("BODYTOPPAD", s["body_padding_top"])
+    page = page.replace("BODYHORIZPAD", s["body_padding_horiz"])
+    page = page.replace("ROWPAD", s["row_padding"])
+    page = page.replace("LINEHEIGHT", s["line_height"])
+    page = page.replace("USERWEIGHT", s["user_weight"])
+    page = page.replace("USERMARGIN", s["user_margin"])
+    page = page.replace("BANNERFONT", s["banner_font"])
+    page = page.replace("BANNERPAD", s["banner_padding"])
+    page = page.replace("MORE_MSG", json.dumps(_("More messages below")))
+    page = page.replace("MAX_MSGS", str(MAX_MESSAGES))
+    page = page.replace("CULL_CHUNK", str(CULL_CHUNK))
+    page = page.replace("BODYCLASS", "dark" if dark else "light")
+    page = page.replace("BADGE_SVGS", _badge_svg_defs())
     if alternating_bg:
-        html = html.replace(
+        page = page.replace(
             "ROWCSS",
             f".msg:nth-child(even) {{ background: {theme['row_color']}; }}",
         )
     else:
-        html = html.replace("ROWCSS", "")
-    return html
+        page = page.replace("ROWCSS", "")
+    return page
 
 
 def _to_js_positions(text, positions):
