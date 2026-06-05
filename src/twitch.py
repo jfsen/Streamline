@@ -76,6 +76,45 @@ class TwitchAPI:
         ):
             self._get_access_token()
 
+    def _invalidate_token(self):
+        """Invalidate the cached token so the next request fetches a fresh one."""
+        self.access_token = None
+        self.token_expires_at = None
+        self._token_loaded = False
+        try:
+            self._get_token_cache_path().unlink(missing_ok=True)
+            logger.debug("Invalidated cached token")
+        except OSError:
+            pass
+
+    def _request_with_auth(self, method, url, **kwargs):
+        """Make an authenticated request, retrying once if the token has been
+        invalidated server-side (401)."""
+        self._ensure_access_token()
+        headers = kwargs.pop("headers", {})
+        headers["Client-ID"] = self.client_id
+        headers["Authorization"] = f"Bearer {self.access_token}"
+
+        for attempt in range(2):
+            try:
+                response = requests.request(method, url, headers=headers, **kwargs)
+                response.raise_for_status()
+                return response
+            except requests.exceptions.HTTPError as e:
+                if (
+                    e.response is not None
+                    and e.response.status_code == 401
+                    and attempt == 0
+                ):
+                    logger.debug("Token rejected (401), refreshing and retrying...")
+                    self._invalidate_token()
+                    self._ensure_access_token()
+                    headers["Authorization"] = f"Bearer {self.access_token}"
+                    continue
+                raise
+            except requests.exceptions.RequestException:
+                raise
+
     @property
     def user_cache(self):
         """Lazy-loaded combined cache of user IDs and names."""
@@ -239,16 +278,8 @@ class TwitchAPI:
                 cached_data["online"],
             )
 
-        # Only get access token if we need to make API calls
-        self._ensure_access_token()
-
         start_time = time()
         logger.debug("Fetching streams for %s users", len(usernames))
-
-        headers = {
-            "Client-ID": self.client_id,
-            "Authorization": f"Bearer {self.access_token}",
-        }
 
         online_streamers = []
         offline_streamers = []
@@ -261,10 +292,9 @@ class TwitchAPI:
             url = f"{TWITCH_API_BASE}/streams?user_login={user_logins}"
 
             try:
-                response = requests.get(
-                    url, headers=headers, timeout=TWITCH_STREAMS_TIMEOUT
+                response = self._request_with_auth(
+                    "GET", url, timeout=TWITCH_STREAMS_TIMEOUT
                 )
-                response.raise_for_status()
                 data = response.json()
 
                 for stream in data.get("data", []):
@@ -329,23 +359,15 @@ class TwitchAPI:
         if not uncached:
             return
 
-        self._ensure_access_token()
-
-        headers = {
-            "Client-ID": self.client_id,
-            "Authorization": f"Bearer {self.access_token}",
-        }
-
         for i in range(0, len(uncached), 100):
             batch = uncached[i : i + 100]
             url_params = "&login=".join(batch)
             url = f"{TWITCH_API_BASE}/users?login={url_params}"
 
             try:
-                response = requests.get(
-                    url, headers=headers, timeout=TWITCH_USERS_TIMEOUT
+                response = self._request_with_auth(
+                    "GET", url, timeout=TWITCH_USERS_TIMEOUT
                 )
-                response.raise_for_status()
                 users = response.json()["data"]
                 for user in users:
                     login = user["login"]
@@ -368,14 +390,6 @@ class TwitchAPI:
         start_time = time()
         logger.debug("Fetching VODs for %s", username)
 
-        # Only get access token if we need to make API calls
-        self._ensure_access_token()
-
-        headers = {
-            "Client-ID": self.client_id,
-            "Authorization": f"Bearer {self.access_token}",
-        }
-
         # Populate cache if needed
         self.get_users([username])
 
@@ -392,10 +406,9 @@ class TwitchAPI:
             f"{TWITCH_API_BASE}/videos?user_id={user_id}&first={limit}&type=archive"
         )
         try:
-            response = requests.get(
-                vods_url, headers=headers, timeout=TWITCH_VODS_TIMEOUT
+            response = self._request_with_auth(
+                "GET", vods_url, timeout=TWITCH_VODS_TIMEOUT
             )
-            response.raise_for_status()
             vods = response.json()["data"]
 
             formatted_vods = []
