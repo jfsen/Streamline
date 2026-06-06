@@ -1,7 +1,7 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8" ?>
 <interface>
-  <requires lib="gtk" version="4.0"/>
-  <requires lib="libadwaita" version="1.0"/>
+  <requires lib="gtk" version="4.0" />
+  <requires lib="libadwaita" version="1.0" />
   <template class="StreamlineWindow" parent="AdwApplicationWindow">
     <property name="title" translatable="yes">Streamline</property>
     <child>
@@ -15,14 +15,24 @@
                     <property name="spacing">6</property>
                     <child>
                       <object class="GtkButton" id="refresh_button">
-                        <property name="icon-name">view-refresh-symbolic</property>
-                        <property name="tooltip-text" translatable="yes">Refresh</property>
+                        <property
+                                                    name="icon-name"
+                                                >view-refresh-symbolic</property>
+                        <property
+                                                    name="tooltip-text"
+                                                    translatable="yes"
+                                                >Refresh</property>
                       </object>
                     </child>
                     <child>
                       <object class="GtkButton" id="quick_play_button">
-                        <property name="icon-name">media-playback-start-symbolic</property>
-                        <property name="tooltip-text" translatable="yes">Quick Play Stream</property>
+                        <property
+                                                    name="icon-name"
+                                                >media-playback-start-symbolic</property>
+                        <property
+                                                    name="tooltip-text"
+                                                    translatable="yes"
+                                                >Quick Play Stream</property>
                       </object>
                     </child>
                   </object>
@@ -33,7 +43,10 @@
                     <child>
                       <object class="GtkButton" id="follow_button">
                         <property name="icon-name">list-add-symbolic</property>
-                        <property name="tooltip-text" translatable="yes">Follow Streamer</property>
+                        <property
+                                                    name="tooltip-text"
+                                                    translatable="yes"
+                                                >Follow Streamer</property>
                         <property name="action-name">app.follow</property>
                       </object>
                     </child>
@@ -41,7 +54,10 @@
                       <object class="GtkMenuButton">
                         <property name="primary">True</property>
                         <property name="icon-name">open-menu-symbolic</property>
-                        <property name="tooltip-text" translatable="yes">Main Menu</property>
+                        <property
+                                                    name="tooltip-text"
+                                                    translatable="yes"
+                                                >Main Menu</property>
                         <property name="menu-model">primary_menu</property>
                       </object>
                     </child>
@@ -56,14 +72,10 @@
                 <child>
                   <object class="AdwPreferencesPage" id="preferences_page">
                     <child>
-                      <object class="AdwPreferencesGroup" id="online_group">
-                        <property name="title" translatable="yes">Online</property>
-                      </object>
+                      <object class="AdwPreferencesGroup" id="online_group" />
                     </child>
                     <child>
-                      <object class="AdwPreferencesGroup" id="offline_group">
-                        <property name="title" translatable="yes">Offline</property>
-                      </object>
+                      <object class="AdwPreferencesGroup" id="offline_group" />
                     </child>
                   </object>
                 </child>
@@ -81,7 +93,10 @@
         <attribute name="action">app.preferences</attribute>
       </item>
       <item>
-        <attribute name="label" translatable="yes">_Keyboard Shortcuts</attribute>
+        <attribute
+                    name="label"
+                    translatable="yes"
+                >_Keyboard Shortcuts</attribute>
         <attribute name="action">app.shortcuts</attribute>
       </item>
       <item>

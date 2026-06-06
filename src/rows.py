@@ -18,15 +18,42 @@ class StreamerRowManager:
         self.offline_list = window.offline_list
         self._previous_online = set()
 
-        # Pill badge on the online group header
+        # Custom header with "Online" label and pill badge
+        self._header_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
+        self._header_box.add_css_class("streamer-group-header")
+
+        self._header_label = Gtk.Label(label=_("Online"))
+        self._header_label.add_css_class("streamer-group-header-label")
+        self._header_label.set_halign(Gtk.Align.START)
+        self._header_box.append(self._header_label)
+
+        # Pill badge
         self._pill_box = Gtk.Box(spacing=0)
         self._pill_box.add_css_class("online-pill")
+        self._pill_box.set_valign(Gtk.Align.CENTER)
         self._pill_box.set_visible(False)
         self._pill_plus = Gtk.Label()
         self._pill_plus.add_css_class("pill-plus")
         self._pill_minus = Gtk.Label()
         self._pill_minus.add_css_class("pill-minus")
-        self.window.online_group.set_header_suffix(self._pill_box)
+        self._header_box.append(self._pill_box)
+
+        # Insert the custom header as the first child of the online group
+        self.window.online_group.add(self._header_box)
+
+        # Custom header for the offline group (label only)
+        self._offline_header_box = Gtk.Box(
+            orientation=Gtk.Orientation.HORIZONTAL, spacing=8
+        )
+        self._offline_header_box.add_css_class("streamer-group-header")
+
+        self._offline_header_label = Gtk.Label(label=_("Offline"))
+        self._offline_header_label.add_css_class("streamer-group-header-label")
+        self._offline_header_label.set_halign(Gtk.Align.START)
+        self._offline_header_box.append(self._offline_header_label)
+
+        self.window.offline_group.add(self._offline_header_box)
+
         self._pill_timeout_id = None
 
     @classmethod

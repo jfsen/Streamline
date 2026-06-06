@@ -73,11 +73,25 @@ list.boxed-list.streamer-list > row.just-went-online {
     }
 }
 
+/* ── Custom group headers (title + optional pill) ── */
+.streamer-group-header {
+    margin: 12px 0 6px 0;
+    padding: 0 12px;
+}
+
+.streamer-group-header-label {
+    font-size: smaller;
+    font-weight: 700;
+    opacity: 0.75;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
 /* ── Online count pill badge ── */
 .online-pill {
     border-radius: 999px;
     min-height: 0;
-    margin: 2px 0;
+    margin: 0;
     opacity: 1;
     transition: opacity 1000ms ease-out;
 }

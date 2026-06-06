@@ -95,16 +95,19 @@ class StreamlineWindow(Adw.ApplicationWindow):
         self.online_list.add_css_class("boxed-list")
         self.online_list.add_css_class("streamer-list")
         self.online_list.set_selection_mode(Gtk.SelectionMode.NONE)
-        self.online_group.add(self.online_list)
 
         self.offline_list = Gtk.ListBox()
         self.offline_list.add_css_class("boxed-list")
         self.offline_list.add_css_class("streamer-list")
         self.offline_list.set_selection_mode(Gtk.SelectionMode.NONE)
-        self.offline_group.add(self.offline_list)
 
         # Row manager (CSS loading deferred until first row is created)
+        # Must be created before adding lists to groups,
+        # because it inserts custom headers as each group's first child.
         self.row_manager = StreamerRowManager(self)
+
+        self.online_group.add(self.online_list)
+        self.offline_group.add(self.offline_list)
 
         # Initialize API-related attributes
         self.twitch = None
