@@ -271,7 +271,7 @@
                             .querySelectorAll("img.emote")
                             .forEach(function (img) {
                                 if (e.isIntersecting) {
-                                    if (img.dataset.src) {
+                                    if (img.dataset.src && !img.src) {
                                         img.src = img.dataset.src;
                                     }
                                 } else {
@@ -406,7 +406,7 @@
                                 var ed = pm[i];
                                 html +=
                                     '<img class="emote"' +
-                                    ' src="' +
+                                    ' data-src="' +
                                     ed.url +
                                     '"' +
                                     ' title="' +

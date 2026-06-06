@@ -273,7 +273,7 @@ class ChatPage(Adw.NavigationPage):
             )
         else:
             self._webview.evaluate_javascript(
-                "var imgs=document.querySelectorAll('img.emote');var n=0;for(var i=0;i<imgs.length;i++){if(!imgs[i].src&&imgs[i].dataset.src){imgs[i].src=imgs[i].dataset.src;n++}};n",
+                "var imgs=document.querySelectorAll('img.emote'),n=0,vh=window.innerHeight;for(var i=0;i<imgs.length;i++){if(!imgs[i].src&&imgs[i].dataset.src){var r=imgs[i].getBoundingClientRect();if(r.top<vh&&r.bottom>0){imgs[i].src=imgs[i].dataset.src;n++}}};n",
                 -1,
                 None,
                 None,
