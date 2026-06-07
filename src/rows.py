@@ -121,20 +121,77 @@ class StreamerRowManager:
         """Add buttons and dropdown menu to the row."""
         row.add_css_class("action-row")
 
-        # Create play button as prefix
-        play_button = Gtk.Button(icon_name="media-playback-start-symbolic")
-        play_button.add_css_class("flat")
-        if not row.is_online:
-            play_button.add_css_class("offline-stream-button")
-        play_button.set_valign(Gtk.Align.CENTER)
-        play_button.set_tooltip_text(_("Play stream"))
-        play_button.connect(
-            "clicked",
-            lambda btn: self.window.player.play_content(
-                f"twitch.tv/{streamer}", is_vod=False
-            ),
-        )
+        # ── Play button ──
+        show_avatars = getattr(self.window, "show_profile_pictures", True)
+
+        if show_avatars:
+            # Avatar mode: always use the overlay structure for consistent look.
+            # Cached avatars show immediately; uncached ones use a placeholder
+            # icon that set_avatar() swaps out once the download finishes.
+            avatar_path = None
+            if self.window.twitch is not None:
+                url = self.window.twitch.user_cache.get(streamer, {}).get(
+                    "profile_image_url", ""
+                )
+                if url:
+                    from pathlib import Path
+
+                    p = Path(self.window.twitch._get_avatars_dir()) / f"{streamer}.jpg"
+                    if p.exists():
+                        avatar_path = str(p)
+
+            play_button = Gtk.Button()
+            play_button.add_css_class("flat")
+            play_button.add_css_class("avatar-play-button")
+            play_button.set_valign(Gtk.Align.CENTER)
+            play_button.set_tooltip_text(_("Play stream"))
+            play_button.set_overflow(Gtk.Overflow.HIDDEN)
+            if not row.is_online:
+                play_button.add_css_class("offline-stream-button")
+            play_button.connect(
+                "clicked",
+                lambda btn: self.window.player.play_content(
+                    f"twitch.tv/{streamer}", is_vod=False
+                ),
+            )
+
+            overlay = Gtk.Overlay()
+            overlay.set_overflow(Gtk.Overflow.HIDDEN)
+            overlay.add_css_class("avatar-overlay")
+
+            if avatar_path:
+                pic = Gtk.Image.new_from_file(avatar_path)
+                pic.set_pixel_size(48)
+                overlay.set_child(pic)
+
+                icon = Gtk.Image.new_from_icon_name("media-playback-start-symbolic")
+                icon.add_css_class("avatar-play-icon")
+                overlay.add_overlay(icon)
+            else:
+                placeholder = Gtk.Image.new_from_icon_name(
+                    "media-playback-start-symbolic"
+                )
+                placeholder.set_pixel_size(24)
+                overlay.set_child(placeholder)
+
+            play_button.set_child(overlay)
+        else:
+            # No avatars: old-style native GTK button
+            play_button = Gtk.Button(icon_name="media-playback-start-symbolic")
+            play_button.add_css_class("flat")
+            play_button.set_valign(Gtk.Align.CENTER)
+            play_button.set_tooltip_text(_("Play stream"))
+            if not row.is_online:
+                play_button.add_css_class("offline-stream-button")
+            play_button.connect(
+                "clicked",
+                lambda btn: self.window.player.play_content(
+                    f"twitch.tv/{streamer}", is_vod=False
+                ),
+            )
+
         row.add_prefix(play_button)
+        row._play_button = play_button
 
         # Create browser button
         browser_button = Gtk.Button(icon_name="web-browser-symbolic")
@@ -199,6 +256,26 @@ class StreamerRowManager:
         popover.connect("notify::visible", lambda p, *_: _sync_chat_actions(p))
 
         row.add_suffix(menu_button)
+
+    def set_avatar(self, streamer, path):
+        """Swap a streamer's placeholder icon for its avatar image (called
+        from the background downloader via GLib.idle_add)."""
+        row = self.streamer_rows.get(streamer)
+        if row is None or not hasattr(row, "_play_button"):
+            return
+        button = row._play_button
+        overlay = button.get_child()
+
+        # Replace the placeholder with the avatar and add the play-icon overlay
+        pic = Gtk.Image.new_from_file(path)
+        pic.set_pixel_size(48)
+        overlay.set_child(pic)
+
+        icon = Gtk.Image.new_from_icon_name("media-playback-start-symbolic")
+        icon.add_css_class("avatar-play-icon")
+        overlay.add_overlay(icon)
+
+        button.set_child(overlay)
 
     def add_new_streamer(self, username):
         """New streamers are added to the offline list."""

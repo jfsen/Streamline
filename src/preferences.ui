@@ -32,6 +32,18 @@
                 </property>
               </object>
             </child>
+            <child>
+              <object class="AdwSwitchRow" id="profile_pictures_switch">
+                <property
+                                    name="title"
+                                    translatable="yes"
+                                >Profile Pictures</property>
+                <property
+                                    name="subtitle"
+                                    translatable="yes"
+                                >Show streamer profile pictures on play buttons</property>
+              </object>
+            </child>
           </object>
         </child>
 

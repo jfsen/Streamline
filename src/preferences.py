@@ -15,6 +15,7 @@ class StreamlinePreferences(Adw.PreferencesDialog):
 
     # Template children — Appearance page
     theme_row = Gtk.Template.Child()
+    profile_pictures_switch = Gtk.Template.Child()
 
     # Template children — Playback page
     player_row = Gtk.Template.Child()
@@ -81,6 +82,7 @@ class StreamlinePreferences(Adw.PreferencesDialog):
                 "chat-disable-emote-animations",
                 self.chat_disable_emote_animations_switch,
             ),
+            ("show-profile-pictures", self.profile_pictures_switch),
         ):
             settings.bind(key, row, "active", Gio.SettingsBindFlags.DEFAULT)
 

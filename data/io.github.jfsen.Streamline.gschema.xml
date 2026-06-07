@@ -66,5 +66,11 @@
             <description
             >Use static emote images to reduce CPU and GPU usage</description>
         </key>
+        <key name="show-profile-pictures" type="b">
+            <default>true</default>
+            <summary>Show profile pictures on play buttons</summary>
+            <description
+            >Replace the play icon with the streamer's profile picture when available</description>
+        </key>
 	</schema>
 </schemalist>

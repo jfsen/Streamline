@@ -2,6 +2,7 @@ import gettext
 import json
 import logging
 import re
+import threading
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from time import time
@@ -192,6 +193,61 @@ class TwitchAPI:
         except OSError:
             logger.debug("Failed to save user cache")
 
+    def _get_avatars_dir(self):
+        """Get the directory for cached avatar images."""
+        return self._CACHE_DIR / "avatars"
+
+    def get_cached_avatar_path(self, login):
+        """Return local filesystem path to a cached avatar image, downloading
+        it from the CDN if necessary.  Returns None when the profile URL is
+        unknown or the download fails."""
+        url = self.user_cache.get(login, {}).get("profile_image_url", "")
+        if not url:
+            return None
+
+        avatars_dir = self._get_avatars_dir()
+        avatars_dir.mkdir(parents=True, exist_ok=True)
+        path = avatars_dir / f"{login}.jpg"
+
+        if path.exists():
+            return str(path)
+
+        try:
+            response = requests.get(url, timeout=10)
+            response.raise_for_status()
+            path.write_bytes(response.content)
+            logger.debug("Cached avatar for %s", login)
+            return str(path)
+        except Exception:
+            logger.debug("Failed to download avatar for %s", login)
+            return None
+
+    def download_avatars_background(self, logins, on_done):
+        """Download avatars in a background thread, calling on_done(login, path)
+        on the main thread via GLib.idle_add for each successful download."""
+        avatars_dir = self._get_avatars_dir()
+        avatars_dir.mkdir(parents=True, exist_ok=True)
+
+        def _download():
+            for login in logins:
+                url = self.user_cache.get(login, {}).get("profile_image_url", "")
+                if not url:
+                    continue
+                path = avatars_dir / f"{login}.jpg"
+                if path.exists():
+                    GLib.idle_add(on_done, login, str(path))
+                    continue
+                try:
+                    response = requests.get(url, timeout=10)
+                    response.raise_for_status()
+                    path.write_bytes(response.content)
+                    logger.debug("Cached avatar for %s", login)
+                    GLib.idle_add(on_done, login, str(path))
+                except Exception:
+                    logger.debug("Failed to download avatar for %s", login)
+
+        threading.Thread(target=_download, daemon=True).start()
+
     def _get_streams_cache_path(self):
         """Get path to streams cache file."""
         return self._CACHE_DIR / "streams.json"
@@ -281,6 +337,9 @@ class TwitchAPI:
         start_time = time()
         logger.debug("Fetching streams for %s users", len(usernames))
 
+        # Populate profile picture URLs for all streamers before building rows
+        self.get_users(usernames)
+
         online_streamers = []
         offline_streamers = []
         streamer_info = {}
@@ -300,8 +359,10 @@ class TwitchAPI:
                 for stream in data.get("data", []):
                     user_login = stream["user_login"]
                     online_streamers.append(user_login)
-                    # Cache the user ID and display name
+                    # Update the user cache without wiping profile_image_url
+                    existing = self.user_cache.get(user_login, {})
                     self.user_cache[user_login] = {
+                        **existing,
                         "id": stream["user_id"],
                         "name": stream["user_name"],
                     }
@@ -350,12 +411,18 @@ class TwitchAPI:
         return online_streamers, offline_streamers, streamer_info
 
     def get_users(self, logins):
-        """Fetch user IDs and display names for given logins.
+        """Fetch user IDs, display names and profile picture URLs for given
+        logins.
 
         Only makes API calls for logins not already cached. Invalid/nonexistent
         usernames are silently skipped (the API simply omits them from the response).
         """
-        uncached = [login for login in logins if login not in self.user_cache]
+        uncached = [
+            login
+            for login in logins
+            if login not in self.user_cache
+            or "profile_image_url" not in self.user_cache.get(login, {})
+        ]
         if not uncached:
             return
 
@@ -374,6 +441,7 @@ class TwitchAPI:
                     self.user_cache[login] = {
                         "id": user["id"],
                         "name": user["display_name"],
+                        "profile_image_url": user.get("profile_image_url", ""),
                     }
                 logger.debug(
                     "Cached user info for %s/%s logins in batch",

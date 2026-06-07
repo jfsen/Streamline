@@ -153,3 +153,33 @@ list.boxed-list.streamer-list > row button.flat:hover {
 list.boxed-list.streamer-list > row:hover .offline-stream-button {
     opacity: 0.5;
 }
+
+/* ── Avatar play button ── */
+.avatar-play-button {
+    padding: 0;
+    margin: 4px;
+    border-radius: 999px;
+}
+
+.avatar-overlay {
+    border-radius: 999px;
+    overflow: hidden;
+}
+
+.avatar-play-button .avatar-play-icon {
+    -gtk-icon-size: 28px;
+    color: white;
+    -gtk-icon-shadow: 0 0 4px rgba(0, 0, 0, 0.85);
+    opacity: 0.4;
+}
+
+.avatar-play-button .avatar-play-icon:hover {
+    opacity: 0.8;
+}
+
+/* Inherit existing offline opacity behaviour */
+list.boxed-list.streamer-list
+    > row:hover
+    .avatar-play-button.offline-stream-button {
+    opacity: 0.85;
+}

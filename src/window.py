@@ -81,6 +81,16 @@ class StreamlineWindow(Adw.ApplicationWindow):
         self._apply_theme()
         self.settings.connect("changed::theme", lambda s, k: self._apply_theme())
 
+        # React to live preference changes that affect row rendering
+        self.settings.connect(
+            "changed::show-profile-pictures", self._on_row_pref_changed
+        )
+
+        # Stored fetch data so preferences can rebuild rows without a network call
+        self._last_online = []
+        self._last_offline = []
+        self._last_info = {}
+
         # Set minimum window size
         self.set_size_request(MIN_WIDTH, MIN_HEIGHT)
 
@@ -172,6 +182,7 @@ class StreamlineWindow(Adw.ApplicationWindow):
         self.chat_disable_emote_animations = self.settings.get_boolean(
             "chat-disable-emote-animations"
         )
+        self.show_profile_pictures = self.settings.get_boolean("show-profile-pictures")
 
     def _init_twitch_api(self):
         """Initialize the Twitch API with current credentials.
@@ -252,6 +263,7 @@ class StreamlineWindow(Adw.ApplicationWindow):
     def _on_streams_fetched(self, online, offline, info):
         """Callback from background thread: update UI with fresh stream data."""
         self.update_action_rows(online, offline, info)
+        self._start_avatar_downloads(online, offline)
 
     def _prompt_for_credentials(self):
         """Show dialog to prompt user for Twitch API credentials."""
@@ -335,6 +347,7 @@ class StreamlineWindow(Adw.ApplicationWindow):
         self.refresh_button.set_sensitive(True)
         self.show_toast(_("Stream data refreshed"))
         self.update_action_rows(online, offline, info)
+        self._start_avatar_downloads(online, offline)
 
     def _on_refresh_error(self, heading, message):
         """Callback from background thread: show error and re-enable refresh."""
@@ -345,7 +358,28 @@ class StreamlineWindow(Adw.ApplicationWindow):
 
     def update_action_rows(self, online_streamers, offline_streamers, streamer_info):
         """Update the online and offline streamer lists."""
+        self._last_online = online_streamers
+        self._last_offline = offline_streamers
+        self._last_info = streamer_info
         self.row_manager.update_rows(online_streamers, offline_streamers, streamer_info)
+
+    def _on_row_pref_changed(self, settings, key):
+        """Live-rebuild rows when a preference affecting row rendering changes."""
+        self._initialize_from_config()
+        if self._last_online or self._last_offline:
+            self.row_manager.update_rows(
+                self._last_online, self._last_offline, self._last_info
+            )
+            self._start_avatar_downloads(self._last_online, self._last_offline)
+
+    def _start_avatar_downloads(self, online, offline):
+        """Kick off background avatar downloads for streamers that don't have
+        a cached image yet."""
+        if not getattr(self, "show_profile_pictures", True) or self.twitch is None:
+            return
+        self.twitch.download_avatars_background(
+            online + offline, self.row_manager.set_avatar
+        )
 
     def create_row(self, streamer, info):
         """Create an ActionRow with buttons and additional info."""
@@ -457,6 +491,10 @@ class StreamlineWindow(Adw.ApplicationWindow):
         for name in new_candidates:
             self.all_streamers.append(name)
             self.add_offline_streamer(name)
+
+        # Start background avatar downloads for newly followed streamers
+        if new_candidates:
+            self._start_avatar_downloads([], new_candidates)
 
         if new_candidates:
             self.settings.set_value("streamers", GLib.Variant("as", self.all_streamers))
