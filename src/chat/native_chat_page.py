@@ -7,9 +7,11 @@ rows referencing the same URL.  Animated emotes render as static first-frame
 """
 
 import gettext
+import hashlib
 import logging
 import tempfile as _tempfile
 import threading
+from collections import OrderedDict
 from pathlib import Path
 
 import gi
@@ -36,37 +38,91 @@ _BADGE_SVGS = {}
 for _f in _BADGE_DIR.glob("*.svg"):
     _BADGE_SVGS[_f.stem] = _f.read_text()
 
-# ── Emote image cache ───────────────────────────────────────
+# ── Emote image cache ──────────────────────────────────────────
+
+_EMOTE_IMAGE_DIR = Path(GLib.get_user_cache_dir()) / "Streamline" / "emotes" / "images"
+_MAX_EMOTE_TEXTURES = 500
 
 
 class EmoteTextureCache:
-    """Downloads emote images once and caches them as Gdk.Texture.
+    """Downloads emote images and caches them as Gdk.Texture.
+
+    Two-tier caching:
+
+    * *In-memory LRU* — the most recently used textures (up to
+      ``_MAX_EMOTE_TEXTURES``) are kept decoded for instant reuse.
+      Excess entries are evicted oldest-first.  Since message culling
+      removes rows from the list model, emotes that no longer appear in
+      any visible message naturally become eviction candidates.
+
+    * *On-disk* — raw image bytes are stored at
+      ``~/.cache/Streamline/emotes/images/<url-hash>`` so a texture
+      survives app restarts without re-downloading.
 
     Decodes via Pillow so every format (WebP, GIF, PNG, JPEG) works
     regardless of which gdk-pixbuf loaders the system ships.
     """
 
     def __init__(self):
-        self._textures: dict[str, Gdk.Texture] = {}
+        self._textures: OrderedDict[str, Gdk.Texture] = OrderedDict()
         self._pending: dict[str, list[tuple[Gtk.Widget, bool]]] = {}
         self._lock = threading.Lock()
+        _EMOTE_IMAGE_DIR.mkdir(parents=True, exist_ok=True)
+
+    # ── URL → stable disk filename ──────────────────
+
+    @staticmethod
+    def _url_hash(url: str) -> str:
+        return hashlib.sha256(url.encode()).hexdigest()[:16]
+
+    def _disk_path(self, url: str) -> Path:
+        return _EMOTE_IMAGE_DIR / self._url_hash(url)
+
+    # ── Public API ───────────────────────────────────
 
     def request(self, url: str, widget: Gtk.Widget) -> None:
         with self._lock:
+            # In-memory hit — move to MRU position and apply
             if url in self._textures:
-                texture = self._textures[url]
+                texture = self._textures.pop(url)
+                self._textures[url] = texture
                 GLib.idle_add(_apply_texture, widget, texture)
                 return
+
+            # Already being fetched — queue for when data arrives
             if url in self._pending:
                 self._pending[url].append((widget, False))
                 return
+
             self._pending[url] = [(widget, False)]
 
-        threading.Thread(
-            target=self._download,
-            args=(url,),
-            daemon=True,
-        ).start()
+            # Disk hit — load bytes and decode in background
+            disk_path = self._disk_path(url)
+            if disk_path.exists():
+                target = ("disk", disk_path)
+            else:
+                target = ("net", url)
+
+        kind, arg = target
+        if kind == "disk":
+            threading.Thread(
+                target=self._load_from_disk, args=(url, arg), daemon=True
+            ).start()
+        else:
+            threading.Thread(target=self._download, args=(url,), daemon=True).start()
+
+    # ── Background loaders ──────────────────────────
+
+    def _load_from_disk(self, url: str, path: Path) -> None:
+        try:
+            data = path.read_bytes()
+        except OSError as exc:
+            logger.debug("Failed to read emote from disk %s: %s", path, exc)
+            data = None
+        if data is not None:
+            GLib.idle_add(self._on_data, url, data)
+        else:
+            self._download(url)
 
     def _download(self, url: str) -> None:
         data = None
@@ -74,10 +130,17 @@ class EmoteTextureCache:
             r = requests.get(url, timeout=15)
             r.raise_for_status()
             data = r.content
+            # Persist raw bytes to disk so future requests skip the network
+            try:
+                self._disk_path(url).write_bytes(data)
+            except OSError as exc:
+                logger.debug("Failed to write emote to disk %s: %s", url, exc)
         except Exception as exc:
             logger.debug("Failed to download emote %s: %s", url, exc)
 
         GLib.idle_add(self._on_data, url, data)
+
+    # ── Completion callback (always called on the main thread) ────
 
     def _on_data(self, url: str, data: bytes | None) -> bool:
         texture = None
@@ -88,7 +151,12 @@ class EmoteTextureCache:
 
         with self._lock:
             if texture is not None:
+                # Insert / move to MRU position
                 self._textures[url] = texture
+                self._textures.move_to_end(url)
+                # LRU eviction
+                while len(self._textures) > _MAX_EMOTE_TEXTURES:
+                    self._textures.popitem(last=False)
             widgets = self._pending.pop(url, [])
 
         if texture is not None:
@@ -104,22 +172,20 @@ class EmoteTextureCache:
 
         from PIL import Image
 
-        img = Image.open(BytesIO(data))
-        png_buf = BytesIO()
-        img.save(png_buf, format="PNG")
-        return Gdk.Texture.new_from_bytes(GLib.Bytes.new(png_buf.getvalue()))
+        try:
+            img = Image.open(BytesIO(data))
+            png_buf = BytesIO()
+            img.save(png_buf, format="PNG")
+            return Gdk.Texture.new_from_bytes(GLib.Bytes.new(png_buf.getvalue()))
+        except Exception as exc:
+            logger.debug("Emote decode failed: %s", exc)
+            return None
 
 
 def _apply_texture(widget: Gtk.Widget, texture: Gdk.Texture) -> bool:
-    """Set the texture on an emote widget."""
-    if isinstance(widget, Gtk.Image):
-        # Gtk.Image doesn't auto-size from the paintable; set explicit
-        # pixel size so the parent TextView allocates visible space.
-        widget.set_from_paintable(texture)
-        widget.set_pixel_size(texture.get_height())
-    else:
-        widget.set_paintable(texture)
-        widget.queue_resize()
+    """Set the texture on an emote widget (always called on the main thread)."""
+    widget.set_paintable(texture)
+    widget.queue_resize()
     return GLib.SOURCE_REMOVE
 
 
@@ -260,8 +326,71 @@ class _ChatMsg(GObject.Object):
 
 
 def _row_setup(factory: Gtk.SignalListItemFactory, list_item: Gtk.ListItem) -> None:
-    """Create the row widget once (reused via recycling)."""
+    """Build the reusable widget template once per recycled row.
+
+    Template references are stored on the list_item so ``_row_bind`` can
+    update content without rebuilding widgets.
+    """
+    ns = NATIVE_STYLE
+
+    # ── Root row box ────────────────────────────────────────
     row = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+    list_item._row_provider = Gtk.CssProvider()
+    row.get_style_context().add_provider(
+        list_item._row_provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
+    )
+
+    # ── Card (rounded frame) ────────────────────────────────
+    list_item._card = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+    list_item._card.add_css_class("msg-card")
+    list_item._card_provider = Gtk.CssProvider()
+    list_item._card.get_style_context().add_provider(
+        list_item._card_provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
+    )
+
+    # ── Identity row (badges + username) ────────────────────
+    list_item._identity = Gtk.Box(
+        orientation=Gtk.Orientation.HORIZONTAL,
+        spacing=int(ns["badge_spacing"]),
+    )
+    list_item._identity.set_valign(Gtk.Align.START)
+    list_item._identity.set_margin_bottom(ns["identity_margin_bottom"])
+
+    list_item._user_label = Gtk.Label()
+    list_item._user_label.set_halign(Gtk.Align.START)
+    list_item._user_label.set_valign(Gtk.Align.START)
+    list_item._identity.append(list_item._user_label)
+
+    list_item._card.append(list_item._identity)
+
+    # ── Message body (TextView) ─────────────────────────────
+    list_item._text_view = Gtk.TextView()
+    list_item._text_view.set_editable(False)
+    list_item._text_view.set_cursor_visible(False)
+    list_item._text_view.set_wrap_mode(Gtk.WrapMode.WORD)
+    list_item._text_view.set_halign(Gtk.Align.FILL)
+    list_item._text_view.set_valign(Gtk.Align.FILL)
+    # Minimum width prevents the text view from computing an absurdly tall
+    # layout when the initial measure pass has a narrow-or-zero width guess.
+    list_item._text_view.set_size_request(300, -1)
+
+    tv_provider = Gtk.CssProvider()
+    tv_provider.load_from_data(
+        f"textview {{ background: transparent; font: {ns['font_size']} {ns['font_family']}; }}"
+        "textview text { background: transparent; }",
+        -1,
+    )
+    list_item._text_view.get_style_context().add_provider(
+        tv_provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
+    )
+
+    # Create a reusable text tag for message body colour (one per buffer).
+    # Avoids calling create_tag on every bind, which would warn and skip
+    # property updates when a tag with the same name already exists.
+    list_item._body_tag = list_item._text_view.get_buffer().create_tag("body")
+
+    list_item._card.append(list_item._text_view)
+    row.append(list_item._card)
     list_item.set_child(row)
 
 
@@ -269,58 +398,54 @@ def _row_bind(
     factory: Gtk.SignalListItemFactory,
     list_item: Gtk.ListItem,
 ) -> None:
-    """Populate a recycled row with message data."""
-    row: Gtk.Box = list_item.get_child()
+    """Populate a recycled row with message data (widget template is reused)."""
     msg: _ChatMsg | None = list_item.get_item()
     if msg is None:
         return
 
-    # Clear previous children (recycling)
-    while True:
-        child = row.get_first_child()
-        if child is None:
-            break
-        row.remove(child)
+    identity = list_item._identity
+    user_label = list_item._user_label
+    text_view = list_item._text_view
+    tag = list_item._body_tag
+    row_provider = list_item._row_provider
+    card_provider = list_item._card_provider
 
     dark = getattr(msg, "_dark", False)
     alternating = getattr(msg, "_alternating", False)
     ns = NATIVE_STYLE
     theme = ns["dark"] if dark else ns["light"]
 
-    # Subtle alternating tint on the row background
-    row_bg = theme["alt_row"] if alternating else "transparent"
-    row_provider = Gtk.CssProvider()
-    row_provider.load_from_data(f"box {{ background: {row_bg}; }}", -1)
-    row.get_style_context().add_provider(
-        row_provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
-    )
-
-    # ── Card (rounded frame containing identity + body) ─────
-    card = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
-    card.add_css_class("msg-card")
-    card_provider = Gtk.CssProvider()
+    # ── Card background / radius / padding ──────────────────
+    # Alternate the card background based on the row's position in the
+    # list store (even positions get card_bg, odd get alt_row).  Suppress
+    # hover effects from the theme so the card colour stays stable.
+    pos = list_item.get_position()
+    use_alt = alternating and pos >= 0 and pos % 2 == 1
+    card_bg = theme["alt_row"] if use_alt else theme["card_bg"]
     card_provider.load_from_data(
         f".msg-card {{"
-        f"  background: {theme['card_bg']};"
+        f"  background: {card_bg};"
         f"  border-radius: {ns['card_radius']}px;"
         f"  margin: {ns['card_margin']};"
         f"  padding: {ns['card_padding']};"
-        f"}}",
+        f"}}"
+        f".msg-card:hover {{ background: {card_bg}; }}",
         -1,
     )
-    card.get_style_context().add_provider(
-        card_provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
-    )
 
-    # ── Identity row (badges + username) ────────────────────
-    identity = Gtk.Box(
-        orientation=Gtk.Orientation.HORIZONTAL,
-        spacing=int(ns["badge_spacing"]),
-    )
-    identity.set_valign(Gtk.Align.START)
+    # Keep the row background fully transparent and suppress theme hover
+    # effects so neither the row backdrop nor the card changes on mouse-over.
+    row_provider.load_from_data("box, box:hover { background: transparent; }", -1)
 
-    badges = getattr(msg, "badges", [])
-    for display_name, badge_id in badges:
+    # ── Badges (remove old, add fresh) ──────────────────────
+    while True:
+        child: Gtk.Widget | None = identity.get_first_child()
+        if child is None or child == user_label:
+            break
+        identity.remove(child)
+
+    last_badge = None
+    for display_name, badge_id in getattr(msg, "badges", []):
         svg_data: str | None = _BADGE_SVGS.get(badge_id)
         if svg_data is None:
             continue
@@ -330,13 +455,14 @@ def _row_bind(
             badge.set_size_request(int(ns["badge_size"]), int(ns["badge_size"]))
             badge.set_valign(Gtk.Align.START)
             badge.set_tooltip_text(display_name)
-            identity.append(badge)
+            identity.insert_child_after(badge, last_badge)
+            last_badge = badge
 
+    # ── Username label ──────────────────────────────────────
     color_str = getattr(msg, "color", FALLBACK_USER_COLOR)
     clamped = _clamp_color(color_str, dark)
     user_name = getattr(msg, "user", "")
     is_action = getattr(msg, "action", False)
-    user_label = Gtk.Label()
     user_label.set_markup(
         f'<span font_weight="{ns["user_weight"]}" '
         f'foreground="{_rgba_to_hex(clamped)}">'
@@ -344,41 +470,22 @@ def _row_bind(
         f"{'' if is_action else ':'}"
         f"</span>"
     )
-    user_label.set_halign(Gtk.Align.START)
-    user_label.set_valign(Gtk.Align.START)
-    identity.append(user_label)
 
-    card.append(identity)
+    # ── Message body text + emotes ──────────────────────────
+    buffer = text_view.get_buffer()
+    buffer.set_text("", 0)
 
-    # ── Body (TextView – true inline text + emote flow) ─────
+    tag.set_property("foreground", theme["text_color"])
+
+    text_view.remove_css_class("italic")
+    if is_action:
+        text_view.add_css_class("italic")
+
     segments = getattr(
         msg,
         "segments",
         [{"type": "text", "content": getattr(msg, "text", "")}],
     )
-
-    text_view = Gtk.TextView()
-    text_view.set_editable(False)
-    text_view.set_cursor_visible(False)
-    text_view.set_wrap_mode(Gtk.WrapMode.WORD)
-    text_view.set_halign(Gtk.Align.FILL)
-    text_view.set_valign(Gtk.Align.FILL)
-
-    tv_provider = Gtk.CssProvider()
-    tv_provider.load_from_data(
-        f"textview {{ background: transparent; font: {ns['font_size']} {ns['font_family']}; }}"
-        "textview text { background: transparent; }",
-        -1,
-    )
-    text_view.get_style_context().add_provider(
-        tv_provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
-    )
-
-    if is_action:
-        text_view.add_css_class("italic")
-
-    buffer = text_view.get_buffer()
-    tag = buffer.create_tag("body", foreground=theme["text_color"])
 
     for seg in segments:
         if seg["type"] == "text":
@@ -386,15 +493,19 @@ def _row_bind(
         elif seg["type"] == "emote":
             end_iter = buffer.get_end_iter()
             anchor = buffer.create_child_anchor(end_iter)
-            img = Gtk.Image()
-            img.set_valign(Gtk.Align.CENTER)
+            # Gtk.Picture with CONTENT_FIT=CONTAIN scales the texture to
+            # fill available space while preserving aspect ratio — no
+            # square-cropping.  set_size_request(28,28) reserves space
+            # before the texture arrives so the text view lays out correctly.
+            pic = Gtk.Picture()
+            pic.set_size_request(28, 28)
+            pic.set_can_shrink(False)
+            pic.set_content_fit(Gtk.ContentFit.CONTAIN)
+            pic.set_valign(Gtk.Align.CENTER)
             tooltip = f"{seg['name']} ({seg['source']})"
-            img.set_tooltip_text(tooltip)
-            text_view.add_child_at_anchor(img, anchor)
-            _EMOTE_CACHE.request(seg["url"], img)
-
-    card.append(text_view)
-    row.append(card)
+            pic.set_tooltip_text(tooltip)
+            text_view.add_child_at_anchor(pic, anchor)
+            _EMOTE_CACHE.request(seg["url"], pic)
 
 
 # ── Temporary badge files ────────────────────────────────────
@@ -661,8 +772,35 @@ class NativeChatPage(Adw.NavigationPage):
         dark = style_manager.get_dark()
         self._dark = dark
         self._apply_banner_style()
-        # Refresh visible rows so username colours are re-clamped
-        self._list_view.get_model().items_changed(0, 0, 0)
+        # Replace all stored messages with fresh instances carrying the
+        # updated theme flag.  Using splice() with new GObjects forces
+        # Gtk.ListView to re-bind every visible row (items_changed with
+        # the same object pointers skips bind).  Restore scroll position
+        # afterwards since the list view anchor is invalidated.
+        n = self._store.get_n_items()
+        if n == 0:
+            return
+        vadj = self._scrolled.get_vadjustment()
+        saved_scroll = vadj.get_value()
+        new_items = []
+        for i in range(n):
+            item = self._store.get_item(i)
+            if item is None:
+                continue
+            new_items.append(
+                _ChatMsg(
+                    user=getattr(item, "user", ""),
+                    text=getattr(item, "text", ""),
+                    color=getattr(item, "color", ""),
+                    segments=getattr(item, "segments", []),
+                    badges=getattr(item, "badges", []),
+                    action=getattr(item, "action", False),
+                    _dark=dark,
+                    _alternating=getattr(item, "_alternating", False),
+                )
+            )
+        self._store.splice(0, n, new_items)
+        GLib.idle_add(lambda: vadj.set_value(saved_scroll))
 
     def _apply_banner_style(self) -> None:
         ns = NATIVE_STYLE

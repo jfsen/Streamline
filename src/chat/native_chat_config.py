@@ -19,6 +19,7 @@ NATIVE_STYLE = {
     "user_weight": "700",
     "badge_spacing": 2,  # px between adjacent badges and badges / name
     "badge_size": 18,  # px square
+    "identity_margin_bottom": 6,  # px gap between identity row and body
     # --- "more messages" banner --------------------------------------
     "banner_font": "bold 14px Inter, sans-serif",
     "banner_padding": "8px 12px",
