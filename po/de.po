@@ -422,16 +422,16 @@ msgstr "{} Sek."
 msgid "{}h {}m"
 msgstr "{} Std. {} Min."
 
-#: src/chat/chat_page.py:228
+#: src/chat/webkit/page.py:228
 msgid "More messages below"
 msgstr "Weitere Nachrichten unten"
 
-#: src/chat/chat_page.py:256 src/chat/chat_window.py:32
+#: src/chat/webkit/page.py:256 src/chat/chat_window.py:32
 #, python-brace-format
 msgid "Chat: {}"
 msgstr "Chat: {}"
 
-#: src/chat/chat_page.py:344
+#: src/chat/webkit/page.py:344
 msgid "Detach chat"
 msgstr "Chat ausgliedern"
 

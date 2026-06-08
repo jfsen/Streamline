@@ -18,22 +18,22 @@ import gi
 import requests
 from gi.repository import Adw, Gdk, Gio, GLib, GObject, Gtk
 
-from .config import (
+from ..config import (
     CULL_CHUNK,
     FALLBACK_USER_COLOR,
     FLUSH_MS,
     MAX_MESSAGES,
 )
-from .emotes import ThirdPartyEmotes
-from .native_chat_config import NATIVE_STYLE
-from .twitch_chat import TwitchChat
+from ..emotes import ThirdPartyEmotes
+from ..twitch_chat import TwitchChat
+from .config import NATIVE_STYLE
 
 _ = gettext.gettext
 logger = logging.getLogger("NativeChatPage")
 
 # ── Badge SVGs (loaded once at module level) ───────────────
 
-_BADGE_DIR = Path(__file__).parent / "badges"
+_BADGE_DIR = Path(__file__).parent.parent / "badges"
 _BADGE_SVGS = {}
 for _f in _BADGE_DIR.glob("*.svg"):
     _BADGE_SVGS[_f.stem] = _f.read_text()
@@ -171,6 +171,10 @@ class EmoteTextureCache:
         from io import BytesIO
 
         from PIL import Image
+
+        # Pillow is extremely verbose about PNG chunk metadata on stderr;
+        # suppress its logger so the terminal stays readable.
+        logging.getLogger("PIL").setLevel(logging.WARNING)
 
         try:
             img = Image.open(BytesIO(data))

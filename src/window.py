@@ -34,7 +34,7 @@ gi.require_version("Gtk", "4.0")
 
 from gi.repository import Adw, Gio, GLib, Gtk
 
-from .chat.chat_page import ChatPage
+from .chat.webkit.page import ChatPage
 from .config import (
     DEFAULT_HEIGHT,
     DEFAULT_WIDTH,
@@ -627,7 +627,7 @@ class StreamlineWindow(Adw.ApplicationWindow):
 
         logger.debug("Opening chat page for %s", streamer)
         if self.chat_native_engine:
-            from .chat.native_chat_page import NativeChatPage
+            from .chat.native.page import NativeChatPage
 
             page = NativeChatPage(
                 self,

@@ -10,7 +10,7 @@ gi.require_version("Adw", "1")
 
 from gi.repository import Adw
 
-from .chat_page import ChatPage
+from .webkit.page import ChatPage
 
 _ = gettext.gettext
 logger = logging.getLogger("ChatWindow")
@@ -39,7 +39,7 @@ class ChatWindow(Adw.Window):
             self.set_transient_for(transient_for)
 
         if native_engine:
-            from .native_chat_page import NativeChatPage
+            from .native.page import NativeChatPage
 
             self._chat_page = NativeChatPage(
                 parent=None,

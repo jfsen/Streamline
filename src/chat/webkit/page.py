@@ -13,28 +13,26 @@ gi.require_version("WebKit", "6.0")
 
 from gi.repository import Adw, Gdk, GLib, Gtk, WebKit
 
-from .config import (
+from ..config import (
     CULL_CHUNK,
     FLUSH_MS,
     MAX_MESSAGES,
 )
-from .config import (
-    STYLE as _CHAT_STYLE,
-)
-from .emotes import ThirdPartyEmotes
-from .twitch_chat import TwitchChat
+from ..emotes import ThirdPartyEmotes
+from ..twitch_chat import TwitchChat
+from .config import STYLE as _CHAT_STYLE
 
 _ = gettext.gettext
 logger = logging.getLogger("ChatPage")
 
 # ── HTML template (loaded once at module level) ────────
 
-_HTML = (Path(__file__).parent / "chat_page.html").read_text()
+_HTML = (Path(__file__).parent / "page.html").read_text()
 
 
 # ── Badge SVGs (loaded once at module level) ───────────
 
-_BADGE_DIR = Path(__file__).parent / "badges"
+_BADGE_DIR = Path(__file__).parent.parent / "badges"
 _BADGE_SVGS = {}
 for _f in _BADGE_DIR.glob("*.svg"):
     _BADGE_SVGS[_f.stem] = _f.read_text()

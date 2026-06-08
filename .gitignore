@@ -2,3 +2,5 @@ src/__pycache__/
 _build/
 src/chat/__pycache__/
 po/de.po~
+src/chat/native/__pycache__/
+src/chat/webkit/__pycache__/
