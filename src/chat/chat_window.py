@@ -28,6 +28,7 @@ class ChatWindow(Adw.Window):
         disable_emote_animations=False,
         theme="system",
         transient_for=None,
+        native_engine=False,
     ):
         super().__init__(
             title=_("Chat: {}").format(display_name or streamer),
@@ -37,16 +38,30 @@ class ChatWindow(Adw.Window):
         if transient_for:
             self.set_transient_for(transient_for)
 
-        self._chat_page = ChatPage(
-            parent=None,
-            streamer=streamer,
-            display_name=display_name,
-            alternating_bg=alternating_bg,
-            disable_emote_animations=disable_emote_animations,
-            theme=theme,
-            twitch=twitch,
-            enable_detach=False,
-        )
+        if native_engine:
+            from .native_chat_page import NativeChatPage
+
+            self._chat_page = NativeChatPage(
+                parent=None,
+                streamer=streamer,
+                display_name=display_name,
+                alternating_bg=alternating_bg,
+                disable_emote_animations=disable_emote_animations,
+                theme=theme,
+                twitch=twitch,
+                enable_detach=False,
+            )
+        else:
+            self._chat_page = ChatPage(
+                parent=None,
+                streamer=streamer,
+                display_name=display_name,
+                alternating_bg=alternating_bg,
+                disable_emote_animations=disable_emote_animations,
+                theme=theme,
+                twitch=twitch,
+                enable_detach=False,
+            )
         self.set_content(self._chat_page)
 
         self.connect("close-request", self._on_close_request)

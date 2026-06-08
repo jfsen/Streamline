@@ -66,6 +66,12 @@
             <description
             >Use static emote images to reduce CPU and GPU usage</description>
         </key>
+        <key name="chat-native-engine" type="b">
+            <default>false</default>
+            <summary>Use native chat engine</summary>
+            <description
+            >Use GTK ListView instead of WebKit for chat rendering.  Uses far less memory, but animated emotes render as static.</description>
+        </key>
         <key name="show-profile-pictures" type="b">
             <default>true</default>
             <summary>Show profile pictures on play buttons</summary>

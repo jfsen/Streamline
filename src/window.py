@@ -183,6 +183,7 @@ class StreamlineWindow(Adw.ApplicationWindow):
             "chat-disable-emote-animations"
         )
         self.show_profile_pictures = self.settings.get_boolean("show-profile-pictures")
+        self.chat_native_engine = self.settings.get_boolean("chat-native-engine")
 
     def _init_twitch_api(self):
         """Initialize the Twitch API with current credentials.
@@ -625,16 +626,30 @@ class StreamlineWindow(Adw.ApplicationWindow):
             display_name = user_data.get("name", streamer)
 
         logger.debug("Opening chat page for %s", streamer)
-        page = ChatPage(
-            self,
-            streamer,
-            display_name=display_name,
-            alternating_bg=self.chat_alternating_bg,
-            disable_emote_animations=self.chat_disable_emote_animations,
-            theme=self.theme,
-            twitch=self.twitch,
-            enable_detach=True,
-        )
+        if self.chat_native_engine:
+            from .chat.native_chat_page import NativeChatPage
+
+            page = NativeChatPage(
+                self,
+                streamer,
+                display_name=display_name,
+                alternating_bg=self.chat_alternating_bg,
+                disable_emote_animations=self.chat_disable_emote_animations,
+                theme=self.theme,
+                twitch=self.twitch,
+                enable_detach=True,
+            )
+        else:
+            page = ChatPage(
+                self,
+                streamer,
+                display_name=display_name,
+                alternating_bg=self.chat_alternating_bg,
+                disable_emote_animations=self.chat_disable_emote_animations,
+                theme=self.theme,
+                twitch=self.twitch,
+                enable_detach=True,
+            )
         page.connect(
             "hidden",
             lambda p, s=streamer: (
@@ -670,6 +685,7 @@ class StreamlineWindow(Adw.ApplicationWindow):
             disable_emote_animations=self.chat_disable_emote_animations,
             theme=self.theme,
             transient_for=self,
+            native_engine=self.chat_native_engine,
         )
         popup.connect(
             "close-request",

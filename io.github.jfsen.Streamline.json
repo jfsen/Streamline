@@ -30,6 +30,16 @@
       "build-commands": ["pip3 install requests --prefix=/app"]
     },
     {
+      "name": "python3-pillow",
+      "buildsystem": "simple",
+      "build-commands": [
+        "pip3 install Pillow --prefix=/app --no-build-isolation"
+      ],
+      "build-options": {
+        "build-args": ["--share=network"]
+      }
+    },
+    {
       "name": "streamline",
       "builddir": true,
       "buildsystem": "meson",

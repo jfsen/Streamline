@@ -33,6 +33,7 @@ class StreamlinePreferences(Adw.PreferencesDialog):
     # Template children — Chat page
     chat_alternating_bg_switch = Gtk.Template.Child()
     chat_disable_emote_animations_switch = Gtk.Template.Child()
+    chat_native_engine_switch = Gtk.Template.Child()
 
     def __init__(self, parent, **kwargs):
         super().__init__(**kwargs)
@@ -83,6 +84,7 @@ class StreamlinePreferences(Adw.PreferencesDialog):
                 self.chat_disable_emote_animations_switch,
             ),
             ("show-profile-pictures", self.profile_pictures_switch),
+            ("chat-native-engine", self.chat_native_engine_switch),
         ):
             settings.bind(key, row, "active", Gio.SettingsBindFlags.DEFAULT)
 
