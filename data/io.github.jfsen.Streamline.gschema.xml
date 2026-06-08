@@ -70,7 +70,7 @@
             <default>false</default>
             <summary>Use native chat engine</summary>
             <description
-            >Use GTK ListView instead of WebKit for chat rendering.  Uses far less memory, but animated emotes render as static.</description>
+            >Use GTK instead of WebKit for chat rendering.  Uses far less memory, but animated emotes always render as static.</description>
         </key>
         <key name="show-profile-pictures" type="b">
             <default>true</default>

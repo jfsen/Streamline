@@ -711,7 +711,17 @@ msgstr ""
 msgid "Use static emote images to reduce resource usage"
 msgstr ""
 
-#: src/preferences.ui:185
+#: src/preferences.ui:197
+msgid "Native Chat Engine"
+msgstr ""
+
+#: src/preferences.ui:201
+msgid ""
+"Use GTK instead of WebKit for chat rendering.  Much lower memory "
+"usage, but animated emotes always show as static"
+msgstr ""
+
+#: src/preferences.ui:209
 msgid "Twitch API"
 msgstr ""
 

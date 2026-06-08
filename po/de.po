@@ -747,7 +747,20 @@ msgstr "Emote-Animationen deaktivieren"
 msgid "Use static emote images to reduce resource usage"
 msgstr "Statische Emote-Bilder verwenden, um Ressourcen zu schonen"
 
-#: src/preferences.ui:185
+#: src/preferences.ui:197
+msgid "Native Chat Engine"
+msgstr "Native Chat-Engine"
+
+#: src/preferences.ui:201
+msgid ""
+"Use GTK instead of WebKit for chat rendering.  Much lower memory "
+"usage, but animated emotes always show as static"
+msgstr ""
+"GTK anstelle von WebKit für die Chat-Darstellung verwenden.  "
+"Deutlich geringere Speichernutzung, aber animierte Emotes werden "
+"immer statisch dargestellt"
+
+#: src/preferences.ui:209
 msgid "Twitch API"
 msgstr "Twitch API"
 

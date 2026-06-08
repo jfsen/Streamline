@@ -12,6 +12,7 @@ src/stream_player.py
 src/twitch.py
 src/chat/chat_page.py
 src/chat/chat_window.py
+src/chat/native_chat_page.py
 src/vod_page.py
 src/window.py
 src/window.ui
