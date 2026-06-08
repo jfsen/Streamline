@@ -170,7 +170,7 @@ list.boxed-list.streamer-list > row:hover .offline-stream-button {
     -gtk-icon-size: 28px;
     color: white;
     -gtk-icon-shadow: 0 0 4px rgba(0, 0, 0, 0.85);
-    opacity: 0.4;
+    opacity: 0.3;
 }
 
 .avatar-play-button .avatar-play-icon:hover {
@@ -181,5 +181,5 @@ list.boxed-list.streamer-list > row:hover .offline-stream-button {
 list.boxed-list.streamer-list
     > row:hover
     .avatar-play-button.offline-stream-button {
-    opacity: 0.85;
+    opacity: 0.8;
 }
