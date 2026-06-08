@@ -10,8 +10,6 @@ gi.require_version("Adw", "1")
 
 from gi.repository import Adw
 
-from .webkit.page import ChatPage
-
 _ = gettext.gettext
 logger = logging.getLogger("ChatWindow")
 
@@ -52,6 +50,8 @@ class ChatWindow(Adw.Window):
                 enable_detach=False,
             )
         else:
+            from .webkit.page import ChatPage
+
             self._chat_page = ChatPage(
                 parent=None,
                 streamer=streamer,

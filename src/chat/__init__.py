@@ -8,4 +8,3 @@ from .config import (
 )
 from .emotes import ThirdPartyEmotes
 from .twitch_chat import TwitchChat
-from .webkit.page import ChatPage

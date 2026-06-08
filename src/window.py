@@ -34,7 +34,6 @@ gi.require_version("Gtk", "4.0")
 
 from gi.repository import Adw, Gio, GLib, Gtk
 
-from .chat.webkit.page import ChatPage
 from .config import (
     DEFAULT_HEIGHT,
     DEFAULT_WIDTH,
@@ -640,6 +639,8 @@ class StreamlineWindow(Adw.ApplicationWindow):
                 enable_detach=True,
             )
         else:
+            from .chat.webkit.page import ChatPage
+
             page = ChatPage(
                 self,
                 streamer,

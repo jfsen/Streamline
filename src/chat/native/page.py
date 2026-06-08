@@ -856,7 +856,7 @@ class NativeChatPage(Adw.NavigationPage):
             return
         parent = self.parent
         root = self.get_root()
-        from .chat_window import ChatWindow as ChatWindow
+        from ..chat_window import ChatWindow as ChatWindow
 
         popup = ChatWindow(
             twitch=getattr(parent, "twitch", None),
