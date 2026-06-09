@@ -67,7 +67,7 @@
             >Use static emote images to reduce CPU and GPU usage</description>
         </key>
         <key name="chat-native-engine" type="b">
-            <default>false</default>
+            <default>true</default>
             <summary>Use native chat engine</summary>
             <description
             >Use GTK instead of WebKit for chat rendering.  Much lower memory usage, but higher CPU usage for animated emotes.</description>
