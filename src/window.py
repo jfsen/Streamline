@@ -603,7 +603,12 @@ class StreamlineWindow(Adw.ApplicationWindow):
     def show_vods_page(self, streamer):
         """Show VODs page for the given streamer."""
         logger.debug("Opening VOD page for %s", streamer)
-        page = VODPage(self, streamer, self.twitch, self.player)
+        # Resolve display name from user cache
+        display_name = streamer
+        if self.twitch is not None:
+            user_data = self.twitch.user_cache.get(streamer, {})
+            display_name = user_data.get("name", streamer)
+        page = VODPage(self, streamer, display_name, self.twitch, self.player)
         # Store weak reference to track the current VOD page
         from weakref import proxy
 

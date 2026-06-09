@@ -26,9 +26,8 @@ class VODPage(Adw.NavigationPage):
     toast_overlay = Gtk.Template.Child()
     refresh_button = Gtk.Template.Child()
 
-    def __init__(self, parent, streamer, twitch, player):
-        # Create navigation page with proper title
-        super().__init__(title=_("{}'s VODs").format(streamer))
+    def __init__(self, parent, streamer, display_name, twitch, player):
+        super().__init__(title=_("{}'s VODs").format(display_name))
 
         # Use weak reference for parent
         self.parent = proxy(parent)
