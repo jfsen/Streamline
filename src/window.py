@@ -571,10 +571,8 @@ class StreamlineWindow(Adw.ApplicationWindow):
 
         # Stream Management section
         stream_section = Adw.ShortcutsSection(title=_("Stream Management"))
-        stream_section.add(
-            Adw.ShortcutsItem.new(_("Follow New Streamer"), "<primary>n")
-        )
-        stream_section.add(Adw.ShortcutsItem.new(_("Quick Play Stream"), "<primary>p"))
+        stream_section.add(Adw.ShortcutsItem.new(_("Follow"), "<primary>n"))
+        stream_section.add(Adw.ShortcutsItem.new(_("Quick Play"), "<primary>p"))
         stream_section.add(Adw.ShortcutsItem.new(_("Refresh Streams"), "<primary>r"))
         stream_section.add(Adw.ShortcutsItem.new(_("Refresh Streams"), "F5"))
         dialog.add(stream_section)

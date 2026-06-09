@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: io.github.jfsen.Streamline\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-06-09 13:52+0200\n"
+"POT-Creation-Date: 2026-06-09 14:10+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -187,7 +187,7 @@ msgstr ""
 msgid "Unfollow"
 msgstr ""
 
-#: src/dialogs.py:65 src/dialogs.py:71
+#: src/dialogs.py:65 src/dialogs.py:71 src/window.py:574 src/window.ui:49
 msgid "Follow"
 msgstr ""
 
@@ -195,7 +195,7 @@ msgstr ""
 msgid "Enter Twitch usernames (separate multiple with commas):"
 msgstr ""
 
-#: src/dialogs.py:90
+#: src/dialogs.py:90 src/window.py:575 src/window.ui:35
 msgid "Quick Play"
 msgstr ""
 
@@ -590,24 +590,12 @@ msgstr ""
 msgid "Stream Management"
 msgstr ""
 
-#: src/window.py:575
-msgid "Follow New Streamer"
-msgstr ""
-
-#: src/window.py:577 src/window.ui:35
-msgid "Quick Play Stream"
-msgstr ""
-
-#: src/window.py:578 src/window.py:579
+#: src/window.py:576 src/window.py:577
 msgid "Refresh Streams"
 msgstr ""
 
 #: src/window.ui:24
 msgid "Refresh"
-msgstr ""
-
-#: src/window.ui:49
-msgid "Follow Streamer"
 msgstr ""
 
 #: src/window.ui:60

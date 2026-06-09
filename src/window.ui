@@ -32,7 +32,7 @@
                         <property
                                                     name="tooltip-text"
                                                     translatable="yes"
-                                                >Quick Play Stream</property>
+                                                >Quick Play</property>
                       </object>
                     </child>
                   </object>
@@ -46,7 +46,7 @@
                         <property
                                                     name="tooltip-text"
                                                     translatable="yes"
-                                                >Follow Streamer</property>
+                                                >Follow</property>
                         <property name="action-name">app.follow</property>
                       </object>
                     </child>

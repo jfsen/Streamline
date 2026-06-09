@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: streamline 3.2.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-06-09 13:52+0200\n"
+"POT-Creation-Date: 2026-06-09 14:10+0200\n"
 "PO-Revision-Date: 2026-05-30 00:23+0200\n"
 "Last-Translator: jfsen\n"
 "Language-Team: none\n"
@@ -156,8 +156,7 @@ msgid ""
 "higher CPU usage for animated emotes."
 msgstr ""
 "GTK anstelle von WebKit für die Chat-Darstellung verwenden.  Deutlich "
-"geringere Speichernutzung, aber höhere CPU-Auslastung bei animierten "
-"Emotes"
+"geringere Speichernutzung, aber höhere CPU-Auslastung bei animierten Emotes"
 
 #: data/io.github.jfsen.Streamline.gschema.xml:77
 msgid "Show profile pictures on play buttons"
@@ -199,7 +198,7 @@ msgstr "Abbrechen"
 msgid "Unfollow"
 msgstr "Entfolgen"
 
-#: src/dialogs.py:65 src/dialogs.py:71
+#: src/dialogs.py:65 src/dialogs.py:71 src/window.py:574 src/window.ui:49
 msgid "Follow"
 msgstr "Folgen"
 
@@ -207,7 +206,7 @@ msgstr "Folgen"
 msgid "Enter Twitch usernames (separate multiple with commas):"
 msgstr "Gib Twitch-Benutzernamen ein (mehrere mit Kommas trennen):"
 
-#: src/dialogs.py:90
+#: src/dialogs.py:90 src/window.py:575 src/window.ui:35
 msgid "Quick Play"
 msgstr "Schnellstart"
 
@@ -627,25 +626,13 @@ msgstr "Beenden"
 msgid "Stream Management"
 msgstr "Stream-Verwaltung"
 
-#: src/window.py:575
-msgid "Follow New Streamer"
-msgstr "Neuem Streamer folgen"
-
-#: src/window.py:577 src/window.ui:35
-msgid "Quick Play Stream"
-msgstr "Stream-Schnellstart"
-
-#: src/window.py:578 src/window.py:579
+#: src/window.py:576 src/window.py:577
 msgid "Refresh Streams"
 msgstr "Streams aktualisieren"
 
 #: src/window.ui:24
 msgid "Refresh"
 msgstr "Aktualisieren"
-
-#: src/window.ui:49
-msgid "Follow Streamer"
-msgstr "Streamer folgen"
 
 #: src/window.ui:60
 msgid "Main Menu"
@@ -799,8 +786,7 @@ msgid ""
 "higher CPU usage for animated emotes"
 msgstr ""
 "GTK anstelle von WebKit für die Chat-Darstellung verwenden.  Deutlich "
-"geringere Speichernutzung, aber höhere CPU-Auslastung bei animierten "
-"Emotes"
+"geringere Speichernutzung, aber höhere CPU-Auslastung bei animierten Emotes"
 
 #: src/preferences.ui:221
 msgid "Twitch API"
@@ -821,6 +807,15 @@ msgstr "VODs"
 #: src/vod_page.ui:23
 msgid "Refresh VODs"
 msgstr "VODs aktualisieren"
+
+#~ msgid "Follow New Streamer"
+#~ msgstr "Neuem Streamer folgen"
+
+#~ msgid "Quick Play Stream"
+#~ msgstr "Stream-Schnellstart"
+
+#~ msgid "Follow Streamer"
+#~ msgstr "Streamer folgen"
 
 #~ msgid ""
 #~ "Use GTK instead of WebKit for chat rendering.  Much lower memory usage, "
