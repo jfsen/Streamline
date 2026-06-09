@@ -190,14 +190,14 @@ def _clamp_color(hex_color: str, dark: bool) -> Gdk.RGBA:
 
     max_c = max(r, g, b)
     min_c = min(r, g, b)
-    l = (max_c + min_c) / 2.0
+    lightness = (max_c + min_c) / 2.0
 
     if max_c == min_c:
         h = 0.0
         s = 0.0
     else:
         d = max_c - min_c
-        s = d / (2.0 - max_c - min_c) if l > 0.5 else d / (max_c + min_c)
+        s = d / (2.0 - max_c - min_c) if lightness > 0.5 else d / (max_c + min_c)
         if max_c == r:
             h = ((g - b) / d + (6.0 if g < b else 0.0)) / 6.0
         elif max_c == g:
@@ -205,14 +205,14 @@ def _clamp_color(hex_color: str, dark: bool) -> Gdk.RGBA:
         else:
             h = ((r - g) / d + 4.0) / 6.0
 
-    l = max(l, 0.78) if dark else min(l, 0.28)
+    lightness = max(lightness, 0.78) if dark else min(lightness, 0.28)
 
     if s == 0:
-        rr = gg = bb = l
+        rr = gg = bb = lightness
     else:
-        c = (1.0 - abs(2.0 * l - 1.0)) * s
+        c = (1.0 - abs(2.0 * lightness - 1.0)) * s
         x = c * (1.0 - abs((h * 6.0) % 2.0 - 1.0))
-        m = l - c / 2.0
+        m = lightness - c / 2.0
         if h < 1.0 / 6.0:
             rr, gg, bb = c, x, 0.0
         elif h < 2.0 / 6.0:
