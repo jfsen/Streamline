@@ -344,7 +344,14 @@ class VODPage(Adw.NavigationPage):
         while row := self.list_box.get_first_child():
             self.list_box.remove(row)
 
+        # Toggle boxed-list: cards when thumbnails are on, compact list when off
+        if self._show_thumbnails:
+            self.list_box.remove_css_class("boxed-list")
+        else:
+            self.list_box.add_css_class("boxed-list")
+
         if not vods:
+            self.list_box.add_css_class("boxed-list")
             row = Adw.ActionRow(
                 title=_("No VODs found"),
                 subtitle=_("This channel has no recent VODs available"),
