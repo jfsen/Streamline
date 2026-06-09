@@ -340,6 +340,10 @@ def _row_setup(factory: Gtk.SignalListItemFactory, list_item: Gtk.ListItem) -> N
     # ── Root row box ────────────────────────────────────────
     row = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
     list_item._row_provider = Gtk.CssProvider()
+    # Static CSS — applied once per widget, never changes.
+    list_item._row_provider.load_from_data(
+        "box, box:hover { background: transparent; }", -1
+    )
     row.get_style_context().add_provider(
         list_item._row_provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
     )
@@ -351,6 +355,8 @@ def _row_setup(factory: Gtk.SignalListItemFactory, list_item: Gtk.ListItem) -> N
     list_item._card.get_style_context().add_provider(
         list_item._card_provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
     )
+    # Track last card-bg variant so _row_bind can skip redundant reloads.
+    list_item._last_card_bg = None
 
     # ── Identity row (badges + username) ────────────────────
     list_item._identity = Gtk.Box(
@@ -411,7 +417,6 @@ def _row_bind(
     user_label = list_item._user_label
     text_view = list_item._text_view
     tag = list_item._body_tag
-    row_provider = list_item._row_provider
     card_provider = list_item._card_provider
 
     dark = getattr(msg, "_dark", False)
@@ -426,20 +431,20 @@ def _row_bind(
     pos = list_item.get_position()
     use_alt = alternating and pos >= 0 and pos % 2 == 1
     card_bg = theme["alt_row"] if use_alt else theme["card_bg"]
-    card_provider.load_from_data(
-        f".msg-card {{"
-        f"  background: {card_bg};"
-        f"  border-radius: {ns['card_radius']}px;"
-        f"  margin: {ns['card_margin']};"
-        f"  padding: {ns['card_padding']};"
-        f"}}"
-        f".msg-card:hover {{ background: {card_bg}; }}",
-        -1,
-    )
-
-    # Keep the row background fully transparent and suppress theme hover
-    # effects so neither the row backdrop nor the card changes on mouse-over.
-    row_provider.load_from_data("box, box:hover { background: transparent; }", -1)
+    # Skip reload when the same variant was applied last bind —
+    # load_from_data is a parse + re-validate that isn't free.
+    if card_bg != getattr(list_item, "_last_card_bg", None):
+        list_item._last_card_bg = card_bg
+        card_provider.load_from_data(
+            f".msg-card {{"
+            f"  background: {card_bg};"
+            f"  border-radius: {ns['card_radius']}px;"
+            f"  margin: {ns['card_margin']};"
+            f"  padding: {ns['card_padding']};"
+            f"}}"
+            f".msg-card:hover {{ background: {card_bg}; }}",
+            -1,
+        )
 
     # ── Badges (remove old, add fresh) ──────────────────────
     while True:
@@ -729,7 +734,10 @@ class NativeChatPage(Adw.NavigationPage):
             self._store.append(_ChatMsg(**kwargs))
 
         if self._auto_scroll:
-            GLib.idle_add(self._scroll_to_bottom, priority=GLib.PRIORITY_LOW)
+            # Retry scroll every ~16 ms until the adjustment upper settles.
+            # New rows need a measure pass (text wrap, emote sizes) before the
+            # upper is final; jumping once to a stale value causes bounce.
+            GLib.timeout_add(16, self._scroll_to_bottom)
 
         return GLib.SOURCE_REMOVE
 
@@ -762,7 +770,10 @@ class NativeChatPage(Adw.NavigationPage):
 
     def _scroll_to_bottom(self) -> bool:
         adj = self._scrolled.get_vadjustment()
-        adj.set_value(adj.get_upper() - adj.get_page_size())
+        target = adj.get_upper() - adj.get_page_size()
+        if target > adj.get_value() + 1.0:
+            adj.set_value(target)
+            return GLib.SOURCE_CONTINUE
         return GLib.SOURCE_REMOVE
 
     def _on_more_clicked(self, button: Gtk.Button) -> None:
