@@ -16,6 +16,7 @@ class StreamlinePreferences(Adw.PreferencesDialog):
     # Template children — Appearance page
     theme_row = Gtk.Template.Child()
     profile_pictures_switch = Gtk.Template.Child()
+    vod_thumbnails_switch = Gtk.Template.Child()
 
     # Template children — Playback page
     player_row = Gtk.Template.Child()
@@ -85,6 +86,7 @@ class StreamlinePreferences(Adw.PreferencesDialog):
             ),
             ("show-profile-pictures", self.profile_pictures_switch),
             ("chat-native-engine", self.chat_native_engine_switch),
+            ("show-vod-thumbnails", self.vod_thumbnails_switch),
         ):
             settings.bind(key, row, "active", Gio.SettingsBindFlags.DEFAULT)
 

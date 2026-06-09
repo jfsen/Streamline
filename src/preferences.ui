@@ -44,6 +44,18 @@
                                 >Show streamer profile pictures on play buttons</property>
               </object>
             </child>
+            <child>
+              <object class="AdwSwitchRow" id="vod_thumbnails_switch">
+                <property
+                                    name="title"
+                                    translatable="yes"
+                                >VOD Thumbnails</property>
+                <property
+                                    name="subtitle"
+                                    translatable="yes"
+                                >Show thumbnail previews for VODs as cards</property>
+              </object>
+            </child>
           </object>
         </child>
 

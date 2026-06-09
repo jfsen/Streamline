@@ -1,4 +1,5 @@
 import gettext
+import hashlib
 import json
 import logging
 import re
@@ -8,7 +9,7 @@ from pathlib import Path
 from weakref import proxy
 
 import requests
-from gi.repository import Adw, GLib, Gtk
+from gi.repository import Adw, Gdk, Gio, GLib, Gtk
 
 from .config import VOD_CACHE_TTL, VOD_REFRESH_COOLDOWN
 
@@ -45,6 +46,13 @@ class VODPage(Adw.NavigationPage):
 
         # Connect refresh button
         self.refresh_button.connect("clicked", self._on_refresh_clicked)
+
+        # Read thumbnail preference
+        settings = Gio.Settings.new("io.github.jfsen.Streamline")
+        self._show_thumbnails = settings.get_boolean("show-vod-thumbnails")
+        settings.connect(
+            "changed::show-vod-thumbnails", self._on_thumbnail_setting_changed
+        )
 
         # Load VODs (show spinner immediately, fetch in background)
         self._load_vods()
@@ -179,6 +187,157 @@ class VODPage(Adw.NavigationPage):
         self._invalidate_vods_cache()
         self._load_vods()
 
+    # ── Thumbnail preference ───────────────────────────────
+
+    def _on_thumbnail_setting_changed(self, settings, key):
+        """Reload the VOD display when the thumbnail toggle changes."""
+        self._show_thumbnails = settings.get_boolean(key)
+        cached = self.load_cached_vods()
+        if cached is not None:
+            self.display_vods(cached)
+
+    @staticmethod
+    def _thumbnail_cache_dir():
+        d = Path(GLib.get_user_cache_dir()) / "Streamline" / "vods" / "thumbnails"
+        d.mkdir(parents=True, exist_ok=True)
+        return d
+
+    def _thumbnail_path(self, url):
+        if not url:
+            return None
+        name = hashlib.sha256(url.encode()).hexdigest()[:16] + ".jpg"
+        return self._thumbnail_cache_dir() / name
+
+    def _build_vod_card(self, vod, created_at, duration):
+        """Build a card-style row with thumbnail, title, metadata, and buttons."""
+        # ── Root card (vertical) ────────────────────────────
+        row = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+        row.add_css_class("card")
+
+        # ── Thumbnail ───────────────────────────────────────
+        thumb_url = vod.get("thumbnail_url", "")
+        thumb_path = self._thumbnail_path(thumb_url) if thumb_url else None
+        if thumb_path and thumb_path.exists():
+            picture = Gtk.Picture.new_for_filename(str(thumb_path))
+        else:
+            icon_theme = Gtk.IconTheme.get_for_display(Gdk.Display.get_default())
+            icon = icon_theme.lookup_icon(
+                "video-x-generic-symbolic",
+                None,
+                64,
+                1,
+                Gtk.TextDirection.NONE,
+                Gtk.IconLookupFlags.FORCE_SYMBOLIC,
+            )
+            if icon:
+                picture = Gtk.Picture.new_for_paintable(icon)
+            else:
+                picture = Gtk.Picture.new()
+        picture.set_hexpand(True)
+        picture.set_size_request(-1, 120)
+        picture.set_content_fit(Gtk.ContentFit.COVER)
+        picture.add_css_class("thumbnail")
+        row.append(picture)
+
+        # Start background download if not cached
+        if thumb_url and thumb_path and not thumb_path.exists():
+            threading.Thread(
+                target=self._download_thumbnail,
+                args=(thumb_url, thumb_path, picture),
+                daemon=True,
+            ).start()
+
+        # ── Text area ───────────────────────────────────────
+        text_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=4)
+        text_box.set_margin_start(10)
+        text_box.set_margin_end(10)
+        text_box.set_margin_top(8)
+        text_box.set_margin_bottom(8)
+
+        title_label = Gtk.Label(
+            label=GLib.markup_escape_text(vod["title"]),
+            xalign=0,
+            wrap=True,
+            wrap_mode=2,  # WORD
+            max_width_chars=50,
+        )
+        title_label.add_css_class("heading")
+        title_label.set_tooltip_text(vod["title"])
+        text_box.append(title_label)
+
+        # ── Meta row ────────────────────────────────────────
+        meta_row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
+        meta_row.set_margin_top(2)
+
+        meta_label = Gtk.Label(
+            label=f"{created_at} • {duration}",
+            xalign=0,
+            hexpand=True,
+        )
+        meta_label.add_css_class("dim-label")
+        meta_label.add_css_class("caption")
+        meta_row.append(meta_label)
+
+        play_button = Gtk.Button(icon_name="media-playback-start-symbolic")
+        play_button.add_css_class("flat")
+        play_button.set_valign(Gtk.Align.CENTER)
+        play_button.set_tooltip_text(_("Play VOD"))
+        play_button.connect("clicked", lambda btn, v=vod: self.play_vod(v))
+        meta_row.append(play_button)
+
+        browser_button = Gtk.Button(icon_name="web-browser-symbolic")
+        browser_button.add_css_class("flat")
+        browser_button.set_valign(Gtk.Align.CENTER)
+        browser_button.set_tooltip_text(_("Open VOD in browser"))
+        browser_button.connect("clicked", lambda btn, v=vod: self.open_in_browser(v))
+        meta_row.append(browser_button)
+
+        text_box.append(meta_row)
+        row.append(text_box)
+
+        return row
+
+    def _download_thumbnail(self, url, path, picture):
+        """Download a thumbnail to disk and update the picture."""
+        try:
+            sized_url = url.replace("%{width}", "480").replace("%{height}", "270")
+            r = requests.get(sized_url, timeout=10)
+            r.raise_for_status()
+            path.write_bytes(r.content)
+            GLib.idle_add(self._apply_thumbnail, picture, path)
+        except Exception as e:
+            logger.debug("Thumbnail download failed: %s", e)
+
+    def _apply_thumbnail(self, picture, path):
+        """Replace placeholder with the downloaded thumbnail."""
+        if path.exists():
+            texture = Gdk.Texture.new_from_filename(str(path))
+            if texture:
+                pic = Gtk.Picture.new_for_paintable(texture)
+                pic.set_hexpand(True)
+                pic.set_size_request(-1, 120)
+                pic.set_content_fit(Gtk.ContentFit.COVER)
+                pic.add_css_class("thumbnail")
+                # Replace in parent
+                parent = picture.get_parent()
+                if parent and isinstance(parent, Gtk.Box):
+                    # Find index of old picture
+                    idx = -1
+                    child = parent.get_first_child()
+                    i = 0
+                    while child:
+                        if child == picture:
+                            idx = i
+                            break
+                        child = child.get_next_sibling()
+                        i += 1
+                    if idx >= 0:
+                        parent.remove(picture)
+                        parent.insert_child_after(
+                            pic, None if idx == 0 else parent.get_first_child()
+                        )
+        return GLib.SOURCE_REMOVE
+
     def display_vods(self, vods):
         """Display VODs in the list box."""
         self.list_box.set_visible(False)
@@ -202,28 +361,32 @@ class VODPage(Adw.NavigationPage):
             duration = vod["duration"]
             if re.search(r"\dh", duration):  # raw Twitch format like "2h29m45s"
                 duration = self.twitch._format_duration(duration)
-            row = Adw.ActionRow(
-                title=GLib.markup_escape_text(vod["title"]),
-                subtitle=f"{created_at} • {duration}",
-            )
-            row.set_title_lines(1)
-            row.set_tooltip_text(vod["title"])
 
-            play_button = Gtk.Button(icon_name="media-playback-start-symbolic")
-            play_button.add_css_class("flat")
-            play_button.set_valign(Gtk.Align.CENTER)
-            play_button.set_tooltip_text(_("Play VOD"))
-            play_button.connect("clicked", lambda btn, v=vod: self.play_vod(v))
-            row.add_suffix(play_button)
+            if self._show_thumbnails:
+                row = self._build_vod_card(vod, created_at, duration)
+            else:
+                row = Adw.ActionRow(
+                    title=GLib.markup_escape_text(vod["title"]),
+                    subtitle=f"{created_at} • {duration}",
+                )
+                row.set_title_lines(1)
+                row.set_tooltip_text(vod["title"])
 
-            browser_button = Gtk.Button(icon_name="web-browser-symbolic")
-            browser_button.add_css_class("flat")
-            browser_button.set_valign(Gtk.Align.CENTER)
-            browser_button.set_tooltip_text(_("Open VOD in browser"))
-            browser_button.connect(
-                "clicked", lambda btn, v=vod: self.open_in_browser(v)
-            )
-            row.add_suffix(browser_button)
+                play_button = Gtk.Button(icon_name="media-playback-start-symbolic")
+                play_button.add_css_class("flat")
+                play_button.set_valign(Gtk.Align.CENTER)
+                play_button.set_tooltip_text(_("Play VOD"))
+                play_button.connect("clicked", lambda btn, v=vod: self.play_vod(v))
+                row.add_suffix(play_button)
+
+                browser_button = Gtk.Button(icon_name="web-browser-symbolic")
+                browser_button.add_css_class("flat")
+                browser_button.set_valign(Gtk.Align.CENTER)
+                browser_button.set_tooltip_text(_("Open VOD in browser"))
+                browser_button.connect(
+                    "clicked", lambda btn, v=vod: self.open_in_browser(v)
+                )
+                row.add_suffix(browser_button)
 
             self.list_box.append(row)
 

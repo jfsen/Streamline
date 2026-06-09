@@ -489,6 +489,7 @@ class TwitchAPI:
                         "duration": vod["duration"],
                         "created_at": vod["created_at"],
                         "view_count": vod["view_count"],
+                        "thumbnail_url": vod.get("thumbnail_url", ""),
                     }
                 )
 

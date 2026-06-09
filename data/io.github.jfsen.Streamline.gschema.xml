@@ -78,5 +78,11 @@
             <description
             >Replace the play icon with the streamer's profile picture when available</description>
         </key>
+        <key name="show-vod-thumbnails" type="b">
+            <default>true</default>
+            <summary>Show VOD thumbnails</summary>
+            <description
+            >Display thumbnail previews for VODs as cards instead of a plain list</description>
+        </key>
 	</schema>
 </schemalist>
