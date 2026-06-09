@@ -8,16 +8,16 @@
 # Consumers:  webkit/page.py, native/page.py,  emotes.py  (CACHE_TTL)
 
 # Messages beyond this count trigger culling from the DOM.
-MAX_MESSAGES = 750
+MAX_MESSAGES = 500
 
 # Number of oldest messages removed in one pass when MAX_MESSAGES
 # is exceeded.
-CULL_CHUNK = 50
+CULL_CHUNK = 30
 
 # Incoming messages are batched for this many milliseconds before
 # a single DOM injection.  Higher values improve throughput at the
 # cost of perceived latency.
-FLUSH_MS = 300
+FLUSH_MS = 250
 
 # ── Emote caches ───────────────────────────────────────────
 #
