@@ -386,7 +386,7 @@ def _row_setup(factory: Gtk.SignalListItemFactory, list_item: Gtk.ListItem) -> N
 
     tv_provider = Gtk.CssProvider()
     tv_provider.load_from_data(
-        f"textview {{ background: transparent; font: {ns['font_size']} {ns['font_family']}; }}"
+        f"textview {{ background: transparent; font: {ns['font_size']} {ns['font_family']}; padding: 0; }}"
         "textview text { background: transparent; }",
         -1,
     )
@@ -502,10 +502,6 @@ def _row_bind(
         elif seg["type"] == "emote":
             end_iter = buffer.get_end_iter()
             anchor = buffer.create_child_anchor(end_iter)
-            # Gtk.Picture with CONTENT_FIT=CONTAIN scales the texture to
-            # fill available space while preserving aspect ratio — no
-            # square-cropping.  set_size_request(28,28) reserves space
-            # before the texture arrives so the text view lays out correctly.
             pic = Gtk.Picture()
             pic.set_size_request(28, 28)
             pic.set_can_shrink(False)
@@ -515,6 +511,12 @@ def _row_bind(
             pic.set_tooltip_text(tooltip)
             text_view.add_child_at_anchor(pic, anchor)
             _EMOTE_CACHE.request(seg["url"], pic)
+
+    # After rewriting the buffer the row height may have changed (e.g.
+    # recycled from a tall multi-line message to a short single-line one).
+    # Without a resize the ListView keeps the old measured height, leaving
+    # blank space until the next batch forces a global relayout.
+    text_view.queue_resize()
 
 
 # ── Temporary badge files ────────────────────────────────────
