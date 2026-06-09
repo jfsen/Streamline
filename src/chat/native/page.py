@@ -482,6 +482,13 @@ def _row_bind(
 
     # ── Message body text + emotes ──────────────────────────
     buffer = text_view.get_buffer()
+
+    # Invalidate any cached Pango layout from the previous
+    # binding *before* inserting new content.  Without this the
+    # TextView can report the old natural height, causing the
+    # ListView to allocate the wrong size until a subsequent
+    # message forces a global re-layout.
+    text_view.queue_resize()
     buffer.set_text("", 0)
 
     tag.set_property("foreground", theme["text_color"])
@@ -514,9 +521,11 @@ def _row_bind(
 
     # After rewriting the buffer the row height may have changed (e.g.
     # recycled from a tall multi-line message to a short single-line one).
-    # Without a resize the ListView keeps the old measured height, leaving
-    # blank space until the next batch forces a global relayout.
-    text_view.queue_resize()
+    # Queue a resize on the row widget itself so the ListView re-measures
+    # the item — a resize on a deep descendant doesn't always propagate.
+    row = list_item.get_child()
+    if row is not None:
+        row.queue_resize()
 
 
 # ── Temporary badge files ────────────────────────────────────
