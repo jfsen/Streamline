@@ -17,6 +17,7 @@ import requests
 from gi.repository import Adw, Gdk, Gio, GLib, Gtk
 
 from ..config import (
+    CULL_CHUNK,
     FALLBACK_USER_COLOR,
     FLUSH_MS,
     MAX_MESSAGES,
@@ -476,6 +477,8 @@ class NativeChatPage(Adw.NavigationPage):
     switch between the two implementations.
     """
 
+    # ── constructor ─────────────────────────────────────────
+
     def __init__(
         self,
         parent,
@@ -501,10 +504,32 @@ class NativeChatPage(Adw.NavigationPage):
         self._chat: TwitchChat | None = None
         self._third_party_emotes: ThirdPartyEmotes | None = None
         self._dark = theme != "light"
-        self._auto_scroll = True
         self._batch_flush_id: int | None = None
         self._msg_batch: list[dict] = []
         self._item_count = 0
+        self._next_is_alt = False  # alternating bg toggle
+
+        # ── Scroll state ────────────────────────────────────
+        # ``_auto_scroll``: True when the viewport is pinned to
+        # the bottom (default).  Set to False by the scroll
+        # controller when the user scrolls up past a threshold;
+        # set back to True by ``_on_scroll_value_changed`` when
+        # the viewport reaches the bottom again.
+        #
+        # ``_scroll_gen``: incremented before every scroll
+        # operation (flush, "More" click).  Retry callbacks
+        # carry a copy of the generation at scheduling time and
+        # bail out if it no longer matches — this prevents stale
+        # retries from fighting a newer operation.
+        #
+        # ``_suppress_scroll_signal``: True while
+        # ``adj.set_value()`` is called programmatically.
+        # ``_on_scroll_value_changed`` checks this flag and
+        # returns early so programmatic adjustments never
+        # accidentally toggle ``_auto_scroll``.
+        self._auto_scroll = True
+        self._scroll_gen = 0
+        self._suppress_scroll_signal = False
 
         # Store all card widgets so we can update them on theme change.
         self._cards: list[Gtk.Widget] = []
@@ -755,7 +780,6 @@ class NativeChatPage(Adw.NavigationPage):
                 segments=segments,
                 badges=msg.get("badges", []),
                 action=msg.get("action", False),
-                index=self._item_count,  # used for alternating bg
             )
         )
 
@@ -763,6 +787,20 @@ class NativeChatPage(Adw.NavigationPage):
             self._batch_flush_id = GLib.timeout_add(FLUSH_MS, self._flush_messages)
 
     def _flush_messages(self) -> bool:
+        """Append batched cards, cull excess, and restore scroll.
+
+        Order of operations:
+
+        1. Bump the scroll generation so any in-flight retry callbacks
+           from a previous flush bail out immediately.
+        2. Capture the pre-mutation scroll state (value + upper bound).
+        3. Remove the oldest children from the top (up to CULL_CHUNK at
+           a time) until the message count fits within MAX_MESSAGES.
+        4. Append the new cards.
+        5. Schedule a GTK resize, then schedule the appropriate
+           scroll-position callback (auto-scroll-to-bottom or
+           pin-restore).
+        """
         if not self._msg_batch:
             self._batch_flush_id = None
             return GLib.SOURCE_REMOVE
@@ -771,51 +809,92 @@ class NativeChatPage(Adw.NavigationPage):
         self._msg_batch = []
         self._batch_flush_id = None
 
+        # Bump generation first — any pending retries from a previous
+        # flush will see the stale generation and return SOURCE_REMOVE.
+        self._scroll_gen += 1
+        gen = self._scroll_gen
+
+        adj = self._scrolled.get_vadjustment()
+
+        # Capture pre-mutation geometry.
+        was_auto = self._auto_scroll
+        if not was_auto:
+            pin_value = adj.get_value()
+            pin_upper = adj.get_upper()
+        else:
+            pin_value = None
+            pin_upper = None
+
+        # ── Cull oldest messages from the top ────────────────
+        # Cull in chunks (CULL_CHUNK) so GTK's layout isn't
+        # hammered by hundreds of single-child removals in one
+        # frame.  If more children need removing after this chunk,
+        # the next flush (or the idle callback below) will catch
+        # them.
+        culled = 0
+        while self._item_count > MAX_MESSAGES and culled < CULL_CHUNK:
+            first = self._msg_box.get_first_child()
+            if first is None:
+                break
+            self._msg_box.remove(first)
+            if first in self._cards:
+                self._cards.remove(first)
+            first.unrealize()
+            self._item_count -= 1
+            culled += 1
+
+        # ── Append new cards ─────────────────────────────────
         for msg_data in batch:
             card = self._build_card(msg_data)
 
-            # Alternating background: use alt class for odd rows.
-            if self._alternating_bg and msg_data["index"] % 2 == 1:
+            # Alternating background: simple toggle, independent of
+            # culling or global indices.
+            if self._alternating_bg and self._next_is_alt:
                 card.remove_css_class("msg-card")
                 card.add_css_class("msg-card-alt")
+            self._next_is_alt = not self._next_is_alt
 
             self._msg_box.append(card)
             self._cards.append(card)
 
-        # Cull oldest messages when past the limit
-        while self._item_count > MAX_MESSAGES:
-            first = self._msg_box.get_first_child()
-            if first is not None:
-                self._msg_box.remove(first)
-                if first in self._cards:
-                    self._cards.remove(first)
-                first.unrealize()
-            self._item_count -= 1
-
-        # Gtk.Box.append() queues a resize, but the frame clock may
-        # not tick until the next event.  Schedule an idle callback
-        # that runs after this function returns — by then the new
-        # cards are in the tree, so the resize propagates properly.
-        # This is the same mechanism that makes emote-containing
-        # messages render immediately (via _EMOTE_CACHE.idle_add).
+        # ── Resize + scroll ──────────────────────────────────
+        # queue_resize on idle so the new cards have entered the
+        # widget tree before GTK measures them.
         GLib.idle_add(self._msg_box.queue_resize)
 
-        if self._auto_scroll:
-            # Use a 16ms timeout instead of idle_add so _scroll_to_bottom
-            # can return SOURCE_CONTINUE to retry until the layout settles
-            # and the adjustment's upper value stabilizes.
-            GLib.timeout_add(16, self._scroll_to_bottom)
+        if was_auto:
+            GLib.timeout_add(16, self._scroll_to_bottom, gen, 0)
+        elif culled > 0 and pin_value is not None and pin_upper is not None:
+            # Compute the exact height removed by comparing the
+            # adjustment's upper bound before and after layout.
+            # This is more reliable than summing widget heights
+            # because GTK has the final word on layout geometry.
+            GLib.timeout_add(
+                16, self._restore_scroll_position, gen, pin_value, pin_upper, 0
+            )
 
         return GLib.SOURCE_REMOVE
 
     # ── Scrolling ───────────────────────────────────────────
 
     def _on_scroll_value_changed(self, adjustment: Gtk.Adjustment) -> None:
+        """Re-enable auto-scroll when the viewport reaches the bottom.
+
+        Only *enables* auto-scroll — never disables it.  Disabling is
+        done by ``_on_scroll_event`` (user-initiated scroll-up).
+
+        Returns immediately when ``_suppress_scroll_signal`` is True so
+        that programmatic ``adj.set_value()`` calls during culling or
+        scroll-to-bottom retries don't accidentally toggle state.
+        """
+        if self._suppress_scroll_signal:
+            return
+
         at_bottom = (
             adjustment.get_value() + adjustment.get_page_size()
             >= adjustment.get_upper() - 2.0
         )
-        if at_bottom:
+        if at_bottom and not self._auto_scroll:
             self._auto_scroll = True
             self._more_button.set_visible(False)
 
@@ -825,28 +904,95 @@ class NativeChatPage(Adw.NavigationPage):
         dx: float,
         dy: float,
     ) -> bool:
-        if dy > 0:
+        """Disable auto-scroll when the user scrolls up past a threshold.
+
+        A small threshold (30 px) prevents tiny trackpad bumps or
+        kinetic-scroll noise from yanking the viewport out of
+        auto-scroll mode.
+        """
+        if dy < 0:
             adj = self._scrolled.get_vadjustment()
-            if adj.get_value() + adj.get_page_size() >= adj.get_upper() - 2.0:
-                self._auto_scroll = True
-                self._more_button.set_visible(False)
-        elif dy < 0:
-            self._auto_scroll = False
-            self._more_button.set_visible(True)
+            dist_from_bottom = adj.get_upper() - (adj.get_value() + adj.get_page_size())
+            if dist_from_bottom > 30.0 and self._auto_scroll:
+                self._auto_scroll = False
+                self._more_button.set_visible(True)
         return False
 
-    def _scroll_to_bottom(self) -> bool:
+    def _scroll_to_bottom(self, gen: int, retry: int) -> bool:
+        """Retry-based scroll-to-bottom for the given *gen*.
+
+        Retries up to 3 times (≈48 ms total at 16 ms intervals) so the
+        GTK layout phase has time to settle the adjustment's upper bound.
+        """
+        if gen != self._scroll_gen:
+            return GLib.SOURCE_REMOVE
+        if retry >= 3:
+            return GLib.SOURCE_REMOVE
+
+        self._suppress_scroll_signal = True
+        try:
+            adj = self._scrolled.get_vadjustment()
+            adj.set_value(adj.get_upper() - adj.get_page_size())
+        finally:
+            self._suppress_scroll_signal = False
+
+        GLib.timeout_add(16, self._scroll_to_bottom, gen, retry + 1)
+        return GLib.SOURCE_REMOVE
+
+    def _restore_scroll_position(
+        self, gen: int, pin_value: float, pin_upper: float, retry: int
+    ) -> bool:
+        """Restore the pre-cull scroll position after layout settles.
+
+        Instead of summing widget heights (which can be inaccurate
+        when widgets haven't been allocated yet), we compare the
+        adjustment's old and new upper bounds.  The difference is the
+        exact height that was removed by culling.
+        """
+        if gen != self._scroll_gen:
+            return GLib.SOURCE_REMOVE
+        if retry >= 3:
+            return GLib.SOURCE_REMOVE
+
         adj = self._scrolled.get_vadjustment()
-        target = adj.get_upper() - adj.get_page_size()
-        if target > adj.get_value() + 1.0:
+        new_upper = adj.get_upper()
+
+        # If layout hasn't settled yet the upper bound may not have
+        # changed; retry once more even on the last attempt.
+        removed_height = pin_upper - new_upper
+        if removed_height <= 0 and retry < 2:
+            GLib.timeout_add(
+                16, self._restore_scroll_position, gen, pin_value, pin_upper, retry + 1
+            )
+            return GLib.SOURCE_REMOVE
+
+        target = max(0.0, pin_value - max(removed_height, 0.0))
+        self._suppress_scroll_signal = True
+        try:
             adj.set_value(target)
-            return GLib.SOURCE_CONTINUE  # layout hasn't settled yet, retry
+        finally:
+            self._suppress_scroll_signal = False
+
         return GLib.SOURCE_REMOVE
 
     def _on_more_clicked(self, button: Gtk.Button) -> None:
+        """Jump back to the bottom and resume auto-scroll."""
         self._auto_scroll = True
         self._more_button.set_visible(False)
-        GLib.timeout_add(16, self._scroll_to_bottom)
+
+        self._scroll_gen += 1
+        gen = self._scroll_gen
+
+        # Immediate scroll (layout is already settled).
+        self._suppress_scroll_signal = True
+        try:
+            adj = self._scrolled.get_vadjustment()
+            adj.set_value(adj.get_upper() - adj.get_page_size())
+        finally:
+            self._suppress_scroll_signal = False
+
+        # Retries in case late-loading emotes resize the content.
+        GLib.timeout_add(16, self._scroll_to_bottom, gen, 1)
 
     # ── Theme ───────────────────────────────────────────────
 
@@ -918,13 +1064,25 @@ class NativeChatPage(Adw.NavigationPage):
     # ── Lifecycle ───────────────────────────────────────────
 
     def _on_map(self, _widget) -> None:
-        pass
+        """Reset scroll state when the page becomes visible.
+
+        Called after construction and after the page is re-mapped
+        (e.g. returning from a detached window).  Scrolls to the
+        bottom so the user sees fresh content immediately.
+        """
+        self._auto_scroll = True
+        self._scroll_gen += 1
+        self._suppress_scroll_signal = False
+        self._more_button.set_visible(False)
+        GLib.idle_add(self._scroll_to_bottom, self._scroll_gen, 0)
 
     def _on_hidden(self, page) -> None:
         self.cleanup()
 
     def cleanup(self) -> None:
         """Stop chat and release resources.  Idempotent."""
+        # Invalidate all pending scroll retries before tearing down.
+        self._scroll_gen += 1
         if self._style_manager is not None:
             self._style_manager.disconnect_by_func(self._on_theme_changed)
             self._style_manager = None
@@ -942,6 +1100,8 @@ class NativeChatPage(Adw.NavigationPage):
                 break
             self._msg_box.remove(child)
         self._cards.clear()
+        self._item_count = 0
+        self._next_is_alt = False
 
     def _on_detach(self, button: Gtk.Button) -> None:
         """Open the chat in a separate window and pop this page."""
