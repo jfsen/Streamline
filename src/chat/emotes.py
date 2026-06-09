@@ -329,8 +329,8 @@ class ThirdPartyEmotes:
                     best_data = node[""]
                     best_end = j
             if best_data:
-                before = i == 0 or not text[i - 1].isalnum()
-                after = best_end == n or not text[best_end].isalnum()
+                before = i == 0 or text[i - 1].isspace()
+                after = best_end == n or text[best_end].isspace()
                 if before and after:
                     result.append(
                         {
