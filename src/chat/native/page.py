@@ -1,9 +1,8 @@
-"""Alternative chat page using native GTK ListView widgets instead of WebKit.
+"""Alternative chat page using native GTK widgets instead of WebKit.
 
-Memory model (vs. WebKit): only visible rows exist as GTK widgets.  Emote
-images are downloaded once, decoded to Gdk.Texture, and shared across all
-rows referencing the same URL.  Animated emotes render as static first-frame
-— acceptable for a resource-conscious "alt" implementation.
+Cards are appended directly to a Gtk.Box inside a ScrolledWindow — no
+ListView, no row recycling.  This avoids the measurement / resize-timing
+bugs that plague Gtk.TextView inside recycled list rows.
 """
 
 import gettext
@@ -16,10 +15,9 @@ from pathlib import Path
 
 import gi
 import requests
-from gi.repository import Adw, Gdk, Gio, GLib, GObject, Gtk
+from gi.repository import Adw, Gdk, Gio, GLib, Gtk
 
 from ..config import (
-    CULL_CHUNK,
     FALLBACK_USER_COLOR,
     FLUSH_MS,
     MAX_MESSAGES,
@@ -51,9 +49,7 @@ class EmoteTextureCache:
 
     * *In-memory LRU* — the most recently used textures (up to
       ``_MAX_EMOTE_TEXTURES``) are kept decoded for instant reuse.
-      Excess entries are evicted oldest-first.  Since message culling
-      removes rows from the list model, emotes that no longer appear in
-      any visible message naturally become eviction candidates.
+      Excess entries are evicted oldest-first.
 
     * *On-disk* — raw image bytes are stored at
       ``~/.cache/Streamline/emotes/images/<url-hash>`` so a texture
@@ -69,8 +65,6 @@ class EmoteTextureCache:
         self._lock = threading.Lock()
         _EMOTE_IMAGE_DIR.mkdir(parents=True, exist_ok=True)
 
-    # ── URL → stable disk filename ──────────────────
-
     @staticmethod
     def _url_hash(url: str) -> str:
         return hashlib.sha256(url.encode()).hexdigest()[:16]
@@ -78,25 +72,20 @@ class EmoteTextureCache:
     def _disk_path(self, url: str) -> Path:
         return _EMOTE_IMAGE_DIR / self._url_hash(url)
 
-    # ── Public API ───────────────────────────────────
-
     def request(self, url: str, widget: Gtk.Widget) -> None:
         with self._lock:
-            # In-memory hit — move to MRU position and apply
             if url in self._textures:
                 texture = self._textures.pop(url)
                 self._textures[url] = texture
                 GLib.idle_add(_apply_texture, widget, texture)
                 return
 
-            # Already being fetched — queue for when data arrives
             if url in self._pending:
                 self._pending[url].append((widget, False))
                 return
 
             self._pending[url] = [(widget, False)]
 
-            # Disk hit — load bytes and decode in background
             disk_path = self._disk_path(url)
             if disk_path.exists():
                 target = ("disk", disk_path)
@@ -110,8 +99,6 @@ class EmoteTextureCache:
             ).start()
         else:
             threading.Thread(target=self._download, args=(url,), daemon=True).start()
-
-    # ── Background loaders ──────────────────────────
 
     def _load_from_disk(self, url: str, path: Path) -> None:
         try:
@@ -130,7 +117,6 @@ class EmoteTextureCache:
             r = requests.get(url, timeout=15)
             r.raise_for_status()
             data = r.content
-            # Persist raw bytes to disk so future requests skip the network
             try:
                 self._disk_path(url).write_bytes(data)
             except OSError as exc:
@@ -139,8 +125,6 @@ class EmoteTextureCache:
             logger.debug("Failed to download emote %s: %s", url, exc)
 
         GLib.idle_add(self._on_data, url, data)
-
-    # ── Completion callback (always called on the main thread) ────
 
     def _on_data(self, url: str, data: bytes | None) -> bool:
         texture = None
@@ -151,10 +135,8 @@ class EmoteTextureCache:
 
         with self._lock:
             if texture is not None:
-                # Insert / move to MRU position
                 self._textures[url] = texture
                 self._textures.move_to_end(url)
-                # LRU eviction
                 while len(self._textures) > _MAX_EMOTE_TEXTURES:
                     self._textures.popitem(last=False)
             widgets = self._pending.pop(url, [])
@@ -172,8 +154,6 @@ class EmoteTextureCache:
 
         from PIL import Image
 
-        # Pillow is extremely verbose about PNG chunk metadata on stderr;
-        # suppress its logger so the terminal stays readable.
         logging.getLogger("PIL").setLevel(logging.WARNING)
 
         try:
@@ -187,13 +167,11 @@ class EmoteTextureCache:
 
 
 def _apply_texture(widget: Gtk.Widget, texture: Gdk.Texture) -> bool:
-    """Set the texture on an emote widget (always called on the main thread)."""
+    """Set the texture on an emote Gtk.Picture (always main-thread)."""
     widget.set_paintable(texture)
     widget.queue_resize()
     return GLib.SOURCE_REMOVE
 
-
-# ── Shared emote cache (one per process) ────────────────────
 
 _EMOTE_CACHE = EmoteTextureCache()
 
@@ -227,10 +205,8 @@ def _clamp_color(hex_color: str, dark: bool) -> Gdk.RGBA:
         else:
             h = ((r - g) / d + 4.0) / 6.0
 
-    # Clamp lightness
     l = max(l, 0.78) if dark else min(l, 0.28)
 
-    # HSL → RGB
     if s == 0:
         rr = gg = bb = l
     else:
@@ -266,14 +242,10 @@ def _build_segments(text: str, emotes: list[dict]) -> list[dict]:
 
         {"type": "text", "content": "…"}
         {"type": "emote", "url": "https://…", "name": "Kappa", "source": "Twitch"}
-
-    Emote positions are Python code-point offsets (from Twitch IRC and
-    the third-party trie scanner) — no UTF-16 conversion needed here.
     """
     if not emotes:
         return [{"type": "text", "content": text}]
 
-    # Collect, deduplicate overlapping, and sort
     raw_positions: list[tuple[int, int, str, str, str]] = []
     for em in emotes:
         for start, end in em["positions"]:
@@ -286,7 +258,7 @@ def _build_segments(text: str, emotes: list[dict]) -> list[dict]:
     cursor = 0
     for start, end, url, name, source in raw_positions:
         if start < cursor:
-            continue  # overlapping emote — skip
+            continue
         if start > cursor:
             segments.append({"type": "text", "content": text[cursor:start]})
         segments.append(
@@ -305,232 +277,7 @@ def _build_segments(text: str, emotes: list[dict]) -> list[dict]:
     return segments
 
 
-# ── Data model ───────────────────────────────────────────────
-
-
-class _ChatMsg(GObject.Object):
-    """GObject wrapper so Gio.ListStore can hold message data."""
-
-    user: str
-    text: str
-    color: str
-    segments: list
-    badges: list
-    action: bool
-    _dark: bool
-    _alternating: bool
-
-    def __init__(self, **kwargs):
-        super().__init__()
-        for k, v in kwargs.items():
-            object.__setattr__(self, k, v)
-
-
-# ── Row factory ──────────────────────────────────────────────
-
-
-def _row_setup(factory: Gtk.SignalListItemFactory, list_item: Gtk.ListItem) -> None:
-    """Build the reusable widget template once per recycled row.
-
-    Template references are stored on the list_item so ``_row_bind`` can
-    update content without rebuilding widgets.
-    """
-    ns = NATIVE_STYLE
-
-    # ── Root row box ────────────────────────────────────────
-    row = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
-    list_item._row_provider = Gtk.CssProvider()
-    # Static CSS — applied once per widget, never changes.
-    list_item._row_provider.load_from_data(
-        "box, box:hover { background: transparent; }", -1
-    )
-    row.get_style_context().add_provider(
-        list_item._row_provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
-    )
-
-    # ── Card (rounded frame) ────────────────────────────────
-    list_item._card = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
-    list_item._card.add_css_class("msg-card")
-    list_item._card_provider = Gtk.CssProvider()
-    list_item._card.get_style_context().add_provider(
-        list_item._card_provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
-    )
-    # Track last card-bg variant so _row_bind can skip redundant reloads.
-    list_item._last_card_bg = None
-
-    # ── Identity row (badges + username) ────────────────────
-    list_item._identity = Gtk.Box(
-        orientation=Gtk.Orientation.HORIZONTAL,
-        spacing=int(ns["badge_spacing"]),
-    )
-    list_item._identity.set_valign(Gtk.Align.START)
-    list_item._identity.set_margin_bottom(ns["identity_margin_bottom"])
-
-    list_item._user_label = Gtk.Label()
-    list_item._user_label.set_halign(Gtk.Align.START)
-    list_item._user_label.set_valign(Gtk.Align.START)
-    list_item._identity.append(list_item._user_label)
-
-    list_item._card.append(list_item._identity)
-
-    # ── Message body (TextView) ─────────────────────────────
-    list_item._text_view = Gtk.TextView()
-    list_item._text_view.set_editable(False)
-    list_item._text_view.set_cursor_visible(False)
-    list_item._text_view.set_wrap_mode(Gtk.WrapMode.WORD)
-    list_item._text_view.set_halign(Gtk.Align.FILL)
-    list_item._text_view.set_valign(Gtk.Align.FILL)
-    # Minimum width prevents the text view from computing an absurdly tall
-    # layout when the initial measure pass has a narrow-or-zero width guess.
-    list_item._text_view.set_size_request(300, -1)
-
-    tv_provider = Gtk.CssProvider()
-    tv_provider.load_from_data(
-        f"textview {{ background: transparent; font: {ns['font_size']} {ns['font_family']}; padding: 0; }}"
-        "textview text { background: transparent; }",
-        -1,
-    )
-    list_item._text_view.get_style_context().add_provider(
-        tv_provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
-    )
-
-    # Create a reusable text tag for message body colour (one per buffer).
-    # Avoids calling create_tag on every bind, which would warn and skip
-    # property updates when a tag with the same name already exists.
-    list_item._body_tag = list_item._text_view.get_buffer().create_tag("body")
-
-    list_item._card.append(list_item._text_view)
-    row.append(list_item._card)
-    list_item.set_child(row)
-
-
-def _row_bind(
-    factory: Gtk.SignalListItemFactory,
-    list_item: Gtk.ListItem,
-) -> None:
-    """Populate a recycled row with message data (widget template is reused)."""
-    msg: _ChatMsg | None = list_item.get_item()
-    if msg is None:
-        return
-
-    identity = list_item._identity
-    user_label = list_item._user_label
-    text_view = list_item._text_view
-    tag = list_item._body_tag
-    card_provider = list_item._card_provider
-
-    dark = getattr(msg, "_dark", False)
-    alternating = getattr(msg, "_alternating", False)
-    ns = NATIVE_STYLE
-    theme = ns["dark"] if dark else ns["light"]
-
-    # ── Card background / radius / padding ──────────────────
-    # Alternate the card background based on the row's position in the
-    # list store (even positions get card_bg, odd get alt_row).  Suppress
-    # hover effects from the theme so the card colour stays stable.
-    pos = list_item.get_position()
-    use_alt = alternating and pos >= 0 and pos % 2 == 1
-    card_bg = theme["alt_row"] if use_alt else theme["card_bg"]
-    # Skip reload when the same variant was applied last bind —
-    # load_from_data is a parse + re-validate that isn't free.
-    if card_bg != getattr(list_item, "_last_card_bg", None):
-        list_item._last_card_bg = card_bg
-        card_provider.load_from_data(
-            f".msg-card {{"
-            f"  background: {card_bg};"
-            f"  border-radius: {ns['card_radius']}px;"
-            f"  margin: {ns['card_margin']};"
-            f"  padding: {ns['card_padding']};"
-            f"}}"
-            f".msg-card:hover {{ background: {card_bg}; }}",
-            -1,
-        )
-
-    # ── Badges (remove old, add fresh) ──────────────────────
-    while True:
-        child: Gtk.Widget | None = identity.get_first_child()
-        if child is None or child == user_label:
-            break
-        identity.remove(child)
-
-    last_badge = None
-    for display_name, badge_id in getattr(msg, "badges", []):
-        svg_data: str | None = _BADGE_SVGS.get(badge_id)
-        if svg_data is None:
-            continue
-        gfile = _make_badge_tempfile(badge_id, svg_data)
-        if gfile is not None:
-            badge = Gtk.Picture.new_for_file(gfile)
-            badge.set_size_request(int(ns["badge_size"]), int(ns["badge_size"]))
-            badge.set_valign(Gtk.Align.START)
-            badge.set_tooltip_text(display_name)
-            identity.insert_child_after(badge, last_badge)
-            last_badge = badge
-
-    # ── Username label ──────────────────────────────────────
-    color_str = getattr(msg, "color", FALLBACK_USER_COLOR)
-    clamped = _clamp_color(color_str, dark)
-    user_name = getattr(msg, "user", "")
-    is_action = getattr(msg, "action", False)
-    user_label.set_markup(
-        f'<span font_weight="{ns["user_weight"]}" '
-        f'foreground="{_rgba_to_hex(clamped)}">'
-        f"{GLib.markup_escape_text(user_name)}"
-        f"{'' if is_action else ':'}"
-        f"</span>"
-    )
-
-    # ── Message body text + emotes ──────────────────────────
-    buffer = text_view.get_buffer()
-
-    # Invalidate any cached Pango layout from the previous
-    # binding *before* inserting new content.  Without this the
-    # TextView can report the old natural height, causing the
-    # ListView to allocate the wrong size until a subsequent
-    # message forces a global re-layout.
-    text_view.queue_resize()
-    buffer.set_text("", 0)
-
-    tag.set_property("foreground", theme["text_color"])
-
-    text_view.remove_css_class("italic")
-    if is_action:
-        text_view.add_css_class("italic")
-
-    segments = getattr(
-        msg,
-        "segments",
-        [{"type": "text", "content": getattr(msg, "text", "")}],
-    )
-
-    for seg in segments:
-        if seg["type"] == "text":
-            buffer.insert_with_tags(buffer.get_end_iter(), seg["content"], tag)
-        elif seg["type"] == "emote":
-            end_iter = buffer.get_end_iter()
-            anchor = buffer.create_child_anchor(end_iter)
-            pic = Gtk.Picture()
-            pic.set_size_request(28, 28)
-            pic.set_can_shrink(False)
-            pic.set_content_fit(Gtk.ContentFit.CONTAIN)
-            pic.set_valign(Gtk.Align.CENTER)
-            tooltip = f"{seg['name']} ({seg['source']})"
-            pic.set_tooltip_text(tooltip)
-            text_view.add_child_at_anchor(pic, anchor)
-            _EMOTE_CACHE.request(seg["url"], pic)
-
-    # After rewriting the buffer the row height may have changed (e.g.
-    # recycled from a tall multi-line message to a short single-line one).
-    # Queue a resize on the row widget itself so the ListView re-measures
-    # the item — a resize on a deep descendant doesn't always propagate.
-    row = list_item.get_child()
-    if row is not None:
-        row.queue_resize()
-
-
 # ── Temporary badge files ────────────────────────────────────
-# Gtk.Picture can render SVGs when loaded from a file, but not from
-# in-memory bytes.  We write each badge SVG to a temp file once.
 
 _badge_tempdir_path: str | None = None
 
@@ -564,10 +311,10 @@ def _rgba_to_hex(rgba: Gdk.RGBA) -> str:
 
 
 class NativeChatPage(Adw.NavigationPage):
-    """A read-only Twitch chat page rendered with native GTK ListView.
+    """A read-only Twitch chat page rendered with native GTK widgets.
 
-    Constructor signature matches ``ChatPage`` so callers can
-    trivially switch between the two implementations.
+    Constructor signature matches ``ChatPage`` so callers can trivially
+    switch between the two implementations.
     """
 
     def __init__(
@@ -599,25 +346,25 @@ class NativeChatPage(Adw.NavigationPage):
         self._msg_batch: list[dict] = []
         self._item_count = 0
 
+        # Store all card widgets so we can update them on theme change.
+        self._cards: list[Gtk.Widget] = []
+
         # Style manager for theme changes
         self._style_manager = Adw.StyleManager.get_default()
         self._style_manager.connect("notify::dark", self._on_theme_changed)
 
-        # ── Data model ──────────────────────────────────────
-        self._store = Gio.ListStore.new(_ChatMsg)
+        # ── Shared CSS provider for card styling ─────────────
+        # Updated on theme change; all cards reuse this one provider.
+        self._card_css_provider = Gtk.CssProvider()
 
-        # ── ListView factory ────────────────────────────────
-        factory = Gtk.SignalListItemFactory()
-        factory.connect("setup", _row_setup)
-        factory.connect("bind", _row_bind)
-        self._list_view = Gtk.ListView.new(Gtk.NoSelection.new(self._store), factory)
-        self._list_view.set_vexpand(True)
-        self._list_view.set_hexpand(True)
+        # ── Message container (plain vertical Box) ───────────
+        self._msg_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+        self._msg_box.set_halign(Gtk.Align.FILL)
 
         # ── Scrolled window ─────────────────────────────────
         self._scrolled = Gtk.ScrolledWindow()
         self._scrolled.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.ALWAYS)
-        self._scrolled.set_child(self._list_view)
+        self._scrolled.set_child(self._msg_box)
 
         vadjustment = self._scrolled.get_vadjustment()
         vadjustment.connect("value-changed", self._on_scroll_value_changed)
@@ -646,6 +393,7 @@ class NativeChatPage(Adw.NavigationPage):
         overlay.set_measure_overlay(self._more_button, True)
 
         self._apply_banner_style()
+        self._update_card_css()
 
         # ── Toolbar ─────────────────────────────────────────
         toolbar = Adw.ToolbarView()
@@ -696,19 +444,142 @@ class NativeChatPage(Adw.NavigationPage):
 
         threading.Thread(target=_load_then_connect, daemon=True).start()
 
-    # ── Message processing (same logic as ChatPage) ──────────
+    # ── Card CSS ─────────────────────────────────────────────
+
+    def _update_card_css(self) -> None:
+        """Rebuild the shared card CSS provider for the current theme."""
+        ns = NATIVE_STYLE
+        theme = ns["dark"] if self._dark else ns["light"]
+        # Use two classes so alternating rows can pick a different bg.
+        self._card_css_provider.load_from_data(
+            f".msg-card {{"
+            f"  background: {theme['card_bg']};"
+            f"  border-radius: {ns['card_radius']}px;"
+            f"  margin: {ns['card_margin']};"
+            f"  padding: {ns['card_padding']};"
+            f"}}"
+            f".msg-card-alt {{"
+            f"  background: {theme['alt_row']};"
+            f"  border-radius: {ns['card_radius']}px;"
+            f"  margin: {ns['card_margin']};"
+            f"  padding: {ns['card_padding']};"
+            f"}}"
+            f".msg-card:hover {{ background: {theme['card_bg']}; }}"
+            f".msg-card-alt:hover {{ background: {theme['alt_row']}; }}",
+            -1,
+        )
+
+    # ── Card builder ─────────────────────────────────────────
+
+    def _build_card(self, msg: dict) -> Gtk.Widget:
+        """Create one message card widget from the raw message dict."""
+        ns = NATIVE_STYLE
+        theme = ns["dark"] if self._dark else ns["light"]
+
+        # ── Card frame ───────────────────────────────────────
+        card = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+        card.add_css_class("msg-card")
+        card.get_style_context().add_provider(
+            self._card_css_provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
+        )
+
+        # ── Identity (badges + username) ────────────────────
+        identity = Gtk.Box(
+            orientation=Gtk.Orientation.HORIZONTAL,
+            spacing=int(ns["badge_spacing"]),
+        )
+        identity.set_valign(Gtk.Align.START)
+
+        # Badges
+        for display_name, badge_id in msg.get("badges", []):
+            svg_data: str | None = _BADGE_SVGS.get(badge_id)
+            if svg_data is None:
+                continue
+            gfile = _make_badge_tempfile(badge_id, svg_data)
+            if gfile is not None:
+                badge = Gtk.Picture.new_for_file(gfile)
+                badge.set_size_request(int(ns["badge_size"]), int(ns["badge_size"]))
+                badge.set_valign(Gtk.Align.START)
+                badge.set_tooltip_text(display_name)
+                identity.append(badge)
+
+        # Username
+        color_str = msg.get("color", FALLBACK_USER_COLOR)
+        clamped = _clamp_color(color_str, self._dark)
+        user_name = msg["user"]
+        is_action = msg.get("action", False)
+        user_label = Gtk.Label()
+        user_label.set_markup(
+            f'<span font_weight="{ns["user_weight"]}" '
+            f'foreground="{_rgba_to_hex(clamped)}">'
+            f"{GLib.markup_escape_text(user_name)}"
+            f"{'' if is_action else ':'}"
+            f"</span>"
+        )
+        user_label.set_halign(Gtk.Align.START)
+        user_label.set_valign(Gtk.Align.START)
+        identity.append(user_label)
+
+        # Stash original data for theme-change restyling.
+        identity._user_name = user_name
+        identity._user_color = color_str
+        identity._is_action = is_action
+
+        card.append(identity)
+
+        # ── Body (TextView with inline emote anchors) ─────────
+        segments = msg.get("segments", [{"type": "text", "content": msg["text"]}])
+
+        text_view = Gtk.TextView()
+        text_view.set_editable(False)
+        text_view.set_cursor_visible(False)
+        text_view.set_wrap_mode(Gtk.WrapMode.WORD)
+        text_view.set_halign(Gtk.Align.FILL)
+        text_view.set_valign(Gtk.Align.FILL)
+        text_view.set_top_margin(2)
+        text_view.set_bottom_margin(2)
+
+        tv_provider = Gtk.CssProvider()
+        tv_provider.load_from_data(
+            "textview { background: transparent; }"
+            "textview text { background: transparent; }",
+            -1,
+        )
+        text_view.get_style_context().add_provider(
+            tv_provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
+        )
+
+        buffer = text_view.get_buffer()
+        tag = buffer.create_tag("body", foreground=theme["text_color"])
+
+        for seg in segments:
+            if seg["type"] == "text":
+                buffer.insert_with_tags(buffer.get_end_iter(), seg["content"], tag)
+            elif seg["type"] == "emote":
+                end_iter = buffer.get_end_iter()
+                anchor = buffer.create_child_anchor(end_iter)
+                pic = Gtk.Picture()
+                pic.set_size_request(28, 28)
+                pic.set_can_shrink(False)
+                pic.set_content_fit(Gtk.ContentFit.CONTAIN)
+                pic.set_valign(Gtk.Align.CENTER)
+                tooltip = f"{seg['name']} ({seg['source']})"
+                pic.set_tooltip_text(tooltip)
+                text_view.add_child_at_anchor(pic, anchor)
+                _EMOTE_CACHE.request(seg["url"], pic)
+
+        # The buffer-changed signal doesn't always queue a resize when
+        # the widget isn't yet in the tree (text-only messages).
+        # Explicitly invalidate so the card gets its real height.
+        text_view.queue_resize()
+
+        card.append(text_view)
+        return card
+
+    # ── Message processing ────────────────────────────────────
 
     def _on_message(self, msg: dict) -> None:
         self._item_count += 1
-
-        # Cull oldest rows when past the limit
-        if self._item_count > MAX_MESSAGES:
-            excess = self._item_count - MAX_MESSAGES
-            to_remove = min(excess + CULL_CHUNK, CULL_CHUNK * 4)
-            for _ in range(to_remove):
-                if self._store.get_n_items() > 0:
-                    self._store.remove(0)
-            self._item_count -= to_remove
 
         emotes = list(msg["emotes"])
         if self._third_party_emotes:
@@ -724,8 +595,7 @@ class NativeChatPage(Adw.NavigationPage):
                 segments=segments,
                 badges=msg.get("badges", []),
                 action=msg.get("action", False),
-                _dark=self._dark,
-                _alternating=self._alternating_bg,
+                index=self._item_count,  # used for alternating bg
             )
         )
 
@@ -741,13 +611,39 @@ class NativeChatPage(Adw.NavigationPage):
         self._msg_batch = []
         self._batch_flush_id = None
 
-        for kwargs in batch:
-            self._store.append(_ChatMsg(**kwargs))
+        for msg_data in batch:
+            card = self._build_card(msg_data)
+
+            # Alternating background: use alt class for odd rows.
+            if self._alternating_bg and msg_data["index"] % 2 == 1:
+                card.remove_css_class("msg-card")
+                card.add_css_class("msg-card-alt")
+
+            self._msg_box.append(card)
+            self._cards.append(card)
+
+        # Cull oldest messages when past the limit
+        while self._item_count > MAX_MESSAGES:
+            first = self._msg_box.get_first_child()
+            if first is not None:
+                self._msg_box.remove(first)
+                if first in self._cards:
+                    self._cards.remove(first)
+                first.unrealize()
+            self._item_count -= 1
+
+        # Gtk.Box.append() queues a resize, but the frame clock may
+        # not tick until the next event.  Schedule an idle callback
+        # that runs after this function returns — by then the new
+        # cards are in the tree, so the resize propagates properly.
+        # This is the same mechanism that makes emote-containing
+        # messages render immediately (via _EMOTE_CACHE.idle_add).
+        GLib.idle_add(self._msg_box.queue_resize)
 
         if self._auto_scroll:
-            # Retry scroll every ~16 ms until the adjustment upper settles.
-            # New rows need a measure pass (text wrap, emote sizes) before the
-            # upper is final; jumping once to a stale value causes bounce.
+            # Use a 16ms timeout instead of idle_add so _scroll_to_bottom
+            # can return SOURCE_CONTINUE to retry until the layout settles
+            # and the adjustment's upper value stabilizes.
             GLib.timeout_add(16, self._scroll_to_bottom)
 
         return GLib.SOURCE_REMOVE
@@ -769,22 +665,22 @@ class NativeChatPage(Adw.NavigationPage):
         dx: float,
         dy: float,
     ) -> bool:
-        if dy > 0:  # scrolling *down*
+        if dy > 0:
             adj = self._scrolled.get_vadjustment()
             if adj.get_value() + adj.get_page_size() >= adj.get_upper() - 2.0:
                 self._auto_scroll = True
                 self._more_button.set_visible(False)
-        elif dy < 0:  # scrolling *up*
+        elif dy < 0:
             self._auto_scroll = False
             self._more_button.set_visible(True)
-        return False  # don't swallow the event
+        return False
 
     def _scroll_to_bottom(self) -> bool:
         adj = self._scrolled.get_vadjustment()
         target = adj.get_upper() - adj.get_page_size()
         if target > adj.get_value() + 1.0:
             adj.set_value(target)
-            return GLib.SOURCE_CONTINUE
+            return GLib.SOURCE_CONTINUE  # layout hasn't settled yet, retry
         return GLib.SOURCE_REMOVE
 
     def _on_more_clicked(self, button: Gtk.Button) -> None:
@@ -795,38 +691,51 @@ class NativeChatPage(Adw.NavigationPage):
     # ── Theme ───────────────────────────────────────────────
 
     def _on_theme_changed(self, style_manager: Adw.StyleManager, _pspec) -> None:
-        dark = style_manager.get_dark()
-        self._dark = dark
+        self._dark = style_manager.get_dark()
         self._apply_banner_style()
-        # Replace all stored messages with fresh instances carrying the
-        # updated theme flag.  Using splice() with new GObjects forces
-        # Gtk.ListView to re-bind every visible row (items_changed with
-        # the same object pointers skips bind).  Restore scroll position
-        # afterwards since the list view anchor is invalidated.
-        n = self._store.get_n_items()
-        if n == 0:
+        self._update_card_css()
+        # Rebuild all cards with updated username colours and text colour.
+        self._rebuild_all_cards()
+
+    def _rebuild_all_cards(self) -> None:
+        """Re-style every visible card for the new theme."""
+        for card in self._cards:
+            identity = card.get_first_child()
+            if identity is not None:
+                self._restyle_identity(identity)
+            body = identity.get_next_sibling() if identity else None
+            if body is not None:
+                self._restyle_body(body)
+
+    def _restyle_identity(self, identity: Gtk.Box) -> None:
+        """Update the username label colour for the current theme."""
+        ns = NATIVE_STYLE
+
+        child = identity.get_last_child()
+        if child is None or not isinstance(child, Gtk.Label):
             return
-        vadj = self._scrolled.get_vadjustment()
-        saved_scroll = vadj.get_value()
-        new_items = []
-        for i in range(n):
-            item = self._store.get_item(i)
-            if item is None:
-                continue
-            new_items.append(
-                _ChatMsg(
-                    user=getattr(item, "user", ""),
-                    text=getattr(item, "text", ""),
-                    color=getattr(item, "color", ""),
-                    segments=getattr(item, "segments", []),
-                    badges=getattr(item, "badges", []),
-                    action=getattr(item, "action", False),
-                    _dark=dark,
-                    _alternating=getattr(item, "_alternating", False),
-                )
-            )
-        self._store.splice(0, n, new_items)
-        GLib.idle_add(lambda: vadj.set_value(saved_scroll))
+
+        user_name = getattr(identity, "_user_name", None)
+        color_str = getattr(identity, "_user_color", None)
+        is_action = getattr(identity, "_is_action", False)
+        if user_name is None or color_str is None:
+            return
+
+        clamped = _clamp_color(color_str, self._dark)
+        child.set_markup(
+            f'<span font_weight="{ns["user_weight"]}" '
+            f'foreground="{_rgba_to_hex(clamped)}">'
+            f"{GLib.markup_escape_text(user_name)}"
+            f"{'' if is_action else ':'}"
+            f"</span>"
+        )
+
+    def _restyle_body(self, text_view: Gtk.TextView) -> None:
+        """Update text colour in the TextView body for the new theme."""
+        theme = NATIVE_STYLE["dark"] if self._dark else NATIVE_STYLE["light"]
+        tag = text_view.get_buffer().get_tag_table().lookup("body")
+        if tag is not None:
+            tag.set_property("foreground", theme["text_color"])
 
     def _apply_banner_style(self) -> None:
         ns = NATIVE_STYLE
@@ -843,14 +752,13 @@ class NativeChatPage(Adw.NavigationPage):
         )
         ctx = self._more_button.get_style_context()
         ctx.add_provider(provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
-        # Also set text color on the label child
         if self._more_button.get_child():
             self._more_button.get_child().set_css_classes([])
 
     # ── Lifecycle ───────────────────────────────────────────
 
     def _on_map(self, _widget) -> None:
-        pass  # no deferred signal connection needed here
+        pass
 
     def _on_hidden(self, page) -> None:
         self.cleanup()
@@ -867,10 +775,13 @@ class NativeChatPage(Adw.NavigationPage):
         if self._chat:
             self._chat.stop()
             self._chat = None
-        if self._list_view:
-            self._list_view.set_model(None)
-            self._list_view = None
-        self._store.remove_all()
+        # Clear all cards
+        while True:
+            child = self._msg_box.get_first_child()
+            if child is None:
+                break
+            self._msg_box.remove(child)
+        self._cards.clear()
 
     def _on_detach(self, button: Gtk.Button) -> None:
         """Open the chat in a separate window and pop this page."""
