@@ -260,6 +260,8 @@ class VODPage(Adw.NavigationPage):
             wrap=True,
             wrap_mode=2,  # WORD
             max_width_chars=50,
+            ellipsize=3,  # END
+            lines=2,
         )
         title_label.add_css_class("heading")
         title_label.set_tooltip_text(vod["title"])
