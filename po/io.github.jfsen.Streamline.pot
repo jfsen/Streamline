@@ -1,14 +1,14 @@
 # SOME DESCRIPTIVE TITLE.
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
-# This file is distributed under the same license as the streamline package.
+# This file is distributed under the same license as the io.github.jfsen.Streamline package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
 #
 #, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: streamline 3.2.0\n"
+"Project-Id-Version: io.github.jfsen.Streamline\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-06-02 18:08+0200\n"
+"POT-Creation-Date: 2026-06-09 02:33+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -18,7 +18,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 
 #: data/io.github.jfsen.Streamline.desktop.in:2
-#: data/io.github.jfsen.Streamline.metainfo.xml.in:7 src/window.py:128
+#: data/io.github.jfsen.Streamline.metainfo.xml.in:7 src/window.py:140
 #: src/window.ui:6
 msgid "Streamline"
 msgstr ""
@@ -80,7 +80,7 @@ msgid "Theme"
 msgstr ""
 
 #: data/io.github.jfsen.Streamline.gschema.xml:28
-msgid "The application theme (system, light, dark, bronze, anthracite, justin)"
+msgid "The application theme (system, light, dark, anthracite, justin, oxide)"
 msgstr ""
 
 #: data/io.github.jfsen.Streamline.gschema.xml:32
@@ -119,7 +119,7 @@ msgstr ""
 msgid "Alternating chat background"
 msgstr ""
 
-#: data/io.github.jfsen.Streamline.gschema.xml:55
+#: data/io.github.jfsen.Streamline.gschema.xml:55 src/preferences.ui:174
 msgid "Show alternating background colors on chat messages"
 msgstr ""
 
@@ -139,6 +139,25 @@ msgstr ""
 msgid "Use static emote images to reduce CPU and GPU usage"
 msgstr ""
 
+#: data/io.github.jfsen.Streamline.gschema.xml:71
+msgid "Use native chat engine"
+msgstr ""
+
+#: data/io.github.jfsen.Streamline.gschema.xml:73
+msgid ""
+"Use GTK instead of WebKit for chat rendering. Uses far less memory, but "
+"animated emotes always render as static."
+msgstr ""
+
+#: data/io.github.jfsen.Streamline.gschema.xml:77
+msgid "Show profile pictures on play buttons"
+msgstr ""
+
+#: data/io.github.jfsen.Streamline.gschema.xml:79
+msgid ""
+"Replace the play icon with the streamer's profile picture when available"
+msgstr ""
+
 #: src/dialogs.py:39
 msgid "OK"
 msgstr ""
@@ -156,28 +175,24 @@ msgstr ""
 msgid "Cancel"
 msgstr ""
 
-#: src/dialogs.py:51 src/rows.py:137
+#: src/dialogs.py:51 src/rows.py:221
 msgid "Unfollow"
 msgstr ""
 
-#: src/dialogs.py:65
-msgid "Follow Streamer(s)"
+#: src/dialogs.py:65 src/dialogs.py:71
+msgid "Follow"
 msgstr ""
 
 #: src/dialogs.py:66
 msgid "Enter Twitch usernames (separate multiple with commas):"
 msgstr ""
 
-#: src/dialogs.py:71
-msgid "Follow"
-msgstr ""
-
-#: src/dialogs.py:90 src/window.py:536 src/window.ui:25
-msgid "Quick Play Stream"
+#: src/dialogs.py:90
+msgid "Quick Play"
 msgstr ""
 
 #: src/dialogs.py:91
-msgid "Enter the Twitch username of the streamer:"
+msgid "Open a stream without following:"
 msgstr ""
 
 #: src/dialogs.py:96
@@ -195,11 +210,11 @@ msgid ""
 "You can get these at https://dev.twitch.tv/console/apps"
 msgstr ""
 
-#: src/dialogs.py:133 src/preferences.ui:192
+#: src/dialogs.py:133 src/preferences.ui:216
 msgid "Client ID"
 msgstr ""
 
-#: src/dialogs.py:139 src/preferences.ui:200
+#: src/dialogs.py:139 src/preferences.ui:224
 msgid "Client Secret"
 msgstr ""
 
@@ -213,90 +228,98 @@ msgid "translator-credits"
 msgstr ""
 
 #. ── Combo row models (labels only — values live in GSettings) ──
-#: src/preferences.py:42 src/preferences.py:44
+#: src/preferences.py:44 src/preferences.py:46
 msgid "Custom"
 msgstr ""
 
-#: src/preferences.py:44
+#: src/preferences.py:46
 msgid "High"
 msgstr ""
 
-#: src/preferences.py:44
+#: src/preferences.py:46
 msgid "Medium"
 msgstr ""
 
-#: src/preferences.py:44
+#: src/preferences.py:46
 msgid "Low"
 msgstr ""
 
-#: src/preferences.py:148
+#: src/preferences.py:166
 #, python-brace-format
 msgid "Streamers list saved to {}"
 msgstr ""
 
-#: src/preferences.py:152
+#: src/preferences.py:170
 #, python-brace-format
 msgid "Error saving file: {}"
 msgstr ""
 
-#: src/preferences.py:191
+#: src/preferences.py:209
 msgid "No streamer names found in file"
 msgstr ""
 
-#: src/preferences.py:207
+#: src/preferences.py:225
 #, python-brace-format
 msgid "Added {} streamer(s) ({} already followed)"
 msgstr ""
 
-#: src/preferences.py:214
+#: src/preferences.py:232
 #, python-brace-format
 msgid "Added {} streamer(s)"
 msgstr ""
 
-#: src/preferences.py:217
+#: src/preferences.py:235
 msgid "All streamers already followed"
 msgstr ""
 
-#: src/preferences.py:221
+#: src/preferences.py:239
 #, python-brace-format
 msgid "Error importing file: {}"
 msgstr ""
 
-#: src/rows.py:74
+#: src/rows.py:25
+msgid "Online"
+msgstr ""
+
+#: src/rows.py:50
+msgid "Offline"
+msgstr ""
+
+#: src/rows.py:101
 #, python-brace-format
 msgid ""
 "{}\n"
 "{} viewers"
 msgstr ""
 
-#: src/rows.py:84
+#: src/rows.py:111
 #, python-brace-format
 msgid ""
 "Title: {}\n"
 "Uptime: {}"
 msgstr ""
 
-#: src/rows.py:103
+#: src/rows.py:147 src/rows.py:183
 msgid "Play stream"
 msgstr ""
 
-#: src/rows.py:116
+#: src/rows.py:200
 msgid "Open in browser"
 msgstr ""
 
-#: src/rows.py:127
+#: src/rows.py:211
 msgid "More"
 msgstr ""
 
-#: src/rows.py:134 src/preferences.ui:148
+#: src/rows.py:218 src/preferences.ui:160
 msgid "Chat"
 msgstr ""
 
-#: src/rows.py:135
+#: src/rows.py:219
 msgid "Detached Chat"
 msgstr ""
 
-#: src/rows.py:136
+#: src/rows.py:220
 msgid "Show VODs"
 msgstr ""
 
@@ -350,252 +373,248 @@ msgstr ""
 msgid "Missing Player"
 msgstr ""
 
-#: src/twitch.py:437
+#: src/twitch.py:518
 msgid "Just now"
 msgstr ""
 
-#: src/twitch.py:439
+#: src/twitch.py:520
 #, python-brace-format
 msgid "{}m ago"
 msgstr ""
 
-#: src/twitch.py:443
+#: src/twitch.py:524
 #, python-brace-format
 msgid "{}h ago"
 msgstr ""
 
-#: src/twitch.py:447
+#: src/twitch.py:528
 #, python-brace-format
 msgid "{}d ago"
 msgstr ""
 
-#: src/twitch.py:450
+#: src/twitch.py:531
 #, python-brace-format
 msgid "{}w ago"
 msgstr ""
 
-#: src/twitch.py:460
+#: src/twitch.py:541
 #, python-brace-format
 msgid "{}h"
 msgstr ""
 
-#: src/twitch.py:462
+#: src/twitch.py:543
 #, python-brace-format
 msgid "{}m"
 msgstr ""
 
-#: src/twitch.py:466
+#: src/twitch.py:547
 #, python-brace-format
 msgid "{}s"
 msgstr ""
 
-#: src/twitch.py:476
+#: src/twitch.py:557
 #, python-brace-format
 msgid "{}h {}m"
 msgstr ""
 
-#: src/chat/webkit/page.py:228
-msgid "More messages below"
-msgstr ""
-
-#: src/chat/webkit/page.py:256 src/chat/chat_window.py:32
+#: src/chat/chat_window.py:32 src/chat/native/page.py:568
+#: src/chat/webkit/page.py:112
 #, python-brace-format
 msgid "Chat: {}"
 msgstr ""
 
-#: src/chat/webkit/page.py:344
+#: src/chat/native/page.py:617 src/chat/webkit/page.py:74
+msgid "More messages below"
+msgstr ""
+
+#: src/chat/native/page.py:642 src/chat/webkit/page.py:197
 msgid "Detach chat"
 msgstr ""
 
-#. Create navigation page with proper title
-#: src/vod_page.py:31
+#: src/vod_page.py:30
 #, python-brace-format
 msgid "{}'s VODs"
 msgstr ""
 
-#: src/vod_page.py:106
+#: src/vod_page.py:105
 msgid "Loading VODs…"
 msgstr ""
 
-#: src/vod_page.py:134 src/vod_page.py:141
+#: src/vod_page.py:133 src/vod_page.py:140
 msgid "Error Loading VODs"
 msgstr ""
 
-#: src/vod_page.py:135
+#: src/vod_page.py:134
 msgid "No internet connection. Check your network and try again."
 msgstr ""
 
-#: src/vod_page.py:175 src/window.py:282
+#: src/vod_page.py:174 src/window.py:297
 #, python-brace-format
 msgid "Please wait {}s before refreshing"
 msgstr ""
 
-#: src/vod_page.py:191
+#: src/vod_page.py:190
 msgid "No VODs found"
 msgstr ""
 
-#: src/vod_page.py:192
+#: src/vod_page.py:191
 msgid "This channel has no recent VODs available"
 msgstr ""
 
-#: src/vod_page.py:216
+#: src/vod_page.py:215
 msgid "Play VOD"
 msgstr ""
 
-#: src/vod_page.py:223
+#: src/vod_page.py:222
 msgid "Open VOD in browser"
 msgstr ""
 
-#: src/vod_page.py:237
+#: src/vod_page.py:236
 #, python-brace-format
 msgid "Starting VOD: {}"
 msgstr ""
 
-#: src/vod_page.py:239
+#: src/vod_page.py:238
 msgid "Error playing VOD: player failed to start"
 msgstr ""
 
-#: src/window.py:217 src/window.py:298
+#: src/window.py:231 src/window.py:313
 msgid "Connection Error"
 msgstr ""
 
-#: src/window.py:219 src/window.py:300
+#: src/window.py:233 src/window.py:315
 msgid "Could not fetch streamer data. Please check your internet connection."
 msgstr ""
 
-#: src/window.py:229 src/window.py:310
+#: src/window.py:243 src/window.py:325
 msgid "API Rate Limit"
 msgstr ""
 
-#: src/window.py:231 src/window.py:312
+#: src/window.py:245 src/window.py:327
 msgid ""
 "Twitch API rate limit reached. Please wait a few minutes before refreshing "
 "again."
 msgstr ""
 
-#: src/window.py:237 src/window.py:245 src/window.py:318 src/window.py:326
+#: src/window.py:251 src/window.py:259 src/window.py:333 src/window.py:341
 msgid "API Error"
 msgstr ""
 
-#: src/window.py:238 src/window.py:319
+#: src/window.py:252 src/window.py:334
 #, python-brace-format
 msgid "HTTP error {} occurred while fetching streamer data."
 msgstr ""
 
-#: src/window.py:246 src/window.py:327
+#: src/window.py:260 src/window.py:342
 #, python-brace-format
 msgid "Failed to fetch streamer data: {}"
 msgstr ""
 
-#: src/window.py:273
+#: src/window.py:288
 msgid "API not available"
 msgstr ""
 
-#: src/window.py:333
+#: src/window.py:348
 msgid "Stream data refreshed"
 msgstr ""
 
-#: src/window.py:468
+#: src/window.py:509
 #, python-brace-format
 msgid "Added {}"
 msgstr ""
 
-#: src/window.py:470
+#: src/window.py:511
 #, python-brace-format
 msgid "Added {} streamers"
 msgstr ""
 
-#: src/window.py:473
+#: src/window.py:514
 #, python-brace-format
 msgid "'{}' is invalid"
 msgstr ""
 
-#: src/window.py:475
+#: src/window.py:516
 #, python-brace-format
 msgid "{} invalid names"
 msgstr ""
 
-#: src/window.py:478
+#: src/window.py:519
 #, python-brace-format
 msgid "Already following {}"
 msgstr ""
 
-#: src/window.py:480
+#: src/window.py:521
 msgid "Already following"
 msgstr ""
 
-#: src/window.py:494
+#: src/window.py:535
 #, python-brace-format
 msgid "Error: {}"
 msgstr ""
 
-#: src/window.py:503
+#: src/window.py:544
 msgid "Error Saving Config"
 msgstr ""
 
-#: src/window.py:503
+#: src/window.py:544
 msgid "Could not save configuration"
 msgstr ""
 
 #. Application section
-#: src/window.py:525
+#: src/window.py:566
 msgid "Application"
 msgstr ""
 
-#: src/window.py:526 src/preferences.ui:7
+#: src/window.py:567 src/preferences.ui:7
 msgid "Preferences"
 msgstr ""
 
-#: src/window.py:527
+#: src/window.py:568
 msgid "Show Shortcuts"
 msgstr ""
 
-#: src/window.py:528
+#: src/window.py:569
 msgid "Quit"
 msgstr ""
 
 #. Stream Management section
-#: src/window.py:532
+#: src/window.py:573
 msgid "Stream Management"
 msgstr ""
 
-#: src/window.py:534
+#: src/window.py:575
 msgid "Follow New Streamer"
 msgstr ""
 
-#: src/window.py:537 src/window.py:538
+#: src/window.py:577 src/window.ui:35
+msgid "Quick Play Stream"
+msgstr ""
+
+#: src/window.py:578 src/window.py:579
 msgid "Refresh Streams"
 msgstr ""
 
-#: src/window.ui:19
+#: src/window.ui:24
 msgid "Refresh"
 msgstr ""
 
-#: src/window.ui:36
+#: src/window.ui:49
 msgid "Follow Streamer"
 msgstr ""
 
-#: src/window.ui:44
+#: src/window.ui:60
 msgid "Main Menu"
 msgstr ""
 
-#: src/window.ui:60
-msgid "Online"
-msgstr ""
-
-#: src/window.ui:65
-msgid "Offline"
-msgstr ""
-
-#: src/window.ui:80
+#: src/window.ui:92
 msgid "_Preferences"
 msgstr ""
 
-#: src/window.ui:84
+#: src/window.ui:99
 msgid "_Keyboard Shortcuts"
 msgstr ""
 
-#: src/window.ui:88
+#: src/window.ui:103
 msgid "_About Streamline"
 msgstr ""
 
@@ -620,94 +639,98 @@ msgid "Dark"
 msgstr ""
 
 #: src/preferences.ui:27
-msgid "Bronze"
-msgstr ""
-
-#: src/preferences.ui:28
 msgid "Anthracite"
 msgstr ""
 
-#: src/preferences.ui:29
+#: src/preferences.ui:28
 msgid "Justin"
 msgstr ""
 
+#: src/preferences.ui:29
+msgid "Oxide"
+msgstr ""
+
 #: src/preferences.ui:40
+msgid "Profile Pictures"
+msgstr ""
+
+#: src/preferences.ui:44
+msgid "Show streamer profile pictures on play buttons"
+msgstr ""
+
+#: src/preferences.ui:52
 msgid "Player"
 msgstr ""
 
-#: src/preferences.ui:46
+#: src/preferences.ui:58
 msgid "Media Player"
 msgstr ""
 
-#: src/preferences.ui:50
+#: src/preferences.ui:62
 msgid "The video player used to watch streams"
 msgstr ""
 
-#: src/preferences.ui:58
+#: src/preferences.ui:70
 msgid "Custom Player Command"
 msgstr ""
 
-#: src/preferences.ui:67
+#: src/preferences.ui:79
 msgid "Quality"
 msgstr ""
 
-#: src/preferences.ui:73
+#: src/preferences.ui:85
 msgid "Stream Quality"
 msgstr ""
 
-#: src/preferences.ui:77
+#: src/preferences.ui:89
 msgid "Higher quality uses more bandwidth"
 msgstr ""
 
-#: src/preferences.ui:85
+#: src/preferences.ui:97
 msgid "Custom Quality"
 msgstr ""
 
-#: src/preferences.ui:94
+#: src/preferences.ui:106
 msgid "Low Latency Mode"
 msgstr ""
 
-#: src/preferences.ui:98
+#: src/preferences.ui:110
 msgid "Reduces stream delay but may cause buffering on slower connections"
 msgstr ""
 
-#: src/preferences.ui:106
+#: src/preferences.ui:118
 msgid "Streamers"
 msgstr ""
 
-#: src/preferences.ui:109
+#: src/preferences.ui:121
 msgid "Export List"
 msgstr ""
 
-#: src/preferences.ui:113
+#: src/preferences.ui:125
 msgid "Save your followed streamers for backup"
 msgstr ""
 
-#: src/preferences.ui:127
+#: src/preferences.ui:139
 msgid "Import List"
 msgstr ""
 
-#: src/preferences.ui:131
+#: src/preferences.ui:143
 msgid "Load a backup file to follow streamers"
 msgstr ""
 
-#: src/preferences.ui:152
+#: src/preferences.ui:164
 msgid "Changes apply to newly opened chats"
 msgstr ""
 
-#: src/preferences.ui:158
+#: src/preferences.ui:170
 msgid "Alternating Background"
 msgstr ""
 
-#: src/preferences.ui:162
-msgid "Show subtle alternating background colors on chat messages"
-msgstr ""
-
-#: src/preferences.ui:173
+#: src/preferences.ui:185
 msgid "Disable Emote Animations"
 msgstr ""
 
-#: src/preferences.ui:177
+#: src/preferences.ui:189
 msgid "Use static emote images to reduce resource usage"
 msgstr ""
 
@@ -717,15 +740,15 @@ msgstr ""
 
 #: src/preferences.ui:201
 msgid ""
-"Use GTK instead of WebKit for chat rendering.  Much lower memory "
-"usage, but animated emotes always show as static"
+"Use GTK instead of WebKit for chat rendering.  Much lower memory usage, but "
+"animated emotes always show as static"
 msgstr ""
 
 #: src/preferences.ui:209
 msgid "Twitch API"
 msgstr ""
 
-#: src/preferences.ui:189
+#: src/preferences.ui:213
 msgid ""
 "Credentials are required to fetch stream data. You can get these at "
 "dev.twitch.tv/console/apps"

@@ -62,7 +62,7 @@ class StreamlineDialogs:
     def show_follow_dialog(self, callback):
         """Show dialog to follow new streamer(s)."""
         dialog, entry = self.create_input_dialog(
-            heading=_("Follow Streamer(s)"),
+            heading=_("Follow"),
             body=_("Enter Twitch usernames (separate multiple with commas):"),
             default_response="follow",
         )
@@ -87,8 +87,8 @@ class StreamlineDialogs:
     def show_quick_play_dialog(self, callback):
         """Show dialog to quickly play a stream."""
         dialog, entry = self.create_input_dialog(
-            heading=_("Quick Play Stream"),
-            body=_("Enter the Twitch username of the streamer:"),
+            heading=_("Quick Play"),
+            body=_("Open a stream without following:"),
             default_response="play",
         )
 

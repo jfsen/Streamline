@@ -82,11 +82,10 @@ msgid "Theme"
 msgstr "Erscheinungsbild"
 
 #: data/io.github.jfsen.Streamline.gschema.xml:28
-#, fuzzy
 msgid "The application theme (system, light, dark, bronze, anthracite, justin)"
 msgstr ""
 "Das Erscheinungsbild der Anwendung (System, Hell, Dunkel, Bronze, Anthrazit, "
-"Rot)"
+"Justin)"
 
 #: data/io.github.jfsen.Streamline.gschema.xml:32
 msgid "Low latency mode"
@@ -531,22 +530,22 @@ msgstr "Stream-Daten aktualisiert"
 #: src/window.py:468
 #, python-brace-format
 msgid "Added {}"
-msgstr ""
+msgstr "{} hinzugefügt"
 
 #: src/window.py:470
-#, fuzzy, python-brace-format
+#, python-brace-format
 msgid "Added {} streamers"
 msgstr "{} Streamer hinzugefügt"
 
 #: src/window.py:473
 #, python-brace-format
 msgid "'{}' is invalid"
-msgstr ""
+msgstr "'{}' ist ungültig"
 
 #: src/window.py:475
 #, python-brace-format
 msgid "{} invalid names"
-msgstr ""
+msgstr "{} ungültige Namen"
 
 #: src/window.py:478
 #, python-brace-format
@@ -554,9 +553,8 @@ msgid "Already following {}"
 msgstr "Folgst {} bereits"
 
 #: src/window.py:480
-#, fuzzy
 msgid "Already following"
-msgstr "Folgst {} bereits"
+msgstr "Bereits gefolgt"
 
 #: src/window.py:494
 #, python-brace-format
