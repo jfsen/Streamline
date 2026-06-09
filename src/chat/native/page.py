@@ -845,7 +845,7 @@ class NativeChatPage(Adw.NavigationPage):
     def _on_more_clicked(self, button: Gtk.Button) -> None:
         self._auto_scroll = True
         self._more_button.set_visible(False)
-        GLib.idle_add(self._scroll_to_bottom, priority=GLib.PRIORITY_LOW)
+        GLib.timeout_add(16, self._scroll_to_bottom)
 
     # ── Theme ───────────────────────────────────────────────
 
