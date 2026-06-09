@@ -13,7 +13,6 @@ import threading
 from collections import OrderedDict
 from pathlib import Path
 
-import gi
 import requests
 from gi.repository import Adw, Gdk, Gio, GLib, Gtk
 
