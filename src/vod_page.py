@@ -300,7 +300,7 @@ class VODPage(Adw.NavigationPage):
     def _download_thumbnail(self, url, path, picture):
         """Download a thumbnail to disk and update the picture."""
         try:
-            sized_url = url.replace("%{width}", "480").replace("%{height}", "270")
+            sized_url = url.replace("%{width}", "640").replace("%{height}", "360")
             r = requests.get(sized_url, timeout=10)
             r.raise_for_status()
             path.write_bytes(r.content)
