@@ -14,7 +14,7 @@ NATIVE_STYLE = {
     "card_padding": "5px 10px",  # internal padding
     # --- identity (badges + username) ----------------------------------
     "font_size": "15px",
-    "font_family": "Inter, Emoji, sans-serif",
+    "font_family": "Inter, sans-serif",
     "line_height": "1.4",
     "user_weight": "700",
     "badge_spacing": 2,  # px between adjacent badges and badges / name
