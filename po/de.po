@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: streamline 3.2.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-06-09 03:28+0200\n"
+"POT-Creation-Date: 2026-06-09 13:52+0200\n"
 "PO-Revision-Date: 2026-05-30 00:23+0200\n"
 "Last-Translator: jfsen\n"
 "Language-Team: none\n"
@@ -84,8 +84,8 @@ msgstr "Erscheinungsbild"
 #: data/io.github.jfsen.Streamline.gschema.xml:28
 msgid "The application theme (system, light, dark, anthracite, justin, oxide)"
 msgstr ""
-"Das Erscheinungsbild der Anwendung (System, Hell, Dunkel, Anthrazit, "
-"Justin, Oxide)"
+"Das Erscheinungsbild der Anwendung (System, Hell, Dunkel, Anthrazit, Justin, "
+"Oxide)"
 
 #: data/io.github.jfsen.Streamline.gschema.xml:32
 msgid "Low latency mode"
@@ -152,12 +152,12 @@ msgstr "Native Chat-Engine verwenden"
 
 #: data/io.github.jfsen.Streamline.gschema.xml:73
 msgid ""
-"Use GTK instead of WebKit for chat rendering. Uses far less memory, but "
-"animated emotes always render as static."
+"Use GTK instead of WebKit for chat rendering. Much lower memory usage, but "
+"higher CPU usage for animated emotes."
 msgstr ""
 "GTK anstelle von WebKit für die Chat-Darstellung verwenden.  Deutlich "
-"geringere Speichernutzung, aber animierte Emotes werden immer statisch "
-"dargestellt"
+"geringere Speichernutzung, aber höhere CPU-Auslastung bei animierten "
+"Emotes"
 
 #: data/io.github.jfsen.Streamline.gschema.xml:77
 msgid "Show profile pictures on play buttons"
@@ -166,7 +166,9 @@ msgstr "Profilbilder auf Wiedergabe-Schaltflächen anzeigen"
 #: data/io.github.jfsen.Streamline.gschema.xml:79
 msgid ""
 "Replace the play icon with the streamer's profile picture when available"
-msgstr "Das Wiedergabe-Symbol durch das Profilbild des Streamers ersetzen, wenn verfügbar"
+msgstr ""
+"Das Wiedergabe-Symbol durch das Profilbild des Streamers ersetzen, wenn "
+"verfügbar"
 
 #: data/io.github.jfsen.Streamline.gschema.xml:83
 msgid "Show VOD thumbnails"
@@ -266,35 +268,35 @@ msgstr "Mittel"
 msgid "Low"
 msgstr "Niedrig"
 
-#: src/preferences.py:168
+#: src/preferences.py:166
 #, python-brace-format
 msgid "Streamers list saved to {}"
 msgstr "Streamer-Liste gespeichert unter {}"
 
-#: src/preferences.py:172
+#: src/preferences.py:170
 #, python-brace-format
 msgid "Error saving file: {}"
 msgstr "Fehler beim Speichern der Datei: {}"
 
-#: src/preferences.py:211
+#: src/preferences.py:209
 msgid "No streamer names found in file"
 msgstr "Keine Streamer-Namen in der Datei gefunden"
 
-#: src/preferences.py:227
+#: src/preferences.py:225
 #, python-brace-format
 msgid "Added {} streamer(s) ({} already followed)"
 msgstr "{} Streamer hinzugefügt ({} wird bereits gefolgt)"
 
-#: src/preferences.py:234
+#: src/preferences.py:232
 #, python-brace-format
 msgid "Added {} streamer(s)"
 msgstr "{} Streamer hinzugefügt"
 
-#: src/preferences.py:237
+#: src/preferences.py:235
 msgid "All streamers already followed"
 msgstr "Allen Streamern wird bereits gefolgt"
 
-#: src/preferences.py:241
+#: src/preferences.py:239
 #, python-brace-format
 msgid "Error importing file: {}"
 msgstr "Fehler beim Importieren der Datei: {}"
@@ -455,17 +457,17 @@ msgstr "{} Sek."
 msgid "{}h {}m"
 msgstr "{} Std. {} Min."
 
-#: src/chat/chat_window.py:32 src/chat/native/page.py:575
+#: src/chat/chat_window.py:32 src/chat/native/page.py:490
 #: src/chat/webkit/page.py:112
 #, python-brace-format
 msgid "Chat: {}"
 msgstr "Chat: {}"
 
-#: src/chat/native/page.py:624 src/chat/webkit/page.py:74
+#: src/chat/native/page.py:539 src/chat/webkit/page.py:74
 msgid "More messages below"
 msgstr "Weitere Nachrichten unten"
 
-#: src/chat/native/page.py:649 src/chat/webkit/page.py:197
+#: src/chat/native/page.py:565 src/chat/webkit/page.py:197
 msgid "Detach chat"
 msgstr "Chat ausgliedern"
 
@@ -492,28 +494,28 @@ msgstr ""
 msgid "Please wait {}s before refreshing"
 msgstr "Bitte warte {} s vor dem Aktualisieren"
 
-#: src/vod_page.py:276 src/vod_page.py:370
+#: src/vod_page.py:286 src/vod_page.py:387
 msgid "Play VOD"
 msgstr "VOD abspielen"
 
-#: src/vod_page.py:283 src/vod_page.py:377
+#: src/vod_page.py:293 src/vod_page.py:394
 msgid "Open VOD in browser"
 msgstr "VOD im Browser öffnen"
 
-#: src/vod_page.py:341
+#: src/vod_page.py:358
 msgid "No VODs found"
 msgstr "Keine VODs gefunden"
 
-#: src/vod_page.py:342
+#: src/vod_page.py:359
 msgid "This channel has no recent VODs available"
 msgstr "Dieser Kanal hat keine aktuellen VODs verfügbar"
 
-#: src/vod_page.py:391
+#: src/vod_page.py:408
 #, python-brace-format
 msgid "Starting VOD: {}"
 msgstr "Starte VOD: {}"
 
-#: src/vod_page.py:393
+#: src/vod_page.py:410
 msgid "Error playing VOD: player failed to start"
 msgstr "Fehler beim Abspielen des VODs: Player konnte nicht gestartet werden"
 
@@ -794,11 +796,11 @@ msgstr "Native Chat-Engine"
 #: src/preferences.ui:213
 msgid ""
 "Use GTK instead of WebKit for chat rendering.  Much lower memory usage, but "
-"animated emotes always show as static"
+"higher CPU usage for animated emotes"
 msgstr ""
 "GTK anstelle von WebKit für die Chat-Darstellung verwenden.  Deutlich "
-"geringere Speichernutzung, aber animierte Emotes werden immer statisch "
-"dargestellt"
+"geringere Speichernutzung, aber höhere CPU-Auslastung bei animierten "
+"Emotes"
 
 #: src/preferences.ui:221
 msgid "Twitch API"
@@ -819,6 +821,22 @@ msgstr "VODs"
 #: src/vod_page.ui:23
 msgid "Refresh VODs"
 msgstr "VODs aktualisieren"
+
+#~ msgid ""
+#~ "Use GTK instead of WebKit for chat rendering.  Much lower memory usage, "
+#~ "but animated emotes always show as static"
+#~ msgstr ""
+#~ "GTK anstelle von WebKit für die Chat-Darstellung verwenden.  Deutlich "
+#~ "geringere Speichernutzung, aber animierte Emotes werden immer statisch "
+#~ "dargestellt"
+
+#~ msgid ""
+#~ "Use GTK instead of WebKit for chat rendering. Uses far less memory, but "
+#~ "animated emotes always render as static."
+#~ msgstr ""
+#~ "GTK anstelle von WebKit für die Chat-Darstellung verwenden.  Deutlich "
+#~ "geringere Speichernutzung, aber animierte Emotes werden immer statisch "
+#~ "dargestellt"
 
 #~ msgid "Follow Streamer(s)"
 #~ msgstr "Streamer(n) folgen"

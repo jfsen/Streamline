@@ -90,8 +90,8 @@ class StreamlinePreferences(Adw.PreferencesDialog):
         ):
             settings.bind(key, row, "active", Gio.SettingsBindFlags.DEFAULT)
 
-        # The native chat engine always renders emotes as static, so
-        # the emote-animations toggle is meaningless when it is on.
+        # The native chat engine supports animated emotes — no need
+        # to grey out the toggle.  The callback exists for future use.
         self.chat_native_engine_switch.connect(
             "notify::active", self._on_native_engine_toggled
         )
@@ -124,11 +124,9 @@ class StreamlinePreferences(Adw.PreferencesDialog):
         )
 
     def _on_native_engine_toggled(self, native_switch, _pspec):
-        """Grey out the emote-animations toggle when the native engine is
-        on, since it always renders emotes as static first-frame."""
-        self.chat_disable_emote_animations_switch.set_sensitive(
-            not native_switch.get_active()
-        )
+        """The native engine now supports animated emotes, so the
+        toggle is always sensitive regardless of engine choice."""
+        pass
 
     # ── Export streamers ─────────────────────────────────────
 

@@ -59,7 +59,9 @@ class EmoteTextureCache:
     """
 
     def __init__(self):
-        self._textures: OrderedDict[str, Gdk.Texture] = OrderedDict()
+        # Cached value is either a Gdk.Texture (static) or a
+        # list of (Gdk.Texture, delay_ms) tuples (animated).
+        self._textures: OrderedDict[str, Gdk.Texture | list] = OrderedDict()
         self._pending: dict[str, list[tuple[Gtk.Widget, bool]]] = {}
         self._lock = threading.Lock()
         _EMOTE_IMAGE_DIR.mkdir(parents=True, exist_ok=True)
@@ -76,7 +78,7 @@ class EmoteTextureCache:
             if url in self._textures:
                 texture = self._textures.pop(url)
                 self._textures[url] = texture
-                GLib.idle_add(_apply_texture, widget, texture)
+                GLib.idle_add(_apply_texture, widget, url, texture)
                 return
 
             if url in self._pending:
@@ -126,29 +128,30 @@ class EmoteTextureCache:
         GLib.idle_add(self._on_data, url, data)
 
     def _on_data(self, url: str, data: bytes | None) -> bool:
-        texture = None
+        decoded = None
         if data:
-            texture = self._decode(data)
-            if texture is None:
+            decoded = self._decode(data)
+            if decoded is None:
                 logger.debug("Failed to decode emote %s", url)
 
         with self._lock:
-            if texture is not None:
-                self._textures[url] = texture
+            if decoded is not None:
+                self._textures[url] = decoded
                 self._textures.move_to_end(url)
                 while len(self._textures) > _MAX_EMOTE_TEXTURES:
                     self._textures.popitem(last=False)
             widgets = self._pending.pop(url, [])
 
-        if texture is not None:
+        if decoded is not None:
             for widget, _replaced in widgets:
-                _apply_texture(widget, texture)
+                _apply_texture(widget, url, decoded)
 
         return GLib.SOURCE_REMOVE
 
     @staticmethod
-    def _decode(data: bytes) -> Gdk.Texture | None:
-        """Decode any image format to a Gdk.Texture via Pillow → PNG."""
+    def _decode(data: bytes) -> Gdk.Texture | list | None:
+        """Decode to a static Gdk.Texture, or a list of
+        (Gdk.Texture, delay_ms) frames for animated images."""
         from io import BytesIO
 
         from PIL import Image
@@ -157,22 +160,179 @@ class EmoteTextureCache:
 
         try:
             img = Image.open(BytesIO(data))
-            png_buf = BytesIO()
-            img.save(png_buf, format="PNG")
-            return Gdk.Texture.new_from_bytes(GLib.Bytes.new(png_buf.getvalue()))
         except Exception as exc:
             logger.debug("Emote decode failed: %s", exc)
             return None
 
+        # Animated (GIF / APNG / WebP) — extract all frames.
+        # Falls back to a single static frame if Pillow cannot
+        # iterate the animation on this platform.
+        if getattr(img, "is_animated", False):
+            return _decode_animated_frames(img)
 
-def _apply_texture(widget: Gtk.Widget, texture: Gdk.Texture) -> bool:
-    """Set the texture on an emote Gtk.Picture (always main-thread)."""
-    widget.set_paintable(texture)
+        # Static image — encode as PNG for Gdk.Texture
+        png_buf = BytesIO()
+        img.save(png_buf, format="PNG")
+        return Gdk.Texture.new_from_bytes(GLib.Bytes.new(png_buf.getvalue()))
+
+
+def _apply_texture(widget: Gtk.Widget, url: str, data: Gdk.Texture | list) -> bool:
+    """Set an emote's texture; *data* is either a static Gdk.Texture
+    or a list of (texture, delay_ms) tuples for animated GIFs."""
+    if isinstance(data, Gdk.Texture):
+        widget.set_paintable(data)
+    else:
+        _anim_register(widget, url, data)
     widget.queue_resize()
     return GLib.SOURCE_REMOVE
 
 
+# ── Animated GIF frame extraction ─────────────────────────────
+
+
+def _decode_animated_frames(img) -> list:
+    """Extract every frame from an animated GIF via Pillow.
+
+    Returns a list of (Gdk.Texture, delay_ms).  Frame delays
+    below 20 ms are clamped to 50 ms to avoid burning CPU.
+    """
+    from io import BytesIO
+
+    frames = []
+    try:
+        while True:
+            delay_cs = img.info.get("duration", 100)
+            if delay_cs <= 0:
+                delay_cs = 100
+            delay_ms = max(int(delay_cs), 50)
+
+            png_buf = BytesIO()
+            img.save(png_buf, format="PNG")
+            texture = Gdk.Texture.new_from_bytes(GLib.Bytes.new(png_buf.getvalue()))
+            frames.append((texture, delay_ms))
+
+            img.seek(img.tell() + 1)
+    except EOFError:
+        pass
+    except Exception as exc:
+        logger.debug("Failed to extract GIF frame: %s", exc)
+
+    return frames if frames else []
+
+
 _EMOTE_CACHE = EmoteTextureCache()
+
+
+# ── Shared animation registry ─────────────────────────────────
+# One timer per unique emote URL; all visible instances stay
+# frame-synced and only one timeout is active per URL.
+
+_anim_registry: dict[str, dict] = {}
+
+
+def _anim_shared_tick(url: str) -> bool:
+    """Advance the shared animation for *url* by one frame."""
+    info = _anim_registry.get(url)
+    if info is None:
+        return GLib.SOURCE_REMOVE
+
+    frames = info["frames"]
+    idx = (info["frame_idx"] + 1) % len(frames)
+    info["frame_idx"] = idx
+    texture, delay = frames[idx]
+
+    dead = []
+    for widget in info["widgets"]:
+        if getattr(widget, "_anim_paused", False):
+            continue
+        try:
+            widget.set_paintable(texture)
+        except Exception:
+            dead.append(widget)
+    for w in dead:
+        info["widgets"].discard(w)
+
+    if not info["widgets"]:
+        _anim_registry.pop(url, None)
+        return GLib.SOURCE_REMOVE
+
+    if delay > 0:
+        info["timer_id"] = GLib.timeout_add(delay, _anim_shared_tick, url)
+    return GLib.SOURCE_REMOVE
+
+
+def _anim_register(widget: Gtk.Picture, url: str, frames: list) -> None:
+    """Register *widget* in the shared animation for *url*."""
+    if not frames:
+        return
+
+    widget._anim_url = url
+    widget._anim_paused = False
+
+    if url not in _anim_registry:
+        _anim_registry[url] = {
+            "frames": frames,
+            "widgets": {widget},
+            "timer_id": None,
+            "frame_idx": 0,
+        }
+        texture, delay = frames[0]
+        widget.set_paintable(texture)
+        if delay > 0:
+            _anim_registry[url]["timer_id"] = GLib.timeout_add(
+                delay, _anim_shared_tick, url
+            )
+    else:
+        info = _anim_registry[url]
+        info["widgets"].add(widget)
+        texture, _ = frames[info["frame_idx"]]
+        widget.set_paintable(texture)
+
+    # One-shot signal wiring (skip duplicate connections).
+    for func in (_on_anim_map, _on_anim_unmap, _on_anim_destroy):
+        try:
+            widget.disconnect_by_func(func)
+        except TypeError:
+            pass
+    widget.connect("map", _on_anim_map)
+    widget.connect("unmap", _on_anim_unmap)
+    widget.connect("destroy", _on_anim_destroy)
+
+
+def _on_anim_map(widget: Gtk.Picture) -> None:
+    """Sync widget to current shared frame when becoming visible."""
+    if not getattr(widget, "_anim_paused", False):
+        return
+    widget._anim_paused = False
+    url = getattr(widget, "_anim_url", None)
+    if url is None:
+        return
+    info = _anim_registry.get(url)
+    if info is not None:
+        texture, _ = info["frames"][info["frame_idx"]]
+        widget.set_paintable(texture)
+
+
+def _on_anim_unmap(widget: Gtk.Picture) -> None:
+    """Mark widget paused — shared timer will skip it."""
+    widget._anim_paused = True
+
+
+def _on_anim_destroy(widget: Gtk.Picture) -> None:
+    """Remove widget from shared animation; stop timer if last."""
+    url = getattr(widget, "_anim_url", None)
+    if url is None:
+        return
+    info = _anim_registry.get(url)
+    if info is None:
+        return
+    info["widgets"].discard(widget)
+    if not info["widgets"]:
+        tid = info.get("timer_id")
+        if tid is not None:
+            GLib.source_remove(tid)
+        _anim_registry.pop(url, None)
+
 
 # ── Helpers ──────────────────────────────────────────────────
 

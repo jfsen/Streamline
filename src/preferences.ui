@@ -210,7 +210,7 @@
                 <property
                                     name="subtitle"
                                     translatable="yes"
-                                >Use GTK instead of WebKit for chat rendering.  Much lower memory usage, but animated emotes always show as static</property>
+                                >Use GTK instead of WebKit for chat rendering.  Much lower memory usage, but higher CPU usage for animated emotes</property>
               </object>
             </child>
           </object>

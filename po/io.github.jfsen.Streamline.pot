@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: io.github.jfsen.Streamline\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-06-09 03:28+0200\n"
+"POT-Creation-Date: 2026-06-09 13:52+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -145,8 +145,8 @@ msgstr ""
 
 #: data/io.github.jfsen.Streamline.gschema.xml:73
 msgid ""
-"Use GTK instead of WebKit for chat rendering. Uses far less memory, but "
-"animated emotes always render as static."
+"Use GTK instead of WebKit for chat rendering. Much lower memory usage, but "
+"higher CPU usage for animated emotes."
 msgstr ""
 
 #: data/io.github.jfsen.Streamline.gschema.xml:77
@@ -252,35 +252,35 @@ msgstr ""
 msgid "Low"
 msgstr ""
 
-#: src/preferences.py:168
+#: src/preferences.py:166
 #, python-brace-format
 msgid "Streamers list saved to {}"
 msgstr ""
 
-#: src/preferences.py:172
+#: src/preferences.py:170
 #, python-brace-format
 msgid "Error saving file: {}"
 msgstr ""
 
-#: src/preferences.py:211
+#: src/preferences.py:209
 msgid "No streamer names found in file"
 msgstr ""
 
-#: src/preferences.py:227
+#: src/preferences.py:225
 #, python-brace-format
 msgid "Added {} streamer(s) ({} already followed)"
 msgstr ""
 
-#: src/preferences.py:234
+#: src/preferences.py:232
 #, python-brace-format
 msgid "Added {} streamer(s)"
 msgstr ""
 
-#: src/preferences.py:237
+#: src/preferences.py:235
 msgid "All streamers already followed"
 msgstr ""
 
-#: src/preferences.py:241
+#: src/preferences.py:239
 #, python-brace-format
 msgid "Error importing file: {}"
 msgstr ""
@@ -425,17 +425,17 @@ msgstr ""
 msgid "{}h {}m"
 msgstr ""
 
-#: src/chat/chat_window.py:32 src/chat/native/page.py:575
+#: src/chat/chat_window.py:32 src/chat/native/page.py:490
 #: src/chat/webkit/page.py:112
 #, python-brace-format
 msgid "Chat: {}"
 msgstr ""
 
-#: src/chat/native/page.py:624 src/chat/webkit/page.py:74
+#: src/chat/native/page.py:539 src/chat/webkit/page.py:74
 msgid "More messages below"
 msgstr ""
 
-#: src/chat/native/page.py:649 src/chat/webkit/page.py:197
+#: src/chat/native/page.py:565 src/chat/webkit/page.py:197
 msgid "Detach chat"
 msgstr ""
 
@@ -461,28 +461,28 @@ msgstr ""
 msgid "Please wait {}s before refreshing"
 msgstr ""
 
-#: src/vod_page.py:276 src/vod_page.py:370
+#: src/vod_page.py:286 src/vod_page.py:387
 msgid "Play VOD"
 msgstr ""
 
-#: src/vod_page.py:283 src/vod_page.py:377
+#: src/vod_page.py:293 src/vod_page.py:394
 msgid "Open VOD in browser"
 msgstr ""
 
-#: src/vod_page.py:341
+#: src/vod_page.py:358
 msgid "No VODs found"
 msgstr ""
 
-#: src/vod_page.py:342
+#: src/vod_page.py:359
 msgid "This channel has no recent VODs available"
 msgstr ""
 
-#: src/vod_page.py:391
+#: src/vod_page.py:408
 #, python-brace-format
 msgid "Starting VOD: {}"
 msgstr ""
 
-#: src/vod_page.py:393
+#: src/vod_page.py:410
 msgid "Error playing VOD: player failed to start"
 msgstr ""
 
@@ -757,7 +757,7 @@ msgstr ""
 #: src/preferences.ui:213
 msgid ""
 "Use GTK instead of WebKit for chat rendering.  Much lower memory usage, but "
-"animated emotes always show as static"
+"higher CPU usage for animated emotes"
 msgstr ""
 
 #: src/preferences.ui:221
