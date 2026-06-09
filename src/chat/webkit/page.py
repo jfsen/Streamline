@@ -118,6 +118,7 @@ class ChatPage(Adw.NavigationPage):
         else:
             self.parent = None
         self._streamer = streamer
+        self._display_name = display_name
         self._chat = None
         self._msg_count = 0
         self._third_party_emotes = None
@@ -370,6 +371,7 @@ class ChatPage(Adw.NavigationPage):
         popup = ChatWindow(
             twitch=getattr(parent, "twitch", None),
             streamer=self._streamer,
+            display_name=self._display_name,
             alternating_bg=self._alternating_bg,
             disable_emote_animations=self._disable_emote_animations,
             theme=getattr(parent, "theme", "system"),

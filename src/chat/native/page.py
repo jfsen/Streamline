@@ -493,6 +493,7 @@ class NativeChatPage(Adw.NavigationPage):
 
         self.parent = proxy(parent) if parent is not None else None
         self._streamer = streamer
+        self._display_name = display_name
         self._alternating_bg = alternating_bg
         self._disable_emote_animations = disable_emote_animations
         self._twitch = twitch
@@ -953,6 +954,7 @@ class NativeChatPage(Adw.NavigationPage):
         popup = ChatWindow(
             twitch=getattr(parent, "twitch", None),
             streamer=self._streamer,
+            display_name=self._display_name,
             alternating_bg=self._alternating_bg,
             disable_emote_animations=self._disable_emote_animations,
             theme="dark" if self._dark else "light",
