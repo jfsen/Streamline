@@ -839,8 +839,10 @@ class NativeChatPage(Adw.NavigationPage):
 
     def _on_message(self, msg: dict) -> None:
         self._item_count += 1
-        if self._item_count > MAX_MESSAGES:
-            self._do_cull()
+        # Culling is deferred to ``_flush_messages`` so that removal
+        # and addition happen in the same operation with a single
+        # scroll-to-bottom, eliminating the jitter caused by a
+        # separate cull pass shrinking the content between frames.
 
         emotes = list(msg["emotes"])
         if self._third_party_emotes:
@@ -863,10 +865,11 @@ class NativeChatPage(Adw.NavigationPage):
             self._batch_flush_id = GLib.timeout_add(FLUSH_MS, self._flush_messages)
 
     def _flush_messages(self) -> bool:
-        """Append batched cards and scroll to bottom when auto-scrolling.
+        """Cull excess messages then append batched cards.
 
-        Culling is handled separately in ``_on_message`` / ``_do_cull``
-        so the flush is only responsible for injecting new cards.
+        Culling is done here (rather than in ``_on_message``) so that
+        removal from the top and addition at the bottom are a single
+        logical operation with one scroll-to-bottom at the end.
         """
         if not self._msg_batch:
             self._batch_flush_id = None
@@ -879,6 +882,42 @@ class NativeChatPage(Adw.NavigationPage):
         self._scroll_gen += 1
         gen = self._scroll_gen
         was_auto = self._auto_scroll
+
+        # ── Cull excess before adding ──────────────────────────
+        if self._item_count > MAX_MESSAGES:
+            adj = self._scrolled.get_vadjustment()
+            if not was_auto:
+                pre_value = adj.get_value()
+
+            self._suppress_scroll_signal = True
+            self._cull_in_progress = True
+            try:
+                culled_total_height = 0
+                while self._item_count > MAX_MESSAGES:
+                    culled = 0
+                    while culled < CULL_CHUNK:
+                        first = self._msg_box.get_first_child()
+                        if first is None:
+                            break
+                        culled_total_height += first.get_allocated_height()
+                        self._msg_box.remove(first)
+                        if self._cards and self._cards[0] is first:
+                            self._cards.popleft()
+                        elif first in self._cards:
+                            self._cards.remove(first)
+                        _anim_unregister_tree(first)
+                        first.unrealize()
+                        self._item_count -= 1
+                        culled += 1
+                    if culled == 0:
+                        break
+
+                if not was_auto and culled_total_height > 0:
+                    target = max(0.0, pre_value - culled_total_height)
+                    adj.set_value(target)
+            finally:
+                self._cull_in_progress = False
+                self._suppress_scroll_signal = False
 
         # ── Append new cards ─────────────────────────────────
         for msg_data in batch:
@@ -965,60 +1004,6 @@ class NativeChatPage(Adw.NavigationPage):
 
         GLib.timeout_add(16, self._scroll_to_bottom, gen, retry + 1)
         return GLib.SOURCE_REMOVE
-
-    def _do_cull(self) -> None:
-        """Remove CULL_CHUNK oldest messages from the top in one pass.
-
-        Called from ``_on_message`` whenever the message count exceeds
-        ``MAX_MESSAGES``, matching the webkit chat's behaviour of
-        culling synchronously with message reception instead of
-        deferring to the batch flush.
-
-        When auto-scroll is paused the scroll position is adjusted
-        immediately by the exact measured height of the removed
-        children, keeping the user's view anchored to the same content.
-        When auto-scrolling, the viewport is re-pinned to the bottom.
-        """
-        adj = self._scrolled.get_vadjustment()
-        was_auto = self._auto_scroll
-
-        if not was_auto:
-            pin_value = adj.get_value()
-            self._cull_in_progress = True
-
-        try:
-            culled_height = 0
-            culled = 0
-            while culled < CULL_CHUNK:
-                first = self._msg_box.get_first_child()
-                if first is None:
-                    break
-                culled_height += first.get_allocated_height()
-                self._msg_box.remove(first)
-                if self._cards and self._cards[0] is first:
-                    self._cards.popleft()
-                elif first in self._cards:
-                    self._cards.remove(first)
-                _anim_unregister_tree(first)
-                first.unrealize()
-                self._item_count -= 1
-                culled += 1
-
-            if culled == 0:
-                return
-
-            self._suppress_scroll_signal = True
-            try:
-                if was_auto:
-                    adj.set_value(adj.get_upper() - adj.get_page_size())
-                else:
-                    target = max(0.0, pin_value - culled_height)
-                    adj.set_value(target)
-            finally:
-                self._suppress_scroll_signal = False
-        finally:
-            if not was_auto:
-                self._cull_in_progress = False
 
     def _on_more_clicked(self, button: Gtk.Button) -> None:
         """Jump back to the bottom and resume auto-scroll."""
