@@ -201,7 +201,6 @@ list.boxed-list.streamer-list > row:hover .offline-stream-button {
 
 .avatar-overlay {
     border-radius: 999px;
-    overflow: hidden;
 }
 
 .avatar-play-button .avatar-play-icon {
