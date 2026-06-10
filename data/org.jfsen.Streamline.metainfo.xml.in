@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <component type="desktop-application">
-  <id>io.github.jfsen.Streamline</id>
+  <id>org.jfsen.Streamline</id>
   <metadata_license>CC0-1.0</metadata_license>
   <project_license>GPL-3.0-or-later</project_license>
 
@@ -18,8 +18,8 @@
   <url type="vcs-browser">https://github.com/jfsen/Streamline</url>
   <url type="bugtracker">https://github.com/jfsen/Streamline/issues</url>
 
-  <translation type="gettext">io.github.jfsen.Streamline</translation>
-  <launchable type="desktop-id">io.github.jfsen.Streamline.desktop</launchable>
+  <translation type="gettext">org.jfsen.Streamline</translation>
+  <launchable type="desktop-id">org.jfsen.Streamline.desktop</launchable>
 
   <content_rating type="oars-1.1">
     <content_attribute id="social-info">mild</content_attribute>

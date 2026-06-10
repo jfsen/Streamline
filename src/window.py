@@ -50,7 +50,7 @@ from .twitch import TwitchAPI
 from .vod_page import VODPage
 
 
-@Gtk.Template(resource_path="/io/github/jfsen/Streamline/window.ui")
+@Gtk.Template(resource_path="/org/jfsen/Streamline/window.ui")
 class StreamlineWindow(Adw.ApplicationWindow):
     __gtype_name__ = "StreamlineWindow"
 
@@ -67,7 +67,7 @@ class StreamlineWindow(Adw.ApplicationWindow):
         # ── Phase 1: fast setup so the window presents immediately ──
 
         # Initialize GSettings and populate attributes
-        self.settings = Gio.Settings.new("io.github.jfsen.Streamline")
+        self.settings = Gio.Settings.new("org.jfsen.Streamline")
         self._initialize_from_config()
 
         # Store CSS provider for theme overrides
@@ -395,7 +395,7 @@ class StreamlineWindow(Adw.ApplicationWindow):
 
         Args:
             resource_path: GResource path like
-                          '/io/github/jfsen/Streamline/css/bronze.css'
+                          '/org/jfsen/Streamline/css/bronze.css'
         """
         provider = Gtk.CssProvider()
         provider.load_from_resource(resource_path)

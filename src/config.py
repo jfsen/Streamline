@@ -5,7 +5,7 @@
 # Core application identity.
 # Consumers:  main.py  (APP_ID, VERSION),  window.py  (APP_ID via GSettings)
 
-APP_ID = "io.github.jfsen.Streamline"
+APP_ID = "org.jfsen.Streamline"
 VERSION = "3.2.0"
 
 # ── Window ──────────────────────────────────────────────────
@@ -20,7 +20,7 @@ DEFAULT_HEIGHT = 700
 
 # GResource prefix used by all bundled assets (CSS, UI templates).
 # Consumer:  window.py  (_load_theme_css, _apply_theme)
-RESOURCE_BASE = "/io/github/jfsen/Streamline"
+RESOURCE_BASE = "/org/jfsen/Streamline"
 
 # ── Themes ──────────────────────────────────────────────────
 #

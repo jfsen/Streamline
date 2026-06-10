@@ -1,6 +1,6 @@
 desktop_file = i18n.merge_file(
-        input: 'io.github.jfsen.Streamline.desktop.in',
-       output: 'io.github.jfsen.Streamline.desktop',
+        input: 'org.jfsen.Streamline.desktop.in',
+       output: 'org.jfsen.Streamline.desktop',
          type: 'desktop',
        po_dir: '../po',
       install: true,
@@ -13,8 +13,8 @@ if desktop_utils.found()
 endif
 
 appstream_file = i18n.merge_file(
-        input: 'io.github.jfsen.Streamline.metainfo.xml.in',
-       output: 'io.github.jfsen.Streamline.metainfo.xml',
+        input: 'org.jfsen.Streamline.metainfo.xml.in',
+       output: 'org.jfsen.Streamline.metainfo.xml',
        po_dir: '../po',
       install: true,
   install_dir: get_option('datadir') / 'metainfo'
@@ -24,7 +24,7 @@ appstreamcli = find_program('appstreamcli', required: false, disabler: true)
 test('Validate appstream file', appstreamcli,
      args: ['validate', '--no-net', '--explain', appstream_file])
 
-install_data('io.github.jfsen.Streamline.gschema.xml',
+install_data('org.jfsen.Streamline.gschema.xml',
   install_dir: get_option('datadir') / 'glib-2.0' / 'schemas'
 )
 
@@ -37,8 +37,8 @@ test('Validate schema file',
 service_conf = configuration_data()
 service_conf.set('bindir', get_option('prefix') / get_option('bindir'))
 configure_file(
-  input: 'io.github.jfsen.Streamline.service.in',
-  output: 'io.github.jfsen.Streamline.service',
+  input: 'org.jfsen.Streamline.service.in',
+  output: 'org.jfsen.Streamline.service',
   configuration: service_conf,
   install_dir: get_option('datadir') / 'dbus-1' / 'services'
 )

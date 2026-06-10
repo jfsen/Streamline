@@ -1,4 +1,4 @@
-application_id = 'io.github.jfsen.Streamline'
+application_id = 'org.jfsen.Streamline'
 
 scalable_dir = 'hicolor' / 'scalable' / 'apps'
 install_data(

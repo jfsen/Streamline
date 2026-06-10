@@ -27,7 +27,7 @@ import ctypes.util
 import gettext
 import logging
 
-os.environ['GETTEXT_PACKAGE'] = 'io.github.jfsen.Streamline'
+os.environ['GETTEXT_PACKAGE'] = 'org.jfsen.Streamline'
 
 VERSION = '@VERSION@'
 pkgdatadir = '@pkgdatadir@'
@@ -39,14 +39,14 @@ signal.signal(signal.SIGINT, signal.SIG_DFL)
 logging.basicConfig(level=logging.DEBUG, format="[%(name)s] %(message)s")
 
 # Python gettext
-gettext.bindtextdomain('io.github.jfsen.Streamline', localedir)
-gettext.textdomain('io.github.jfsen.Streamline')
-gettext.install('io.github.jfsen.Streamline', localedir)
+gettext.bindtextdomain('org.jfsen.Streamline', localedir)
+gettext.textdomain('org.jfsen.Streamline')
+gettext.install('org.jfsen.Streamline', localedir)
 
 # C-level gettext (GTK uses dgettext(NULL, ...) for UI templates)
 libc = ctypes.CDLL(ctypes.util.find_library('c'))
-libc.bindtextdomain(b'io.github.jfsen.Streamline', localedir.encode())
-libc.textdomain(b'io.github.jfsen.Streamline')
+libc.bindtextdomain(b'org.jfsen.Streamline', localedir.encode())
+libc.textdomain(b'org.jfsen.Streamline')
 
 if __name__ == '__main__':
     import gi

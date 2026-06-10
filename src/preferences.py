@@ -9,7 +9,7 @@ _ = gettext.gettext
 logger = logging.getLogger("Preferences")
 
 
-@Gtk.Template(resource_path="/io/github/jfsen/Streamline/preferences.ui")
+@Gtk.Template(resource_path="/org/jfsen/Streamline/preferences.ui")
 class StreamlinePreferences(Adw.PreferencesDialog):
     __gtype_name__ = "StreamlinePreferences"
 

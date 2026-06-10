@@ -18,7 +18,7 @@ _ = gettext.gettext
 logger = logging.getLogger("VODPage")
 
 
-@Gtk.Template(resource_path="/io/github/jfsen/Streamline/vod_page.ui")
+@Gtk.Template(resource_path="/org/jfsen/Streamline/vod_page.ui")
 class VODPage(Adw.NavigationPage):
     __gtype_name__ = "VODPage"
 
@@ -48,7 +48,7 @@ class VODPage(Adw.NavigationPage):
         self.refresh_button.connect("clicked", self._on_refresh_clicked)
 
         # Read thumbnail preference
-        settings = Gio.Settings.new("io.github.jfsen.Streamline")
+        settings = Gio.Settings.new("org.jfsen.Streamline")
         self._show_thumbnails = settings.get_boolean("show-vod-thumbnails")
         settings.connect(
             "changed::show-vod-thumbnails", self._on_thumbnail_setting_changed

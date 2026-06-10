@@ -34,7 +34,7 @@ class StreamlineApplication(Adw.Application):
 
     def __init__(self):
         super().__init__(
-            application_id="io.github.jfsen.Streamline",
+            application_id="org.jfsen.Streamline",
             flags=Gio.ApplicationFlags.FLAGS_NONE,
         )
 
@@ -69,7 +69,7 @@ class StreamlineApplication(Adw.Application):
         """Callback for the app.about action."""
         about = Adw.AboutDialog(
             application_name="Streamline",
-            application_icon="io.github.jfsen.Streamline",
+            application_icon="org.jfsen.Streamline",
             developer_name="jfsen",
             version="3.2.0",
             developers=["jfsen"],

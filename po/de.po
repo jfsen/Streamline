@@ -16,22 +16,22 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#: data/io.github.jfsen.Streamline.desktop.in:2
-#: data/io.github.jfsen.Streamline.metainfo.xml.in:7 src/window.py:140
+#: data/org.jfsen.Streamline.desktop.in:2
+#: data/org.jfsen.Streamline.metainfo.xml.in:7 src/window.py:140
 #: src/window.ui:6
 msgid "Streamline"
 msgstr "Streamline"
 
-#: data/io.github.jfsen.Streamline.desktop.in:3
-#: data/io.github.jfsen.Streamline.metainfo.xml.in:8
+#: data/org.jfsen.Streamline.desktop.in:3
+#: data/org.jfsen.Streamline.metainfo.xml.in:8
 msgid "Watch Twitch streams in your local media player"
 msgstr "Schaue Twitch-Streams in deinem lokalen Mediaplayer"
 
-#: data/io.github.jfsen.Streamline.desktop.in:9
+#: data/org.jfsen.Streamline.desktop.in:9
 msgid "Twitch;Livestream;Streaming;Streamlink;"
 msgstr "Twitch;Livestream;Streaming;Streamlink;"
 
-#: data/io.github.jfsen.Streamline.metainfo.xml.in:10
+#: data/org.jfsen.Streamline.metainfo.xml.in:10
 msgid ""
 "Follow your favorite Twitch streamers, check their online status, and watch "
 "them in your preferred media player — mpv, VLC, or any custom player. Browse "
@@ -41,116 +41,116 @@ msgstr ""
 "schaue sie in deinem bevorzugten Mediaplayer — mpv, VLC oder einem eigenen "
 "Player. Rufe Kanal-VODs ab und spiele sie – ganz ohne Webbrowser."
 
-#: data/io.github.jfsen.Streamline.metainfo.xml.in:14
+#: data/org.jfsen.Streamline.metainfo.xml.in:14
 msgid "jfsen"
 msgstr "jfsen"
 
-#: data/io.github.jfsen.Streamline.gschema.xml:6
+#: data/org.jfsen.Streamline.gschema.xml:6
 msgid "Player type"
 msgstr "Player-Typ"
 
-#: data/io.github.jfsen.Streamline.gschema.xml:7
+#: data/org.jfsen.Streamline.gschema.xml:7
 msgid "The preferred media player (mpv, vlc, or custom)"
 msgstr "Der bevorzugte Mediaplayer (mpv, VLC oder benutzerdefiniert)"
 
-#: data/io.github.jfsen.Streamline.gschema.xml:11
+#: data/org.jfsen.Streamline.gschema.xml:11
 msgid "Custom player path"
 msgstr "Benutzerdefinierter Player-Pfad"
 
-#: data/io.github.jfsen.Streamline.gschema.xml:12
+#: data/org.jfsen.Streamline.gschema.xml:12
 msgid "Path to a custom media player executable"
 msgstr "Pfad zu einer benutzerdefinierten Mediaplayer-Anwendung"
 
-#: data/io.github.jfsen.Streamline.gschema.xml:16
+#: data/org.jfsen.Streamline.gschema.xml:16
 msgid "Stream quality preset"
 msgstr "Stream-Qualitätsvorgabe"
 
-#: data/io.github.jfsen.Streamline.gschema.xml:17
+#: data/org.jfsen.Streamline.gschema.xml:17
 msgid "The stream quality preset (High, Medium, Low, Custom)"
 msgstr "Die Stream-Qualitätsvorgabe (Hoch, Mittel, Niedrig, Benutzerdefiniert)"
 
-#: data/io.github.jfsen.Streamline.gschema.xml:21
+#: data/org.jfsen.Streamline.gschema.xml:21
 msgid "Custom quality string"
 msgstr "Benutzerdefinierte Qualitätsangabe"
 
-#: data/io.github.jfsen.Streamline.gschema.xml:22
+#: data/org.jfsen.Streamline.gschema.xml:22
 msgid "Custom stream quality string for streamlink"
 msgstr "Benutzerdefinierte Stream-Qualitätsangabe für streamlink"
 
-#: data/io.github.jfsen.Streamline.gschema.xml:26 src/preferences.ui:13
+#: data/org.jfsen.Streamline.gschema.xml:26 src/preferences.ui:13
 msgid "Theme"
 msgstr "Erscheinungsbild"
 
-#: data/io.github.jfsen.Streamline.gschema.xml:28
+#: data/org.jfsen.Streamline.gschema.xml:28
 msgid "The application theme (system, light, dark, anthracite, justin, oxide)"
 msgstr ""
 "Das Erscheinungsbild der Anwendung (System, Hell, Dunkel, Anthrazit, Justin, "
 "Oxide)"
 
-#: data/io.github.jfsen.Streamline.gschema.xml:32
+#: data/org.jfsen.Streamline.gschema.xml:32
 msgid "Low latency mode"
 msgstr "Niedrige Latenz"
 
-#: data/io.github.jfsen.Streamline.gschema.xml:33
+#: data/org.jfsen.Streamline.gschema.xml:33
 msgid "Enable low latency streaming"
 msgstr "Streaming mit niedriger Latenz aktivieren"
 
-#: data/io.github.jfsen.Streamline.gschema.xml:37
+#: data/org.jfsen.Streamline.gschema.xml:37
 msgid "Followed streamers"
 msgstr "Gefolgte Streamer"
 
-#: data/io.github.jfsen.Streamline.gschema.xml:38
+#: data/org.jfsen.Streamline.gschema.xml:38
 msgid "List of followed Twitch streamers"
 msgstr "Liste der gefolgten Twitch-Streamer"
 
-#: data/io.github.jfsen.Streamline.gschema.xml:42
+#: data/org.jfsen.Streamline.gschema.xml:42
 msgid "Twitch Client ID"
 msgstr "Twitch Client-ID"
 
-#: data/io.github.jfsen.Streamline.gschema.xml:43
+#: data/org.jfsen.Streamline.gschema.xml:43
 msgid "Twitch API client ID for authentication"
 msgstr "Twitch API-Client-ID zur Authentifizierung"
 
-#: data/io.github.jfsen.Streamline.gschema.xml:47
+#: data/org.jfsen.Streamline.gschema.xml:47
 msgid "Twitch Client Secret"
 msgstr "Twitch Client-Secret"
 
-#: data/io.github.jfsen.Streamline.gschema.xml:49
+#: data/org.jfsen.Streamline.gschema.xml:49
 msgid "Twitch API client secret for authentication"
 msgstr "Twitch API-Client-Secret zur Authentifizierung"
 
-#: data/io.github.jfsen.Streamline.gschema.xml:53
+#: data/org.jfsen.Streamline.gschema.xml:53
 msgid "Alternating chat background"
 msgstr "Abwechselnder Chat-Hintergrund"
 
-#: data/io.github.jfsen.Streamline.gschema.xml:55 src/preferences.ui:186
+#: data/org.jfsen.Streamline.gschema.xml:55 src/preferences.ui:186
 msgid "Show alternating background colors on chat messages"
 msgstr "Abwechselnde Hintergrundfarben in Chat-Nachrichten anzeigen"
 
-#: data/io.github.jfsen.Streamline.gschema.xml:59
+#: data/org.jfsen.Streamline.gschema.xml:59
 msgid "Hide emotes on focus loss"
 msgstr "Emotes bei Fokusverlust ausblenden"
 
-#: data/io.github.jfsen.Streamline.gschema.xml:61
+#: data/org.jfsen.Streamline.gschema.xml:61
 msgid "Hide all emotes when the window loses focus to save resources"
 msgstr ""
 "Alle Emotes ausblenden, wenn das Fenster den Fokus verliert, um Ressourcen "
 "zu sparen"
 
-#: data/io.github.jfsen.Streamline.gschema.xml:65
+#: data/org.jfsen.Streamline.gschema.xml:65
 msgid "Disable emote animations"
 msgstr "Emote-Animationen deaktivieren"
 
-#: data/io.github.jfsen.Streamline.gschema.xml:67
+#: data/org.jfsen.Streamline.gschema.xml:67
 msgid "Use static emote images to reduce CPU and GPU usage"
 msgstr ""
 "Statische Emote-Bilder verwenden, um CPU- und GPU-Auslastung zu reduzieren"
 
-#: data/io.github.jfsen.Streamline.gschema.xml:71
+#: data/org.jfsen.Streamline.gschema.xml:71
 msgid "Use native chat engine"
 msgstr "Native Chat-Engine verwenden"
 
-#: data/io.github.jfsen.Streamline.gschema.xml:73
+#: data/org.jfsen.Streamline.gschema.xml:73
 msgid ""
 "Use GTK instead of WebKit for chat rendering. Much lower memory usage, but "
 "higher CPU usage for animated emotes."
@@ -158,22 +158,22 @@ msgstr ""
 "GTK anstelle von WebKit für die Chat-Darstellung verwenden.  Deutlich "
 "geringere Speichernutzung, aber höhere CPU-Auslastung bei animierten Emotes"
 
-#: data/io.github.jfsen.Streamline.gschema.xml:77
+#: data/org.jfsen.Streamline.gschema.xml:77
 msgid "Show profile pictures on play buttons"
 msgstr "Profilbilder auf Wiedergabe-Schaltflächen anzeigen"
 
-#: data/io.github.jfsen.Streamline.gschema.xml:79
+#: data/org.jfsen.Streamline.gschema.xml:79
 msgid ""
 "Replace the play icon with the streamer's profile picture when available"
 msgstr ""
 "Das Wiedergabe-Symbol durch das Profilbild des Streamers ersetzen, wenn "
 "verfügbar"
 
-#: data/io.github.jfsen.Streamline.gschema.xml:83
+#: data/org.jfsen.Streamline.gschema.xml:83
 msgid "Show VOD thumbnails"
 msgstr "VOD-Vorschaubilder anzeigen"
 
-#: data/io.github.jfsen.Streamline.gschema.xml:85
+#: data/org.jfsen.Streamline.gschema.xml:85
 msgid "Display thumbnail previews for VODs as cards instead of a plain list"
 msgstr "Vorschaubilder für VODs als Karten statt als einfache Liste anzeigen"
 

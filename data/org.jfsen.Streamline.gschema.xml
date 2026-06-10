@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <schemalist gettext-domain="streamline">
-	<schema id="io.github.jfsen.Streamline" path="/io/github/jfsen/Streamline/">
+	<schema id="org.jfsen.Streamline" path="/org/jfsen/Streamline/">
 		<key name="player-type" type="s">
 			<default>'mpv'</default>
 			<summary>Player type</summary>

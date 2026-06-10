@@ -1,8 +1,8 @@
 # List of source files containing translatable strings.
 # Please keep this file sorted alphabetically.
-data/io.github.jfsen.Streamline.desktop.in
-data/io.github.jfsen.Streamline.metainfo.xml.in
-data/io.github.jfsen.Streamline.gschema.xml
+data/org.jfsen.Streamline.desktop.in
+data/org.jfsen.Streamline.metainfo.xml.in
+data/org.jfsen.Streamline.gschema.xml
 src/config.py
 src/dialogs.py
 src/main.py

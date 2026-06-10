@@ -1,6 +1,6 @@
 
 <p align="center">
-  <img src="data/icons/hicolor/scalable/apps/io.github.jfsen.Streamline.svg" alt="Streamline icon" width="128" height="128"/>
+  <img src="data/icons/hicolor/scalable/apps/org.jfsen.Streamline.svg" alt="Streamline icon" width="128" height="128"/>
 </p>
 
 <h1 align="center">Streamline</h1>
@@ -61,7 +61,7 @@ meson install -C build
 A Flatpak manifest is included in the repository. Build and install with:
 
 ```bash
-flatpak-builder --user --install --force-clean build-dir io.github.jfsen.Streamline.json
+flatpak-builder --user --install --force-clean build-dir org.jfsen.Streamline.json
 ```
 
 ## Usage
