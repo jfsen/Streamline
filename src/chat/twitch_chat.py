@@ -75,8 +75,11 @@ class TwitchChat:
             self._sock.settimeout(None)
             self._send_raw("PASS", "justinfan12345")
             self._send_raw("NICK", "justinfan12345")
+            self._send_raw("CAP REQ", ":twitch.tv/tags")
+            logger.debug("Requested twitch.tv/tags")
+            self._send_raw("CAP REQ", ":twitch.tv/commands")
+            logger.debug("Requested twitch.tv/commands")
             self._send_raw("JOIN", f"#{self._channel}")
-            self._send_raw("CAP REQ", "twitch.tv/tags")
             logger.debug("Joined #%s", self._channel)
 
             buf = b""
@@ -99,6 +102,94 @@ class TwitchChat:
             msg = f"{command} {' '.join(args)}\r\n"
             self._sock.sendall(msg.encode())
 
+    @staticmethod
+    def _empty_msg(text):
+        """Return a minimal system-message dict with the given text."""
+        return {
+            "user": "",
+            "text": text,
+            "color": FALLBACK_USER_COLOR,
+            "emotes": [],
+            "badges": [],
+            "action": False,
+            "first_msg": False,
+            "mod": False,
+            "vip": False,
+            "partner": False,
+            "broadcaster": False,
+            "system": True,
+        }
+
+    def _parse_clearchat(self, line):
+        """Parse a CLEARCHAT line (timeout / ban), or return None."""
+        parts = line.split("CLEARCHAT #", 1)
+        if len(parts) != 2:
+            return None
+
+        tags_part = parts[0]
+        body = parts[1]
+        if " :" not in body:
+            return None
+        _channel, target = body.split(" :", 1)
+        target = target.strip()
+
+        ban_duration = None
+        tag_match = _TAG_RE.match(tags_part)
+        if tag_match:
+            tags = tag_match.group(1)
+            dur_match = re.search(r"ban-duration=([^;]+)", tags)
+            if dur_match:
+                try:
+                    ban_duration = int(dur_match.group(1))
+                except ValueError:
+                    pass
+
+        if ban_duration is not None:
+            minutes = ban_duration // 60
+            if minutes == 1:
+                text = f"{target} was timed out (1 minute)"
+            else:
+                text = f"{target} was timed out ({minutes} minutes)"
+        else:
+            text = f"{target} was banned"
+
+        return self._empty_msg(text)
+
+    def _parse_usernotice(self, line):
+        """Parse a USERNOTICE line (sub / raid / …), or return None."""
+        parts = line.split("USERNOTICE #", 1)
+        if len(parts) != 2:
+            return None
+
+        tags_part = parts[0]
+
+        tag_match = _TAG_RE.match(tags_part)
+        if not tag_match:
+            return None
+        tags = tag_match.group(1)
+
+        msg_id_match = re.search(r"msg-id=([^;]+)", tags)
+        if not msg_id_match:
+            return None
+        msg_id = msg_id_match.group(1)
+
+        # Prefer the human-readable system-msg when available.
+        sys_msg_match = re.search(r"system-msg=([^;]+)", tags)
+        if sys_msg_match and sys_msg_match.group(1):
+            text = sys_msg_match.group(1).replace("\\s", " ")
+            return self._empty_msg(text)
+
+        # Build a fallback message for raid (system-msg is often absent).
+        if msg_id == "raid":
+            dn_match = re.search(r"msg-param-displayName=([^;]+)", tags)
+            vc_match = re.search(r"msg-param-viewerCount=([^;]+)", tags)
+            name = dn_match.group(1).replace("\\s", " ") if dn_match else "Someone"
+            count = vc_match.group(1) if vc_match else "?"
+            text = f"{name} is raiding with {count} viewers!"
+            return self._empty_msg(text)
+
+        return None
+
     def _handle_line(self, line):
         if line.startswith("PING"):
             self._send_raw("PONG", line[5:])
@@ -107,6 +198,24 @@ class TwitchChat:
         msg = self._parse_privmsg(line)
         if msg:
             GLib.idle_add(self._on_message, msg)
+            return
+
+        msg = self._parse_clearchat(line)
+        if msg:
+            logger.debug("CLEARCHAT → %r", msg["text"])
+            GLib.idle_add(self._on_message, msg)
+            return
+
+        msg = self._parse_usernotice(line)
+        if msg:
+            logger.debug("USERNOTICE → %r", msg["text"])
+            GLib.idle_add(self._on_message, msg)
+            return
+
+        # Log unhandled lines (ROOMSTATE, USERSTATE, NOTICE, etc.) at
+        # debug level so we can see what Twitch is actually sending.
+        if not line.startswith("PONG") and "PRIVMSG" not in line:
+            logger.debug("Unhandled IRC: %s", line)
 
     def _parse_privmsg(self, line):
         """Parse a PRIVMSG line into a dict, or return None."""

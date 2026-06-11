@@ -795,6 +795,34 @@ class NativeChatPage(Adw.NavigationPage):
             self._card_css_provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
         )
 
+        is_system = msg.get("system", False)
+
+        if is_system:
+            # System messages: italic text in a TextView (wraps correctly).
+            text_view = Gtk.TextView()
+            text_view.set_editable(False)
+            text_view.set_cursor_visible(False)
+            text_view.set_wrap_mode(Gtk.WrapMode.WORD)
+            text_view.set_halign(Gtk.Align.FILL)
+            text_view.set_valign(Gtk.Align.FILL)
+            text_view.set_top_margin(2)
+            text_view.set_bottom_margin(2)
+
+            text_view.get_style_context().add_provider(
+                self._tv_css_provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
+            )
+
+            buffer = text_view.get_buffer()
+            tag = buffer.create_tag(
+                "body", foreground=theme["text_color"], style="italic"
+            )
+            buffer.insert_with_tags(buffer.get_end_iter(), msg["text"], tag)
+
+            # Stash for theme-change restyling.
+            text_view._is_system = True
+            card.append(text_view)
+            return card
+
         # ── Identity (badges + username) ────────────────────
         identity = Gtk.Box(
             orientation=Gtk.Orientation.HORIZONTAL,
@@ -890,32 +918,49 @@ class NativeChatPage(Adw.NavigationPage):
 
     def _on_message(self, msg: dict) -> None:
         self._item_count += 1
-        # Culling is deferred to ``_flush_messages`` so that removal
-        # and addition happen in the same operation with a single
-        # scroll-to-bottom, eliminating the jitter caused by a
-        # separate cull pass shrinking the content between frames.
 
-        emotes = list(msg["emotes"])
-        if self._third_party_emotes:
-            emotes.extend(self._third_party_emotes.find_emotes(msg["text"]))
-
-        segments = _build_segments(msg["text"], emotes)
-
-        self._msg_batch.append(
-            dict(
-                user=msg["user"],
-                text=msg["text"],
-                color=msg["color"],
-                segments=segments,
-                badges=msg.get("badges", []),
-                action=msg.get("action", False),
-                first_msg=msg.get("first_msg", False),
-                mod=msg.get("mod", False),
-                vip=msg.get("vip", False),
-                partner=msg.get("partner", False),
-                broadcaster=msg.get("broadcaster", False),
+        is_system = msg.get("system", False)
+        if is_system:
+            # System messages carry no emotes / badges / user.
+            segments = [{"type": "text", "content": msg["text"]}]
+            self._msg_batch.append(
+                dict(
+                    user="",
+                    text=msg["text"],
+                    color=msg["color"],
+                    segments=segments,
+                    badges=[],
+                    action=False,
+                    first_msg=False,
+                    mod=False,
+                    vip=False,
+                    partner=False,
+                    broadcaster=False,
+                    system=True,
+                )
             )
-        )
+        else:
+            emotes = list(msg["emotes"])
+            if self._third_party_emotes:
+                emotes.extend(self._third_party_emotes.find_emotes(msg["text"]))
+
+            segments = _build_segments(msg["text"], emotes)
+
+            self._msg_batch.append(
+                dict(
+                    user=msg["user"],
+                    text=msg["text"],
+                    color=msg["color"],
+                    segments=segments,
+                    badges=msg.get("badges", []),
+                    action=msg.get("action", False),
+                    first_msg=msg.get("first_msg", False),
+                    mod=msg.get("mod", False),
+                    vip=msg.get("vip", False),
+                    partner=msg.get("partner", False),
+                    broadcaster=msg.get("broadcaster", False),
+                )
+            )
 
         if self._batch_flush_id is None:
             self._batch_flush_id = GLib.timeout_add(FLUSH_MS, self._flush_messages)
@@ -1144,6 +1189,10 @@ class NativeChatPage(Adw.NavigationPage):
         """Re-style every visible card for the new theme."""
         for card in self._cards:
             identity = card.get_first_child()
+            # System messages have only a TextView, no identity row.
+            if identity is not None and isinstance(identity, Gtk.TextView):
+                self._restyle_body(identity)
+                continue
             if identity is not None:
                 self._restyle_identity(identity)
             body = identity.get_next_sibling() if identity else None

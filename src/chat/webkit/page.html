@@ -359,7 +359,22 @@
                     isVip,
                     isPartner,
                     isBroadcaster,
+                    isSystem,
                 ) {
+                    if (isSystem) {
+                        // System message (timeout / sub / raid): plain italic text.
+                        var html =
+                            '<div class="msg">' +
+                            '<span class="text" style="font-style:italic">' +
+                            _esc(text) +
+                            "</span>" +
+                            "</div>";
+                        chat.insertAdjacentHTML("beforeend", html);
+                        io.observe(chat.lastElementChild);
+                        _scrollToBottom();
+                        return;
+                    }
+
                     var html =
                         '<div class="msg' +
                         (firstMsg && _tintFlags.firstMsg ? " first-msg" : "") +

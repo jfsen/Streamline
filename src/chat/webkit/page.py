@@ -348,27 +348,47 @@ class ChatPage(Adw.NavigationPage):
                 None,
             )
 
-        emotes = list(msg["emotes"])
-        if self._third_party_emotes:
-            emotes.extend(self._third_party_emotes.find_emotes(msg["text"]))
-        # Convert Python code-point positions to JS UTF-16 code-unit positions
-        for em in emotes:
-            em["positions"] = _to_js_positions(msg["text"], em["positions"])
-        self._msg_batch.append(
-            (
-                msg["user"],
-                msg["text"],
-                msg["color"],
-                emotes,
-                msg.get("badges", []),
-                msg.get("action", False),
-                msg.get("first_msg", False),
-                msg.get("mod", False),
-                msg.get("vip", False),
-                msg.get("partner", False),
-                msg.get("broadcaster", False),
+        is_system = msg.get("system", False)
+        if is_system:
+            self._msg_batch.append(
+                (
+                    "",
+                    msg["text"],
+                    msg["color"],
+                    [],
+                    [],
+                    False,
+                    False,
+                    False,
+                    False,
+                    False,
+                    False,
+                    True,
+                )
             )
-        )
+        else:
+            emotes = list(msg["emotes"])
+            if self._third_party_emotes:
+                emotes.extend(self._third_party_emotes.find_emotes(msg["text"]))
+            # Convert Python code-point positions to JS UTF-16 code-unit positions
+            for em in emotes:
+                em["positions"] = _to_js_positions(msg["text"], em["positions"])
+            self._msg_batch.append(
+                (
+                    msg["user"],
+                    msg["text"],
+                    msg["color"],
+                    emotes,
+                    msg.get("badges", []),
+                    msg.get("action", False),
+                    msg.get("first_msg", False),
+                    msg.get("mod", False),
+                    msg.get("vip", False),
+                    msg.get("partner", False),
+                    msg.get("broadcaster", False),
+                    False,
+                )
+            )
 
         if self._batch_flush_id is None:
             self._batch_flush_id = GLib.timeout_add(FLUSH_MS, self._flush_messages)
@@ -382,7 +402,7 @@ class ChatPage(Adw.NavigationPage):
         self._msg_batch.clear()
         self._batch_flush_id = None
         self._webview.evaluate_javascript(
-            f"(function(){{var b={batch};b.forEach(function(m){{chat(m[0],m[1],m[2],m[3],m[4],m[5],m[6],m[7],m[8],m[9],m[10])}})}})()",
+            f"(function(){{var b={batch};b.forEach(function(m){{chat(m[0],m[1],m[2],m[3],m[4],m[5],m[6],m[7],m[8],m[9],m[10],m[11])}})}})()",
             -1,
             None,
             None,
