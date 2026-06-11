@@ -71,7 +71,7 @@ class StreamlineApplication(Adw.Application):
             application_name="Streamline",
             application_icon="org.jfsen.Streamline",
             developer_name="jfsen",
-            version="3.2.0",
+            version="3.3.0",
             developers=["jfsen"],
             copyright="© 2025 jfsen",
             license_type=Gtk.License.GPL_3_0,

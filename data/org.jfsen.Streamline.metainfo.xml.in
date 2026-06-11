@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8" ?>
 <component type="desktop-application">
   <id>org.jfsen.Streamline</id>
   <metadata_license>CC0-1.0</metadata_license>
@@ -7,7 +7,8 @@
   <name>Streamline</name>
   <summary>Watch Twitch streams in your local media player</summary>
   <description>
-    <p>Follow your favorite Twitch streamers, check their online status, and watch them in your preferred media player — mpv, VLC, or any custom player. Browse and play channel VODs, all without a web browser.</p>
+    <p
+        >Follow your favorite Twitch streamers, check their online status, and watch them in your preferred media player — mpv, VLC, or any custom player. Browse and play channel VODs, all without a web browser.</p>
   </description>
 
   <developer id="io.github.jfsen">
@@ -31,16 +32,41 @@
   </branding>
 
   <releases>
+    <release version="3.3.0" date="2026-06-11">
+      <description translate="no">
+        <p
+                >Streamline 3.3 — native chat engine, VOD thumbnail cards, and app ID migration.</p>
+        <ul>
+          <li
+                    >Native GTK4 chat engine with animated emotes (BTTV, 7TV, FFZ), now enabled by default</li>
+          <li
+                    >VOD thumbnail card mode with higher-resolution images and title ellipsizing</li>
+          <li>Migrated application ID from io.github.jfsen to org.jfsen</li>
+          <li>Profile picture avatars on stream play buttons</li>
+          <li>Custom styled group headers replacing plain labels</li>
+          <li>Automatic Twitch token refresh on 401 responses</li>
+          <li>Improved chat memory usage with deferred message culling</li>
+          <li
+                    >Expanded README with distro-specific installation instructions</li>
+        </ul>
+      </description>
+    </release>
     <release version="3.2.0" date="2026-05-30">
       <description translate="no">
-        <p>Streamline 3.2 — infrastructure, polish, and language-agnostic caching.</p>
+        <p
+                >Streamline 3.2 — infrastructure, polish, and language-agnostic caching.</p>
         <ul>
-          <li>Replaced print() debugging with Python logging module across all modules</li>
-          <li>Uptime, VOD dates, and durations are now cached as raw values and formatted at display time — survives locale switches</li>
-          <li>Fixed app access token expiring every 3.5 hours; now uses the actual ~60 day lifetime from the Twitch API</li>
+          <li
+                    >Replaced print() debugging with Python logging module across all modules</li>
+          <li
+                    >Uptime, VOD dates, and durations are now cached as raw values and formatted at display time — survives locale switches</li>
+          <li
+                    >Fixed app access token expiring every 3.5 hours; now uses the actual ~60 day lifetime from the Twitch API</li>
           <li>Removed deprecated --twitch-disable-ads Streamlink flag</li>
-          <li>Simplified cache file structures: merged users.json format, consolidated streams.json</li>
-          <li>Cache paths now use GLib.get_user_cache_dir() for proper Flatpak sandbox integration</li>
+          <li
+                    >Simplified cache file structures: merged users.json format, consolidated streams.json</li>
+          <li
+                    >Cache paths now use GLib.get_user_cache_dir() for proper Flatpak sandbox integration</li>
           <li>Added GPL-3.0 license link to the About dialog</li>
           <li>Removed redundant preferences description strings</li>
         </ul>
@@ -58,15 +84,23 @@
       <description translate="no">
         <p>Streamline 3.0 — visual polish, responsiveness, and fixes.</p>
         <ul>
-          <li>Newly-online streamers get a subtle green glow when they come online after a refresh</li>
-          <li>"+N | −N" pill badge on the Online group header shows how many went online or offline</li>
-          <li>VOD page loads instantly — spinner appears while VODs fetch in the background</li>
-          <li>Custom player paths are now validated before launching; missing players show a clear error</li>
-          <li>Custom stream quality no longer forces a "best" fallback, so "audio_only" works as intended</li>
-          <li>Fixed separator lines clipping into the left border of streamer rows</li>
+          <li
+                    >Newly-online streamers get a subtle green glow when they come online after a refresh</li>
+          <li
+                    >"+N | −N" pill badge on the Online group header shows how many went online or offline</li>
+          <li
+                    >VOD page loads instantly — spinner appears while VODs fetch in the background</li>
+          <li
+                    >Custom player paths are now validated before launching; missing players show a clear error</li>
+          <li
+                    >Custom stream quality no longer forces a "best" fallback, so "audio_only" works as intended</li>
+          <li
+                    >Fixed separator lines clipping into the left border of streamer rows</li>
           <li>Fixed credentials dialog showing Client Secret in plain text</li>
-          <li>Fixed crash on startup when Twitch API credentials are missing</li>
-          <li>Debounced config saves in Preferences — no more disk writes on every keystroke</li>
+          <li
+                    >Fixed crash on startup when Twitch API credentials are missing</li>
+          <li
+                    >Debounced config saves in Preferences — no more disk writes on every keystroke</li>
           <li>README now documents Custom stream quality with examples</li>
         </ul>
       </description>
@@ -76,8 +110,10 @@
         <p>Streamline 2.0 — a major rewrite with new features and polish.</p>
         <ul>
           <li>Migrated settings from JSON file to GSettings backend</li>
-          <li>Interactive credential prompt when Twitch API keys are missing or invalid</li>
-          <li>Custom theme support: Dark, Light, Bronze, Anthracite, and Red</li>
+          <li
+                    >Interactive credential prompt when Twitch API keys are missing or invalid</li>
+          <li
+                    >Custom theme support: Dark, Light, Bronze, Anthracite, and Red</li>
           <li>VOD browsing and playback via streamlink</li>
           <li>Quick Play for one-off streams without following</li>
           <li>Export streamer list to a text file</li>
