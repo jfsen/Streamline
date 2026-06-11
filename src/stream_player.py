@@ -1,11 +1,12 @@
 import gettext
 import logging
+import shutil
 import subprocess
 import threading
 
 from gi.repository import GLib
 
-from .config import QUALITY_PRESETS, STREAMLINK_CMD
+from .config import IS_FLATPAK, QUALITY_PRESETS, STREAMLINK_CMD
 
 _ = gettext.gettext
 
@@ -114,10 +115,15 @@ class StreamPlayer:
         return self._find_executable(self.window.player_type)
 
     def _find_executable(self, name):
-        """Find executable on the host system using flatpak-spawn."""
+        """Find executable on the host system."""
         if name in self._executable_cache:
             return self._executable_cache[name]
 
+        if IS_FLATPAK:
+            return self._find_via_flatpak_spawn(name)
+        return self._find_via_which(name)
+
+    def _find_via_flatpak_spawn(self, name):
         try:
             result = subprocess.run(
                 ["flatpak-spawn", "--host", "which", name],
@@ -133,6 +139,14 @@ class StreamPlayer:
         except subprocess.SubprocessError:
             self._executable_cache.pop(name, None)
 
+        return None
+
+    def _find_via_which(self, name):
+        path = shutil.which(name)
+        if path:
+            self._executable_cache[name] = path
+            return path
+        self._executable_cache.pop(name, None)
         return None
 
     def _show_missing_deps_error(self):

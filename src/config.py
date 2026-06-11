@@ -1,5 +1,10 @@
 """Centralised tunables for the Streamline application."""
 
+import os
+
+# Detects whether the app is running inside a Flatpak sandbox.
+IS_FLATPAK = os.path.exists("/.flatpak-info")
+
 # ── Application ─────────────────────────────────────────────
 #
 # Core application identity.
@@ -67,9 +72,13 @@ QUALITY_PRESETS = {
     "Low": "360p,480p,worst",
 }
 
-# Base command used to invoke streamlink on the host (Flatpak).
+# Base command used to invoke streamlink.
+# Uses flatpak-spawn inside the Flatpak sandbox, streamlink directly otherwise.
 # Consumer:  stream_player.py
-STREAMLINK_CMD = ["flatpak-spawn", "--host", "streamlink"]
+if IS_FLATPAK:
+    STREAMLINK_CMD = ["flatpak-spawn", "--host", "streamlink"]
+else:
+    STREAMLINK_CMD = ["streamlink"]
 
 # ── Twitch API ──────────────────────────────────────────────
 #
