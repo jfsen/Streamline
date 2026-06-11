@@ -12,7 +12,7 @@ MAX_MESSAGES = 500
 
 # Number of oldest messages removed in one pass when MAX_MESSAGES
 # is exceeded.
-CULL_CHUNK = 30
+CULL_CHUNK = 50
 
 # Incoming messages are batched for this many milliseconds before
 # a single DOM injection.  Higher values improve throughput at the

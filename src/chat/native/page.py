@@ -913,8 +913,16 @@ class NativeChatPage(Adw.NavigationPage):
                         break
 
                 if not was_auto and culled_total_height > 0:
-                    target = max(0.0, pre_value - culled_total_height)
-                    adj.set_value(target)
+                    # Defer restoration until after the layout pass so
+                    # GTK's adjustment has settled on the correct upper
+                    # bound.  A synchronous set_value() here would be
+                    # overwritten by the pending queue_resize.
+                    GLib.idle_add(
+                        self._restore_scroll_after_cull,
+                        gen,
+                        pre_value,
+                        culled_total_height,
+                    )
             finally:
                 self._cull_in_progress = False
                 self._suppress_scroll_signal = False
@@ -1003,6 +1011,28 @@ class NativeChatPage(Adw.NavigationPage):
             self._suppress_scroll_signal = False
 
         GLib.timeout_add(16, self._scroll_to_bottom, gen, retry + 1)
+        return GLib.SOURCE_REMOVE
+
+    def _restore_scroll_after_cull(
+        self, gen: int, old_value: float, culled_h: float
+    ) -> bool:
+        """Apply the cull scroll compensation after layout has settled.
+
+        Runs via ``GLib.idle_add`` so that the pending ``queue_resize``
+        from ``_flush_messages`` has already updated the adjustment's
+        upper bound before we set the value.
+        """
+        if gen != self._scroll_gen:
+            return GLib.SOURCE_REMOVE
+
+        target = max(0.0, old_value - culled_h)
+        self._suppress_scroll_signal = True
+        try:
+            adj = self._scrolled.get_vadjustment()
+            adj.set_value(target)
+        finally:
+            self._suppress_scroll_signal = False
+
         return GLib.SOURCE_REMOVE
 
     def _on_more_clicked(self, button: Gtk.Button) -> None:
