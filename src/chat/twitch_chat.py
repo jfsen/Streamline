@@ -40,6 +40,7 @@ _COLOR_RE = re.compile(r"color=#([0-9A-Fa-f]{6})")
 _DISPLAY_NAME_RE = re.compile(r"display-name=([^;]+)")
 _EMOTES_RE = re.compile(r"emotes=([^;]+)")
 _BADGES_RE = re.compile(r"badges=([^;]+)")
+_BADGE_INFO_RE = re.compile(r"badge-info=([^;]+)")
 _FIRST_MSG_RE = re.compile(r"first-msg=([^;]+)")
 
 
@@ -151,7 +152,11 @@ class TwitchChat:
                 )
             badges_match = _BADGES_RE.search(tags)
             if badges_match:
-                badges = _parse_badges(badges_match.group(1))
+                badge_info_value = None
+                badge_info_match = _BADGE_INFO_RE.search(tags)
+                if badge_info_match:
+                    badge_info_value = badge_info_match.group(1)
+                badges = _parse_badges(badges_match.group(1), badge_info_value)
             first_msg_match = _FIRST_MSG_RE.search(tags)
             first_msg = first_msg_match is not None and first_msg_match.group(1) == "1"
 
@@ -188,8 +193,25 @@ class TwitchChat:
         }
 
 
-def _parse_badges(tag_value):
-    """Parse the badges tag into a list of [display_name, raw_id] pairs."""
+def _parse_badges(tag_value, badge_info_value=None):
+    """Parse the badges tag into a list of [display_name, raw_id, tenure] triples.
+
+    tenure is an integer month count for subscriber badges (from badge-info),
+    or None for all other badge types.
+    """
+    # Extract subscriber tenure from badge-info if present.
+    # badge-info format: "subscriber/12" or "subscriber/12,founder/0"
+    sub_tenure = None
+    if badge_info_value:
+        for bi in badge_info_value.split(","):
+            bi = bi.strip()
+            if bi.startswith("subscriber/"):
+                try:
+                    sub_tenure = int(bi.split("/", 1)[1])
+                except ValueError:
+                    pass
+                break
+
     result = []
     for badge in tag_value.split(","):
         badge = badge.strip()
@@ -197,7 +219,8 @@ def _parse_badges(tag_value):
             name, _version = badge.split("/", 1)
             display = _BADGE_NAMES.get(name)
             if display:
-                result.append([display, name])
+                tenure = sub_tenure if name == "subscriber" else None
+                result.append([display, name, tenure])
     return result
 
 

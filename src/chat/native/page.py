@@ -803,7 +803,7 @@ class NativeChatPage(Adw.NavigationPage):
         identity.set_valign(Gtk.Align.START)
 
         # Badges
-        for display_name, badge_id in msg.get("badges", []):
+        for display_name, badge_id, tenure in msg.get("badges", []):
             svg_data: str | None = _BADGE_SVGS.get(badge_id)
             if svg_data is None:
                 continue
@@ -812,7 +812,8 @@ class NativeChatPage(Adw.NavigationPage):
                 badge = Gtk.Picture.new_for_file(gfile)
                 badge.set_size_request(int(ns["badge_size"]), int(ns["badge_size"]))
                 badge.set_valign(Gtk.Align.START)
-                badge.set_tooltip_text(display_name)
+                tooltip = f"{tenure}-month {display_name}" if tenure else display_name
+                badge.set_tooltip_text(tooltip)
                 identity.append(badge)
 
         # Username

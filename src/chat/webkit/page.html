@@ -320,16 +320,18 @@
                 }
 
                 // ── _badgeHTML ──────────────────────────────────────────
-                // Cached badge <svg> fragments — each [id, display] pair
-                // is built once and reused.
+                // Cached badge <svg> fragments — each [id, display, tenure]
+                // triple is built once and reused.  tenure is the subscriber
+                // month count (from badge-info), or undefined for other badges.
 
                 var _badgeTpl = {};
-                function _badgeHTML(id, display) {
-                    var key = id + "|" + display;
+                function _badgeHTML(id, display, tenure) {
+                    var key = id + "|" + display + "|" + tenure;
                     if (!_badgeTpl[key]) {
                         _badgeTpl[key] =
                             '<svg class="badge" width="18" height="18">' +
                             "<title>" +
+                            (tenure ? tenure + "-month " : "") +
                             display +
                             "</title>" +
                             '<use href="#badge-' +
@@ -374,7 +376,11 @@
                     // Badges (broadcaster, moderator, VIP, …)
                     if (badges && badges.length) {
                         for (var bi = 0; bi < badges.length; bi++) {
-                            html += _badgeHTML(badges[bi][1], badges[bi][0]);
+                            html += _badgeHTML(
+                                badges[bi][1],
+                                badges[bi][0],
+                                badges[bi][2],
+                            );
                         }
                     }
 
