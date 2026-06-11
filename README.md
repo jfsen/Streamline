@@ -11,7 +11,7 @@
 
 <p align="center">
   <a href="https://github.com/jfsen/Streamline/blob/main/COPYING"><img src="https://img.shields.io/badge/license-GPL--3.0-blue.svg" alt="License: GPL-3.0-or-later"/></a>
-  <a href="https://github.com/jfsen/Streamline/releases"><img src="https://img.shields.io/badge/release-2.0.0-brightgreen.svg" alt="Release: 2.0.0"/></a>
+  <a href="https://github.com/jfsen/Streamline/releases"><img src="https://img.shields.io/badge/release-3.2.0-brightgreen.svg" alt="Release: 3.2.0"/></a>
 </p>
 
 ---
@@ -38,22 +38,74 @@ Streamline is a GTK4/libadwaita application that lets you follow your favorite T
 
 ## Installation
 
-### Prerequisites
+### Dependencies
+
+#### Runtime
 
 - Python 3
 - [Streamlink](https://streamlink.github.io/install.html)
 - A media player (mpv, VLC, or similar)
 - GTK 4 and libadwaita
+- PyGObject (`python-gobject` / `python3-gi`)
+- `python-requests` and `python-pillow`
 - Twitch API credentials (Client ID and Secret)
 
-### Build from source (Meson)
+#### Build
+
+- `meson`
+- `desktop-file-utils`
+- `appstream-glib` (or `appstreamcli`)
+
+#### Install dependencies by distro
+
+**Arch Linux**
+```bash
+sudo pacman -S --needed meson python python-gobject gtk4 libadwaita \
+  python-requests python-pillow streamlink mpv desktop-file-utils appstream-glib
+```
+
+**Debian / Ubuntu**
+```bash
+sudo apt install meson python3 python3-gi python3-gi-cairo gir1.2-gtk-4.0 \
+  gir1.2-adw-1 python3-requests python3-pillow streamlink mpv desktop-file-utils appstream
+```
+
+**Fedora**
+```bash
+sudo dnf install meson python3 python3-gobject gtk4 libadwaita \
+  python3-requests python3-pillow streamlink mpv desktop-file-utils appstream-glib
+```
+
+> WebKit-based chat (optional): install `webkitgtk-6.0` (Arch) / `gir1.2-webkit-6.0` (Debian) / `webkitgtk6.0` (Fedora).
+
+### Build and install (system-wide)
 
 ```bash
 git clone https://github.com/jfsen/Streamline.git
 cd Streamline
-meson setup build --prefix=$HOME/.local --wipe
-meson compile -C build
-meson install -C build
+meson setup builddir --prefix=/usr --wipe
+meson compile -C builddir
+sudo meson install -C builddir
+sudo glib-compile-schemas /usr/share/glib-2.0/schemas/
+```
+
+### Uninstall
+
+```bash
+sudo ninja -C builddir uninstall
+```
+
+Or remove the installed files manually:
+
+```bash
+sudo rm -f /usr/bin/streamline
+sudo rm -rf /usr/share/streamline
+sudo rm -f /usr/share/applications/org.jfsen.Streamline.desktop
+sudo rm -f /usr/share/metainfo/org.jfsen.Streamline.metainfo.xml
+sudo rm -f /usr/share/glib-2.0/schemas/org.jfsen.Streamline.gschema.xml
+sudo rm -f /usr/share/dbus-1/services/org.jfsen.Streamline.service
+sudo rm -rf /usr/share/icons/hicolor/*/apps/org.jfsen.Streamline*
+sudo rm -f /usr/share/locale/*/LC_MESSAGES/org.jfsen.Streamline.mo
 ```
 
 ### Flatpak
