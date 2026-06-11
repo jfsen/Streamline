@@ -53,7 +53,16 @@ def _badge_svg_defs():
     return "\n".join(parts)
 
 
-def _build_html(alternating_bg, dark, disable_emote_animations=False):
+def _build_html(
+    alternating_bg,
+    dark,
+    disable_emote_animations=False,
+    highlight_first_msg=True,
+    highlight_mod=True,
+    highlight_vip=True,
+    highlight_partner=True,
+    highlight_broadcaster=True,
+):
     """Build the chat HTML with theme-aware colors."""
     s = _CHAT_STYLE
     theme = s["dark"] if dark else s["light"]
@@ -74,13 +83,42 @@ def _build_html(alternating_bg, dark, disable_emote_animations=False):
     page = page.replace("MORE_MSG", json.dumps(_("More messages below")))
     page = page.replace("BODYCLASS", "dark" if dark else "light")
     page = page.replace("BADGE_SVGS", _badge_svg_defs())
+
+    # Row backgrounds — alternating stripes when enabled, plus tint
+    # colours for first messages (blue), mods (green), VIPs (purple),
+    # and broadcasters (red).
+    row_css = ""
     if alternating_bg:
-        page = page.replace(
-            "ROWCSS",
-            f".msg:nth-child(even) {{ background: {theme['row_color']}; }}",
+        row_css += f".msg:nth-child(even){{background:{theme['row_color']}}}"
+        row_css += (
+            f".msg.first-msg:nth-child(even){{background:{theme['first_msg_alt_bg']}}}"
         )
-    else:
-        page = page.replace("ROWCSS", "")
+        row_css += f".msg.is-mod:nth-child(even){{background:{theme['mod_alt_bg']}}}"
+        row_css += f".msg.is-vip:nth-child(even){{background:{theme['vip_alt_bg']}}}"
+        row_css += (
+            f".msg.is-partner:nth-child(even){{background:{theme['partner_alt_bg']}}}"
+        )
+        row_css += f".msg.is-broadcaster:nth-child(even){{background:{theme['broadcaster_alt_bg']}}}"
+    row_css += f".msg.first-msg{{background:{theme['first_msg_bg']}}}"
+    row_css += f".msg.is-mod{{background:{theme['mod_bg']}}}"
+    row_css += f".msg.is-vip{{background:{theme['vip_bg']}}}"
+    row_css += f".msg.is-partner{{background:{theme['partner_bg']}}}"
+    row_css += f".msg.is-broadcaster{{background:{theme['broadcaster_bg']}}}"
+    page = page.replace("ROWCSS", row_css)
+
+    # Tint flags — made available to the JS chat() function so it
+    # only adds CSS classes for enabled highlight categories.
+    tint_flags = json.dumps(
+        {
+            "firstMsg": highlight_first_msg,
+            "mod": highlight_mod,
+            "vip": highlight_vip,
+            "partner": highlight_partner,
+            "broadcaster": highlight_broadcaster,
+        }
+    )
+    page = page.replace("TINT_FLAGS", tint_flags)
+
     return page
 
 
@@ -108,6 +146,11 @@ class ChatPage(Adw.NavigationPage):
         theme="system",
         twitch=None,
         enable_detach=False,
+        highlight_first_msg=True,
+        highlight_mod=True,
+        highlight_vip=True,
+        highlight_partner=True,
+        highlight_broadcaster=True,
     ):
         super().__init__(title=_("Chat: {}").format(display_name or streamer))
 
@@ -124,6 +167,11 @@ class ChatPage(Adw.NavigationPage):
         self._third_party_emotes = None
         self._alternating_bg = alternating_bg
         self._disable_emote_animations = disable_emote_animations
+        self._highlight_first_msg = highlight_first_msg
+        self._highlight_mod = highlight_mod
+        self._highlight_vip = highlight_vip
+        self._highlight_partner = highlight_partner
+        self._highlight_broadcaster = highlight_broadcaster
         self._msg_batch = []
         self._batch_flush_id = None
         self._suspend_signal_id = None
@@ -175,6 +223,11 @@ class ChatPage(Adw.NavigationPage):
                 self._alternating_bg,
                 self._dark,
                 self._disable_emote_animations,
+                self._highlight_first_msg,
+                self._highlight_mod,
+                self._highlight_vip,
+                self._highlight_partner,
+                self._highlight_broadcaster,
             ),
             None,
         )
@@ -309,6 +362,11 @@ class ChatPage(Adw.NavigationPage):
                 emotes,
                 msg.get("badges", []),
                 msg.get("action", False),
+                msg.get("first_msg", False),
+                msg.get("mod", False),
+                msg.get("vip", False),
+                msg.get("partner", False),
+                msg.get("broadcaster", False),
             )
         )
 
@@ -324,7 +382,7 @@ class ChatPage(Adw.NavigationPage):
         self._msg_batch.clear()
         self._batch_flush_id = None
         self._webview.evaluate_javascript(
-            f"(function(){{var b={batch};b.forEach(function(m){{chat(m[0],m[1],m[2],m[3],m[4])}})}})()",
+            f"(function(){{var b={batch};b.forEach(function(m){{chat(m[0],m[1],m[2],m[3],m[4],m[5],m[6],m[7],m[8],m[9],m[10])}})}})()",
             -1,
             None,
             None,
@@ -376,6 +434,11 @@ class ChatPage(Adw.NavigationPage):
             disable_emote_animations=self._disable_emote_animations,
             theme=getattr(parent, "theme", "system"),
             transient_for=root,
+            highlight_first_msg=self._highlight_first_msg,
+            highlight_mod=self._highlight_mod,
+            highlight_vip=self._highlight_vip,
+            highlight_partner=self._highlight_partner,
+            highlight_broadcaster=self._highlight_broadcaster,
         )
         popup.connect(
             "close-request",

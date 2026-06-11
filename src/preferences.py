@@ -36,6 +36,13 @@ class StreamlinePreferences(Adw.PreferencesDialog):
     chat_disable_emote_animations_switch = Gtk.Template.Child()
     chat_native_engine_switch = Gtk.Template.Child()
 
+    # Template children — Chat Highlighting page
+    chat_highlight_first_msg_switch = Gtk.Template.Child()
+    chat_highlight_mod_switch = Gtk.Template.Child()
+    chat_highlight_vip_switch = Gtk.Template.Child()
+    chat_highlight_partner_switch = Gtk.Template.Child()
+    chat_highlight_broadcaster_switch = Gtk.Template.Child()
+
     def __init__(self, parent, **kwargs):
         super().__init__(**kwargs)
         self.parent = parent
@@ -87,6 +94,14 @@ class StreamlinePreferences(Adw.PreferencesDialog):
             ("show-profile-pictures", self.profile_pictures_switch),
             ("chat-native-engine", self.chat_native_engine_switch),
             ("show-vod-thumbnails", self.vod_thumbnails_switch),
+            ("chat-highlight-first-msg", self.chat_highlight_first_msg_switch),
+            ("chat-highlight-mod", self.chat_highlight_mod_switch),
+            ("chat-highlight-vip", self.chat_highlight_vip_switch),
+            ("chat-highlight-partner", self.chat_highlight_partner_switch),
+            (
+                "chat-highlight-broadcaster",
+                self.chat_highlight_broadcaster_switch,
+            ),
         ):
             settings.bind(key, row, "active", Gio.SettingsBindFlags.DEFAULT)
 

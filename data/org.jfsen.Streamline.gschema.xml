@@ -72,6 +72,36 @@
             <description
             >Use GTK instead of WebKit for chat rendering.  Much lower memory usage, but higher CPU usage for animated emotes.</description>
         </key>
+        <key name="chat-highlight-first-msg" type="b">
+            <default>true</default>
+            <summary>Highlight first messages</summary>
+            <description
+            >Show a blue tint behind a user's first message in the channel</description>
+        </key>
+        <key name="chat-highlight-mod" type="b">
+            <default>true</default>
+            <summary>Highlight moderator messages</summary>
+            <description
+            >Show a green tint behind messages from moderators</description>
+        </key>
+        <key name="chat-highlight-vip" type="b">
+            <default>true</default>
+            <summary>Highlight VIP messages</summary>
+            <description
+            >Show a pink tint behind messages from VIPs</description>
+        </key>
+        <key name="chat-highlight-partner" type="b">
+            <default>true</default>
+            <summary>Highlight Partner messages</summary>
+            <description
+            >Show a purple tint behind messages from Twitch Partners</description>
+        </key>
+        <key name="chat-highlight-broadcaster" type="b">
+            <default>true</default>
+            <summary>Highlight broadcaster messages</summary>
+            <description
+            >Show a red tint behind messages from the broadcaster</description>
+        </key>
         <key name="show-profile-pictures" type="b">
             <default>true</default>
             <summary>Show profile pictures on play buttons</summary>

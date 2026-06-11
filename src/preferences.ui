@@ -218,6 +218,70 @@
 
         <child>
           <object class="AdwPreferencesGroup">
+            <property
+                            name="title"
+                            translatable="yes"
+                        >Chat Highlighting</property>
+            <property
+                            name="description"
+                            translatable="yes"
+                        >Apply tinted backgrounds to certain message types</property>
+            <child>
+              <object class="AdwSwitchRow" id="chat_highlight_first_msg_switch">
+                <property
+                                    name="title"
+                                    translatable="yes"
+                                >First Messages</property>
+                <property
+                                    name="subtitle"
+                                    translatable="yes"
+                                >Blue tint for a user's first message in the channel</property>
+              </object>
+            </child>
+            <child>
+              <object class="AdwSwitchRow" id="chat_highlight_mod_switch">
+                <property name="title" translatable="yes">Moderators</property>
+                <property
+                                    name="subtitle"
+                                    translatable="yes"
+                                >Green tint for messages from moderators</property>
+              </object>
+            </child>
+            <child>
+              <object class="AdwSwitchRow" id="chat_highlight_vip_switch">
+                <property name="title" translatable="yes">VIPs</property>
+                <property
+                                    name="subtitle"
+                                    translatable="yes"
+                                >Pink tint for messages from VIPs</property>
+              </object>
+            </child>
+            <child>
+              <object class="AdwSwitchRow" id="chat_highlight_partner_switch">
+                <property name="title" translatable="yes">Partners</property>
+                <property
+                                    name="subtitle"
+                                    translatable="yes"
+                                >Purple tint for messages from Twitch Partners</property>
+              </object>
+            </child>
+            <child>
+              <object
+                                class="AdwSwitchRow"
+                                id="chat_highlight_broadcaster_switch"
+                            >
+                <property name="title" translatable="yes">Broadcaster</property>
+                <property
+                                    name="subtitle"
+                                    translatable="yes"
+                                >Red tint for messages from the broadcaster</property>
+              </object>
+            </child>
+          </object>
+        </child>
+
+        <child>
+          <object class="AdwPreferencesGroup">
             <property name="title" translatable="yes">Twitch API</property>
             <property
                             name="description"

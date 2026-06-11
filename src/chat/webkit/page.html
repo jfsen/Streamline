@@ -88,6 +88,10 @@
             // Localised banner text, injected by Python's gettext.
             var _moreMsg = MORE_MSG;
 
+            // Chat highlight preferences — set by _build_html().
+            // Keys: firstMsg, mod, vip, partner, broadcaster
+            var _tintFlags = TINT_FLAGS;
+
             // ─────────────────────────────────────────────────────────────
             //  HSL colour utilities — used to clamp Twitch username colours
             //  so they remain legible against both dark and light backgrounds.
@@ -348,9 +352,22 @@
                     emotes,
                     badges,
                     action,
+                    firstMsg,
+                    isMod,
+                    isVip,
+                    isPartner,
+                    isBroadcaster,
                 ) {
                     var html =
-                        '<div class="msg"' +
+                        '<div class="msg' +
+                        (firstMsg && _tintFlags.firstMsg ? " first-msg" : "") +
+                        (isMod && _tintFlags.mod ? " is-mod" : "") +
+                        (isVip && _tintFlags.vip ? " is-vip" : "") +
+                        (isPartner && _tintFlags.partner ? " is-partner" : "") +
+                        (isBroadcaster && _tintFlags.broadcaster
+                            ? " is-broadcaster"
+                            : "") +
+                        '"' +
                         (action ? ' style="font-style:italic"' : "") +
                         ">";
 

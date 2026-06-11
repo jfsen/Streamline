@@ -559,6 +559,11 @@ class NativeChatPage(Adw.NavigationPage):
         theme="system",
         twitch=None,
         enable_detach=False,
+        highlight_first_msg=True,
+        highlight_mod=True,
+        highlight_vip=True,
+        highlight_partner=True,
+        highlight_broadcaster=True,
     ):
         super().__init__(title=_("Chat: {}").format(display_name or streamer))
 
@@ -569,6 +574,11 @@ class NativeChatPage(Adw.NavigationPage):
         self._display_name = display_name
         self._alternating_bg = alternating_bg
         self._disable_emote_animations = disable_emote_animations
+        self._highlight_first_msg = highlight_first_msg
+        self._highlight_mod = highlight_mod
+        self._highlight_vip = highlight_vip
+        self._highlight_partner = highlight_partner
+        self._highlight_broadcaster = highlight_broadcaster
 
         self._chat: TwitchChat | None = None
         self._third_party_emotes: ThirdPartyEmotes | None = None
@@ -726,8 +736,48 @@ class NativeChatPage(Adw.NavigationPage):
             f"  margin: {ns['card_margin']};"
             f"  padding: {ns['card_padding']};"
             f"}}"
+            f".msg-card-first {{"
+            f"  background: {theme['first_msg_bg']};"
+            f"}}"
+            f".msg-card-alt.msg-card-first {{"
+            f"  background: {theme['first_msg_alt_bg']};"
+            f"}}"
+            f".msg-card-mod {{"
+            f"  background: {theme['mod_bg']};"
+            f"}}"
+            f".msg-card-alt.msg-card-mod {{"
+            f"  background: {theme['mod_alt_bg']};"
+            f"}}"
+            f".msg-card-vip {{"
+            f"  background: {theme['vip_bg']};"
+            f"}}"
+            f".msg-card-alt.msg-card-vip {{"
+            f"  background: {theme['vip_alt_bg']};"
+            f"}}"
+            f".msg-card-partner {{"
+            f"  background: {theme['partner_bg']};"
+            f"}}"
+            f".msg-card-alt.msg-card-partner {{"
+            f"  background: {theme['partner_alt_bg']};"
+            f"}}"
+            f".msg-card-broadcaster {{"
+            f"  background: {theme['broadcaster_bg']};"
+            f"}}"
+            f".msg-card-alt.msg-card-broadcaster {{"
+            f"  background: {theme['broadcaster_alt_bg']};"
+            f"}}"
             f".msg-card:hover {{ background: {theme['card_bg']}; }}"
-            f".msg-card-alt:hover {{ background: {theme['alt_row']}; }}",
+            f".msg-card-alt:hover {{ background: {theme['alt_row']}; }}"
+            f".msg-card-first:hover {{ background: {theme['first_msg_bg']}; }}"
+            f".msg-card-alt.msg-card-first:hover {{ background: {theme['first_msg_alt_bg']}; }}"
+            f".msg-card-mod:hover {{ background: {theme['mod_bg']}; }}"
+            f".msg-card-alt.msg-card-mod:hover {{ background: {theme['mod_alt_bg']}; }}"
+            f".msg-card-vip:hover {{ background: {theme['vip_bg']}; }}"
+            f".msg-card-alt.msg-card-vip:hover {{ background: {theme['vip_alt_bg']}; }}"
+            f".msg-card-partner:hover {{ background: {theme['partner_bg']}; }}"
+            f".msg-card-alt.msg-card-partner:hover {{ background: {theme['partner_alt_bg']}; }}"
+            f".msg-card-broadcaster:hover {{ background: {theme['broadcaster_bg']}; }}"
+            f".msg-card-alt.msg-card-broadcaster:hover {{ background: {theme['broadcaster_alt_bg']}; }}",
             -1,
         )
 
@@ -858,6 +908,11 @@ class NativeChatPage(Adw.NavigationPage):
                 segments=segments,
                 badges=msg.get("badges", []),
                 action=msg.get("action", False),
+                first_msg=msg.get("first_msg", False),
+                mod=msg.get("mod", False),
+                vip=msg.get("vip", False),
+                partner=msg.get("partner", False),
+                broadcaster=msg.get("broadcaster", False),
             )
         )
 
@@ -937,6 +992,27 @@ class NativeChatPage(Adw.NavigationPage):
                 card.remove_css_class("msg-card")
                 card.add_css_class("msg-card-alt")
             self._next_is_alt = not self._next_is_alt
+
+            # Tint overrides for first message / moderator — applied
+            # on top of whatever base / alternating background is active.
+            # Broadcaster trumps Partner, which trumps VIP, which trumps
+            # mod, which trumps first-msg.
+            # Each is only applied if the corresponding preference is enabled.
+            msg_first = msg_data.get("first_msg", False)
+            msg_mod = msg_data.get("mod", False)
+            msg_vip = msg_data.get("vip", False)
+            msg_partner = msg_data.get("partner", False)
+            msg_bc = msg_data.get("broadcaster", False)
+            if msg_bc and self._highlight_broadcaster:
+                card.add_css_class("msg-card-broadcaster")
+            elif msg_partner and self._highlight_partner:
+                card.add_css_class("msg-card-partner")
+            elif msg_vip and self._highlight_vip:
+                card.add_css_class("msg-card-vip")
+            elif msg_mod and self._highlight_mod:
+                card.add_css_class("msg-card-mod")
+            elif msg_first and self._highlight_first_msg:
+                card.add_css_class("msg-card-first")
 
             self._msg_box.append(card)
             self._cards.append(card)
@@ -1181,6 +1257,11 @@ class NativeChatPage(Adw.NavigationPage):
             theme="dark" if self._dark else "light",
             transient_for=root,
             native_engine=True,
+            highlight_first_msg=self._highlight_first_msg,
+            highlight_mod=self._highlight_mod,
+            highlight_vip=self._highlight_vip,
+            highlight_partner=self._highlight_partner,
+            highlight_broadcaster=self._highlight_broadcaster,
         )
         popup.connect(
             "close-request",

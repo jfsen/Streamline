@@ -40,6 +40,7 @@ _COLOR_RE = re.compile(r"color=#([0-9A-Fa-f]{6})")
 _DISPLAY_NAME_RE = re.compile(r"display-name=([^;]+)")
 _EMOTES_RE = re.compile(r"emotes=([^;]+)")
 _BADGES_RE = re.compile(r"badges=([^;]+)")
+_FIRST_MSG_RE = re.compile(r"first-msg=([^;]+)")
 
 
 class TwitchChat:
@@ -129,6 +130,7 @@ class TwitchChat:
 
         display_name = None
         color = FALLBACK_USER_COLOR
+        first_msg = False
 
         tag_match = _TAG_RE.match(tags_part)
         emotes = []
@@ -150,6 +152,8 @@ class TwitchChat:
             badges_match = _BADGES_RE.search(tags)
             if badges_match:
                 badges = _parse_badges(badges_match.group(1))
+            first_msg_match = _FIRST_MSG_RE.search(tags)
+            first_msg = first_msg_match is not None and first_msg_match.group(1) == "1"
 
         if display_name is None:
             user_part = line.split("!", 1)[0] if "!" in line else ""
@@ -163,6 +167,12 @@ class TwitchChat:
                     (s - action_offset, e - action_offset) for s, e in em["positions"]
                 ]
 
+        # Detect moderator from badges (avoids parsing the tags again).
+        mod = any(b[1] == "moderator" for b in badges)
+        vip = any(b[1] == "vip" for b in badges)
+        partner = any(b[1] == "partner" for b in badges)
+        broadcaster = any(b[1] == "broadcaster" for b in badges)
+
         return {
             "user": display_name or user.strip(),
             "text": text.strip(),
@@ -170,6 +180,11 @@ class TwitchChat:
             "emotes": emotes,
             "badges": badges,
             "action": action,
+            "first_msg": first_msg,
+            "mod": mod,
+            "vip": vip,
+            "partner": partner,
+            "broadcaster": broadcaster,
         }
 
 

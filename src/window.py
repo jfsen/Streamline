@@ -183,6 +183,17 @@ class StreamlineWindow(Adw.ApplicationWindow):
         )
         self.show_profile_pictures = self.settings.get_boolean("show-profile-pictures")
         self.chat_native_engine = self.settings.get_boolean("chat-native-engine")
+        self.chat_highlight_first_msg = self.settings.get_boolean(
+            "chat-highlight-first-msg"
+        )
+        self.chat_highlight_mod = self.settings.get_boolean("chat-highlight-mod")
+        self.chat_highlight_vip = self.settings.get_boolean("chat-highlight-vip")
+        self.chat_highlight_partner = self.settings.get_boolean(
+            "chat-highlight-partner"
+        )
+        self.chat_highlight_broadcaster = self.settings.get_boolean(
+            "chat-highlight-broadcaster"
+        )
 
     def _init_twitch_api(self):
         """Initialize the Twitch API with current credentials.
@@ -640,6 +651,11 @@ class StreamlineWindow(Adw.ApplicationWindow):
                 theme=self.theme,
                 twitch=self.twitch,
                 enable_detach=True,
+                highlight_first_msg=self.chat_highlight_first_msg,
+                highlight_mod=self.chat_highlight_mod,
+                highlight_vip=self.chat_highlight_vip,
+                highlight_partner=self.chat_highlight_partner,
+                highlight_broadcaster=self.chat_highlight_broadcaster,
             )
         else:
             from .chat.webkit.page import ChatPage
@@ -653,6 +669,11 @@ class StreamlineWindow(Adw.ApplicationWindow):
                 theme=self.theme,
                 twitch=self.twitch,
                 enable_detach=True,
+                highlight_first_msg=self.chat_highlight_first_msg,
+                highlight_mod=self.chat_highlight_mod,
+                highlight_vip=self.chat_highlight_vip,
+                highlight_partner=self.chat_highlight_partner,
+                highlight_broadcaster=self.chat_highlight_broadcaster,
             )
         page.connect(
             "hidden",
@@ -690,6 +711,11 @@ class StreamlineWindow(Adw.ApplicationWindow):
             theme=self.theme,
             transient_for=self,
             native_engine=self.chat_native_engine,
+            highlight_first_msg=self.chat_highlight_first_msg,
+            highlight_mod=self.chat_highlight_mod,
+            highlight_vip=self.chat_highlight_vip,
+            highlight_partner=self.chat_highlight_partner,
+            highlight_broadcaster=self.chat_highlight_broadcaster,
         )
         popup.connect(
             "close-request",
