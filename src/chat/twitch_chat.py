@@ -155,6 +155,54 @@ class TwitchChat:
 
         return self._empty_msg(text)
 
+    @staticmethod
+    def _tag_val(tags, key):
+        """Extract a tag value from the tags string, or return None."""
+        m = re.search(rf"{re.escape(key)}=([^;]+)", tags)
+        return m.group(1).replace("\\s", " ") if m else None
+
+    @staticmethod
+    def _tier_short(tier_name):
+        """Shorten a sub-plan-name tag value.
+
+        "Channel Subscription (Tier 1)" → "Tier 1"
+        "Prime" / "Twitch Prime" → "Prime"
+        """
+        if not tier_name:
+            return "?"
+        if "Prime" in tier_name:
+            return "Prime"
+        m = re.search(r"Tier\s+\d+", tier_name)
+        return m.group(0) if m else tier_name
+
+    def _build_sub_msg(self, tags, is_resub):
+        """Build a subscription message from USERNOTICE tags."""
+        name = self._tag_val(tags, "display-name") or "Someone"
+        tier = self._tier_short(self._tag_val(tags, "msg-param-sub-plan-name"))
+
+        if not is_resub:
+            return self._empty_msg(f"{name} subscribed with {tier}!")
+
+        months = self._tag_val(tags, "msg-param-cumulative-months")
+        streak = self._tag_val(tags, "msg-param-streak-months")
+        share = self._tag_val(tags, "msg-param-should-share-streak")
+
+        base = f"{name} subscribed for {months or '?'} months"
+        if share == "1" and streak and streak != "0" and streak != months:
+            base += f" ({streak} streak)"
+        return self._empty_msg(f"{base} with {tier}!")
+
+    def _build_subgift_msg(self, tags, is_anon):
+        """Build a gift-sub message from USERNOTICE tags."""
+        recipient = self._tag_val(tags, "msg-param-recipient-display-name") or "Someone"
+        tier = self._tier_short(self._tag_val(tags, "msg-param-sub-plan-name"))
+
+        if is_anon:
+            return self._empty_msg(f"Anonymous gifted {tier} to {recipient}!")
+
+        gifter = self._tag_val(tags, "display-name") or "Someone"
+        return self._empty_msg(f"{gifter} gifted {tier} to {recipient}!")
+
     def _parse_usernotice(self, line):
         """Parse a USERNOTICE line (sub / raid / …), or return None."""
         parts = line.split("USERNOTICE #", 1)
@@ -168,25 +216,38 @@ class TwitchChat:
             return None
         tags = tag_match.group(1)
 
-        msg_id_match = re.search(r"msg-id=([^;]+)", tags)
-        if not msg_id_match:
+        msg_id = self._tag_val(tags, "msg-id")
+        if not msg_id:
             return None
-        msg_id = msg_id_match.group(1)
 
-        # Prefer the human-readable system-msg when available.
-        sys_msg_match = re.search(r"system-msg=([^;]+)", tags)
-        if sys_msg_match and sys_msg_match.group(1):
-            text = sys_msg_match.group(1).replace("\\s", " ")
-            return self._empty_msg(text)
+        # ── Subscriptions: custom short messages ─────────────
 
-        # Build a fallback message for raid (system-msg is often absent).
+        if msg_id in ("sub", "resub"):
+            return self._build_sub_msg(tags, msg_id == "resub")
+
+        if msg_id in ("subgift", "anonsubgift"):
+            return self._build_subgift_msg(tags, msg_id == "anonsubgift")
+
+        # ── Raid: skip if < 10 viewers ───────────────────────
+
         if msg_id == "raid":
-            dn_match = re.search(r"msg-param-displayName=([^;]+)", tags)
-            vc_match = re.search(r"msg-param-viewerCount=([^;]+)", tags)
-            name = dn_match.group(1).replace("\\s", " ") if dn_match else "Someone"
-            count = vc_match.group(1) if vc_match else "?"
-            text = f"{name} is raiding with {count} viewers!"
-            return self._empty_msg(text)
+            vc = self._tag_val(tags, "msg-param-viewerCount")
+            if vc and int(vc) < 10:
+                return None
+            name = self._tag_val(tags, "msg-param-displayName") or "Someone"
+            count = vc or "?"
+            return self._empty_msg(f"{name} is raiding with {count} viewers!")
+
+        # ── Skip unwanted types ──────────────────────────────
+
+        if msg_id in ("bitsbadgetier", "viewermilestone"):
+            return None
+
+        # ── Everything else: use Twitch's system-msg ─────────
+
+        sys_msg = self._tag_val(tags, "system-msg")
+        if sys_msg:
+            return self._empty_msg(sys_msg)
 
         return None
 
