@@ -39,7 +39,6 @@ from .config import (
     DEFAULT_WIDTH,
     MIN_HEIGHT,
     MIN_WIDTH,
-    RESOURCE_BASE,
     THEME_CSS,
 )
 from .dialogs import StreamlineDialogs
@@ -628,7 +627,7 @@ class StreamlineWindow(Adw.ApplicationWindow):
         """Show chat page for the given streamer, reusing existing if open."""
         existing = self._active_chats.get(streamer)
         if existing is not None:
-            if isinstance(existing, ChatPage):
+            if isinstance(existing, Adw.NavigationPage):
                 self.navigation_view.push(existing)
             return
 
