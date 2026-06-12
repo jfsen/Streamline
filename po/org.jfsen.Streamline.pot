@@ -271,7 +271,7 @@ msgid "Save"
 msgstr ""
 
 #. Translators: Replace "translator-credits" with your name/username, and optionally an email or URL.
-#: src/main.py:80
+#: src/main.py:83
 msgid "translator-credits"
 msgstr ""
 
