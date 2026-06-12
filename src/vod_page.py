@@ -255,7 +255,7 @@ class VODPage(Adw.NavigationPage):
         text_box.set_margin_bottom(8)
 
         title_label = Gtk.Label(
-            label=GLib.markup_escape_text(vod["title"]),
+            label=vod["title"],
             xalign=0,
             wrap=True,
             wrap_mode=2,  # WORD
