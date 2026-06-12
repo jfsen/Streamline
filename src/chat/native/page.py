@@ -1318,6 +1318,7 @@ class NativeChatPage(Adw.NavigationPage):
                 break
             _anim_unregister_tree(child)
             self._msg_box.remove(child)
+            child.unrealize()
         self._cards.clear()
         self._item_count = 0
         self._next_is_alt = False
