@@ -30,16 +30,16 @@ NATIVE_STYLE = {
         "banner_bg": "rgba(0,0,0,0.60)",
         "banner_fg": "#C7C7C7",
         "alt_row": "rgba(255,255,255,0.02)",  # alternating row tint
-        "first_msg_bg": "rgba(30,90,200,0.15)",  # blue tint for first message
-        "first_msg_alt_bg": "rgba(30,90,200,0.20)",  # blue tint on alt row
-        "mod_bg": "rgba(30,180,80,0.15)",  # green tint for moderator
-        "mod_alt_bg": "rgba(30,180,80,0.20)",  # green tint on alt row
-        "vip_bg": "rgba(245,50,155,0.15)",  # hot-pink tint for VIP
-        "vip_alt_bg": "rgba(245,50,155,0.20)",  # hot-pink tint on alt row
-        "partner_bg": "rgba(140,40,200,0.15)",  # purple tint for Partner
-        "partner_alt_bg": "rgba(140,40,200,0.20)",  # purple tint on alt row
-        "broadcaster_bg": "rgba(200,40,40,0.15)",  # red tint for broadcaster
-        "broadcaster_alt_bg": "rgba(200,40,40,0.20)",  # red tint on alt row
+        "first_msg_bg": "rgba(30,90,200,0.20)",  # blue tint for first message
+        "first_msg_alt_bg": "rgba(30,90,200,0.25)",  # blue tint on alt row
+        "mod_bg": "rgba(30,180,80,0.20)",  # green tint for moderator
+        "mod_alt_bg": "rgba(30,180,80,0.25)",  # green tint on alt row
+        "vip_bg": "rgba(255,100,168,0.15)",  # pink tint for VIP
+        "vip_alt_bg": "rgba(255,100,168,0.20)",  # pink tint on alt row
+        "partner_bg": "rgba(140,40,200,0.20)",  # purple tint for Partner
+        "partner_alt_bg": "rgba(140,40,200,0.25)",  # purple tint on alt row
+        "broadcaster_bg": "rgba(200,40,40,0.20)",  # red tint for broadcaster
+        "broadcaster_alt_bg": "rgba(200,40,40,0.25)",  # red tint on alt row
     },
     "light": {
         "card_bg": "rgba(0,0,0,0.04)",
@@ -48,15 +48,15 @@ NATIVE_STYLE = {
         "banner_bg": "rgba(255,255,255,0.70)",
         "banner_fg": "#121212",
         "alt_row": "rgba(0,0,0,0.02)",  # alternating row tint
-        "first_msg_bg": "rgba(30,90,200,0.15)",  # blue tint for first message
-        "first_msg_alt_bg": "rgba(30,90,200,0.10)",  # blue tint on alt row
-        "mod_bg": "rgba(30,180,80,0.15)",  # green tint for moderator
-        "mod_alt_bg": "rgba(30,180,80,0.10)",  # green tint on alt row
-        "vip_bg": "rgba(245,50,155,0.15)",  # hot-pink tint for VIP
-        "vip_alt_bg": "rgba(245,50,155,0.10)",  # hot-pink tint on alt row
-        "partner_bg": "rgba(140,40,200,0.15)",  # purple tint for Partner
-        "partner_alt_bg": "rgba(140,40,200,0.10)",  # purple tint on alt row
-        "broadcaster_bg": "rgba(200,40,40,0.15)",  # red tint for broadcaster
-        "broadcaster_alt_bg": "rgba(200,40,40,0.10)",  # red tint on alt row
+        "first_msg_bg": "rgba(30,90,200,0.20)",  # blue tint for first message
+        "first_msg_alt_bg": "rgba(30,90,200,0.15)",  # blue tint on alt row
+        "mod_bg": "rgba(30,180,80,0.20)",  # green tint for moderator
+        "mod_alt_bg": "rgba(30,180,80,0.15)",  # green tint on alt row
+        "vip_bg": "rgba(255,100,168,0.15)",  # pink tint for VIP
+        "vip_alt_bg": "rgba(255,100,168,0.10)",  # pink tint on alt row
+        "partner_bg": "rgba(140,40,200,0.20)",  # purple tint for Partner
+        "partner_alt_bg": "rgba(140,40,200,0.15)",  # purple tint on alt row
+        "broadcaster_bg": "rgba(200,40,40,0.20)",  # red tint for broadcaster
+        "broadcaster_alt_bg": "rgba(200,40,40,0.15)",  # red tint on alt row
     },
 }
