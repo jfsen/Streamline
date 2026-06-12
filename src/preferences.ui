@@ -8,6 +8,9 @@
 
     <child>
       <object class="AdwPreferencesPage">
+        <property name="title" translatable="yes">General</property>
+        <property name="icon-name">preferences-system-symbolic</property>
+
         <child>
           <object class="AdwPreferencesGroup">
             <property name="title" translatable="yes">Theme</property>
@@ -169,6 +172,36 @@
 
         <child>
           <object class="AdwPreferencesGroup">
+            <property name="title" translatable="yes">Twitch API</property>
+            <property
+                            name="description"
+                            translatable="yes"
+                        >Credentials are required to fetch stream data. You can get these at dev.twitch.tv/console/apps</property>
+            <child>
+              <object class="AdwEntryRow" id="client_id_row">
+                <property name="title" translatable="yes">Client ID</property>
+              </object>
+            </child>
+            <child>
+              <object class="AdwEntryRow" id="client_secret_row">
+                <property
+                                    name="title"
+                                    translatable="yes"
+                                >Client Secret</property>
+              </object>
+            </child>
+          </object>
+        </child>
+      </object>
+    </child>
+
+    <child>
+      <object class="AdwPreferencesPage">
+        <property name="title" translatable="yes">Chat</property>
+        <property name="icon-name">user-available-symbolic</property>
+
+        <child>
+          <object class="AdwPreferencesGroup">
             <property name="title" translatable="yes">Chat</property>
             <property
                             name="description"
@@ -275,29 +308,6 @@
                                     name="subtitle"
                                     translatable="yes"
                                 >Red tint for messages from the broadcaster</property>
-              </object>
-            </child>
-          </object>
-        </child>
-
-        <child>
-          <object class="AdwPreferencesGroup">
-            <property name="title" translatable="yes">Twitch API</property>
-            <property
-                            name="description"
-                            translatable="yes"
-                        >Credentials are required to fetch stream data. You can get these at dev.twitch.tv/console/apps</property>
-            <child>
-              <object class="AdwEntryRow" id="client_id_row">
-                <property name="title" translatable="yes">Client ID</property>
-              </object>
-            </child>
-            <child>
-              <object class="AdwEntryRow" id="client_secret_row">
-                <property
-                                    name="title"
-                                    translatable="yes"
-                                >Client Secret</property>
               </object>
             </child>
           </object>
