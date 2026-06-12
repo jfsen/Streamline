@@ -1,5 +1,56 @@
 """Centralised tunables for the chat module."""
 
+# ── Shared theme ───────────────────────────────────────────
+#
+# Typography, banner, and colour-palette constants shared by
+# both the native GTK and WebKit chat engines.  Each engine's
+# own config.py imports this and layers engine-specific keys
+# (card backgrounds, row spacing, etc.) on top.
+#
+# Consumers:  native/config.py, webkit/config.py
+
+CHAT_THEME = {
+    # --- typography -------------------------------------------------
+    "font_size": "15px",
+    "font_family": "Inter, sans-serif",
+    "line_height": "1.4",
+    "user_weight": "700",
+    # --- "more messages" banner --------------------------------------
+    "banner_font": "bold 14px Inter, sans-serif",
+    "banner_padding": "8px 12px",
+    # --- colour palettes (dark / light) ------------------------------
+    "dark": {
+        "text_color": "#dedede",
+        "banner_bg": "rgba(0,0,0,0.60)",
+        "banner_fg": "#C7C7C7",
+        "first_msg_bg": "rgba(30,90,200,0.20)",
+        "first_msg_alt_bg": "rgba(30,90,200,0.25)",
+        "mod_bg": "rgba(30,180,80,0.20)",
+        "mod_alt_bg": "rgba(30,180,80,0.25)",
+        "vip_bg": "rgba(255,100,168,0.15)",
+        "vip_alt_bg": "rgba(255,100,168,0.20)",
+        "partner_bg": "rgba(140,40,200,0.20)",
+        "partner_alt_bg": "rgba(140,40,200,0.25)",
+        "broadcaster_bg": "rgba(200,40,40,0.25)",
+        "broadcaster_alt_bg": "rgba(200,40,40,0.30)",
+    },
+    "light": {
+        "text_color": "#2e2e2e",
+        "banner_bg": "rgba(255,255,255,0.70)",
+        "banner_fg": "#121212",
+        "first_msg_bg": "rgba(30,90,200,0.20)",
+        "first_msg_alt_bg": "rgba(30,90,200,0.15)",
+        "mod_bg": "rgba(30,180,80,0.20)",
+        "mod_alt_bg": "rgba(30,180,80,0.15)",
+        "vip_bg": "rgba(255,100,168,0.15)",
+        "vip_alt_bg": "rgba(255,100,168,0.10)",
+        "partner_bg": "rgba(140,40,200,0.20)",
+        "partner_alt_bg": "rgba(140,40,200,0.15)",
+        "broadcaster_bg": "rgba(200,40,40,0.25)",
+        "broadcaster_alt_bg": "rgba(200,40,40,0.20)",
+    },
+}
+
 # ── Behaviour ───────────────────────────────────────────────
 #
 # Runtime behaviour tunables — message limits, flush batching,
