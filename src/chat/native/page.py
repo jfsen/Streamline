@@ -613,14 +613,6 @@ class NativeChatPage(Adw.NavigationPage):
         self._suppress_scroll_signal = False
         self._cull_in_progress = False  # guards auto-scroll re-enable during culling
 
-        # ``_up_scroll_accum``: running total of upward scroll delta
-        # within the current accumulation window.  Cleared when the
-        # window closes or when auto-scroll is re-enabled.
-        # ``_up_scroll_accum_timeout``: GLib source id of the
-        # accumulation-window timer (0 when idle).
-        self._up_scroll_accum = 0.0
-        self._up_scroll_accum_timeout = 0
-
         # Store all card widgets so we can update them on theme change.
         self._cards: deque[Gtk.Widget] = deque()
 
@@ -1110,41 +1102,17 @@ class NativeChatPage(Adw.NavigationPage):
         dx: float,
         dy: float,
     ) -> bool:
-        """Accumulate upward scroll deltas and pause auto-scroll on intent.
+        """Pause auto-scroll on any upward scroll.
 
-        Individual scroll events — especially from touchpads — often
-        carry small deltas that never displace the viewport far enough
-        to pass a fixed distance-from-bottom threshold.  Instead we
-        accumulate upward deltas within a short sliding window
-        (80 ms) and disable auto-scroll once the total exceeds a
-        modest threshold.
-
-        This works uniformly for touchpad kinetic scrolls (many small
-        events) and mouse-wheel detents (few large events).
+        The moment the user scrolls up (dy < 0) while auto-scroll
+        is active, we disable it and show the "more below" button.
+        Auto-scroll resumes automatically when the viewport reaches
+        the bottom again (see ``_on_scroll_value_changed``).
         """
         if dy < 0 and self._auto_scroll:
-            self._up_scroll_accum += abs(dy)
-
-            # Start or restart the 80 ms accumulation window.
-            if self._up_scroll_accum_timeout:
-                GLib.source_remove(self._up_scroll_accum_timeout)
-            self._up_scroll_accum_timeout = GLib.timeout_add(
-                80, self._check_scroll_accum
-            )
-        return False
-
-    def _check_scroll_accum(self) -> bool:
-        """Called when the accumulation window closes.
-
-        If the user scrolled up enough within the window, disable
-        auto-scroll; otherwise reset the accumulator.
-        """
-        self._up_scroll_accum_timeout = 0
-        if self._up_scroll_accum > 15.0 and self._auto_scroll:
             self._auto_scroll = False
             self._more_button.set_visible(True)
-        self._up_scroll_accum = 0.0
-        return GLib.SOURCE_REMOVE
+        return False
 
     def _scroll_to_bottom(self, gen: int, retry: int) -> bool:
         """Retry-based scroll-to-bottom for the given *gen*.
