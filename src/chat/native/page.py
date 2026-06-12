@@ -582,7 +582,9 @@ class NativeChatPage(Adw.NavigationPage):
 
         self._chat: TwitchChat | None = None
         self._third_party_emotes: ThirdPartyEmotes | None = None
-        self._dark = theme != "light"
+        self._dark = (
+            Adw.StyleManager.get_default().get_dark() if theme != "light" else False
+        )
         self._batch_flush_id: int | None = None
         self._msg_batch: list[dict] = []
         self._item_count = 0

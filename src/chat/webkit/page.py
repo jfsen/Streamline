@@ -178,7 +178,9 @@ class ChatPage(Adw.NavigationPage):
         self._suspend_window = None
         self._suspend_scheduled = False
         self._twitch = twitch
-        self._dark = theme != "light"
+        self._dark = (
+            Adw.StyleManager.get_default().get_dark() if theme != "light" else False
+        )
 
         # Load BTTV/7TV emotes in background
         user_id = None
