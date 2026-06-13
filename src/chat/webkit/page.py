@@ -30,27 +30,24 @@ logger = logging.getLogger("ChatPage")
 _HTML = (Path(__file__).parent / "page.html").read_text()
 
 
-# ── Badge SVGs (loaded once at module level) ───────────
+# ── Badge SVGs — inner content for inline rendering ────
+#
+# Each badge is rendered as a standalone <svg> element in the
+# chat DOM (no <use>/<symbol> shadow-DOM indirection).  IDs
+# inside <defs> are namespaced per badge to avoid clashes when
+# multiple inline SVGs share the same generic id (e.g. "bg").
 
 _BADGE_DIR = Path(__file__).parent.parent / "badges"
-_BADGE_SVGS = {}
-for _f in _BADGE_DIR.glob("*.svg"):
-    _BADGE_SVGS[_f.stem] = _f.read_text()
-
-
-def _badge_svg_defs():
-    """Build an inline SVG defs block so <use href="#badge-X"/> works."""
-    if not _BADGE_SVGS:
-        return ""
-    parts = ["<svg style='display:none' xmlns='http://www.w3.org/2000/svg'>"]
-    for name, svg in _BADGE_SVGS.items():
-        # Strip outer <svg> tag and add id (handles single-line and multi-line tags)
-        inner = re.sub(r"<svg\b", f'<symbol id="badge-{name}"', svg, count=1).replace(
-            "</svg>", "</symbol>"
-        )
-        parts.append(inner)
-    parts.append("</svg>")
-    return "\n".join(parts)
+_BADGE_INLINES = {}
+for _f in sorted(_BADGE_DIR.glob("*.svg")):
+    svg = _f.read_text()
+    # Namespace ids in <defs> and rewrite url(#…) references.
+    badge_id = _f.stem
+    svg = re.sub(r'\bid="([^"]+)"', f'id="badge-{badge_id}-\\1"', svg)
+    svg = re.sub(r"\burl\(#([^)]+)\)", f"url(#badge-{badge_id}-\\1)", svg)
+    # Strip the outer <svg …> and </svg> to get inner content.
+    inner = re.sub(r"<svg\b[^>]*>", "", svg, count=1).removesuffix("</svg>")
+    _BADGE_INLINES[_f.stem] = inner.strip()
 
 
 def _build_html(
@@ -82,7 +79,7 @@ def _build_html(
     page = page.replace("BANNERPAD", s["banner_padding"])
     page = page.replace("MORE_MSG", json.dumps(_("More messages below")))
     page = page.replace("BODYCLASS", "dark" if dark else "light")
-    page = page.replace("BADGE_SVGS", _badge_svg_defs())
+    page = page.replace("BADGE_SVGS", json.dumps(_BADGE_INLINES))
 
     # Row backgrounds — alternating stripes when enabled, plus tint
     # colours for first messages (blue), mods (green), VIPs (purple),

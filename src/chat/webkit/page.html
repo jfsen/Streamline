@@ -81,10 +81,12 @@
     </head>
 
     <body class="BODYCLASS">
-        BADGE_SVGS
         <div id="chat"></div>
 
         <script>
+            // Badge SVG inner content, keyed by badge ID.
+            var _BADGES = BADGE_SVGS;
+
             // Localised banner text, injected by Python's gettext.
             var _moreMsg = MORE_MSG;
 
@@ -328,15 +330,14 @@
                 function _badgeHTML(id, display, tenure) {
                     var key = id + "|" + display + "|" + tenure;
                     if (!_badgeTpl[key]) {
+                        var inner = _BADGES[id] || "";
                         _badgeTpl[key] =
                             '<svg class="badge" width="18" height="18">' +
                             "<title>" +
                             (tenure ? tenure + "-month " : "") +
                             display +
                             "</title>" +
-                            '<use href="#badge-' +
-                            id +
-                            '"/>' +
+                            inner +
                             "</svg>";
                     }
                     return _badgeTpl[key];
