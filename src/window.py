@@ -169,7 +169,7 @@ class StreamlineWindow(Adw.ApplicationWindow):
         self.client_secret = self.settings.get_string("twitch-client-secret")
         self.player_type = self.settings.get_string("player-type")
         self.custom_player_path = self.settings.get_string("custom-player-path")
-        self.all_streamers = list(self.settings.get_value("streamers"))
+        self.all_streamers = self.settings.get_strv("streamers")
         self.stream_quality = self.settings.get_string("stream-quality")
         self.custom_quality = self.settings.get_string("custom-quality")
         self.theme = self.settings.get_string("theme")
@@ -232,6 +232,7 @@ class StreamlineWindow(Adw.ApplicationWindow):
 
     def _background_fetch_streams(self):
         """Fetch stream data in a background thread, then update UI on main thread."""
+        assert self.twitch is not None
         try:
             online, offline, info = self.twitch.get_streams(self.all_streamers)
             GLib.idle_add(self._on_streams_fetched, online, offline, info)
@@ -314,6 +315,7 @@ class StreamlineWindow(Adw.ApplicationWindow):
 
     def _background_refresh(self):
         """Perform refresh in background thread, then update UI on main thread."""
+        assert self.twitch is not None
         try:
             online, offline, info = self.twitch.get_streams(self.all_streamers)
             GLib.idle_add(self._on_refresh_complete, online, offline, info)
@@ -363,7 +365,8 @@ class StreamlineWindow(Adw.ApplicationWindow):
         """Callback from background thread: show error and re-enable refresh."""
         self.refresh_button.set_sensitive(True)
         # Expire cache cooldown so next manual refresh attempt is not blocked
-        self.twitch._invalidate_streams_cache()
+        if self.twitch is not None:
+            self.twitch._invalidate_streams_cache()
         self._show_error_dialog(heading, message)
 
     def update_action_rows(self, online_streamers, offline_streamers, streamer_info):

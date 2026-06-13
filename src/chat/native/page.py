@@ -177,7 +177,7 @@ class EmoteTextureCache:
         return Gdk.Texture.new_from_bytes(GLib.Bytes.new(png_buf.getvalue()))
 
 
-def _apply_texture(widget: Gtk.Widget, url: str, data: Gdk.Texture | list) -> bool:
+def _apply_texture(widget: Gtk.Picture, url: str, data: Gdk.Texture | list) -> bool:
     """Set an emote's texture; *data* is either a static Gdk.Texture
     or a list of (texture, delay_ms) tuples for animated GIFs.
 

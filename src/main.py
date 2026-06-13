@@ -86,31 +86,31 @@ class StreamlineApplication(Adw.Application):
     def on_preferences_action(self, *args):
         """Show preferences dialog."""
         win = self.props.active_window
-        if win:
+        if isinstance(win, StreamlineWindow):
             win.show_preferences()
 
     def on_shortcuts_action(self, *args):
         """Show keyboard shortcuts dialog."""
         win = self.props.active_window
-        if win:
+        if isinstance(win, StreamlineWindow):
             win.show_shortcuts()
 
     def on_follow_action(self, *args):
         """Show follow dialog."""
         win = self.props.active_window
-        if win:
+        if isinstance(win, StreamlineWindow):
             win.follow_streamer()
 
     def on_quick_play_action(self, *args):
         """Show quick play dialog."""
         win = self.props.active_window
-        if win:
+        if isinstance(win, StreamlineWindow):
             win.quick_play()
 
     def on_refresh_action(self, *args):
         """Refresh streamer data."""
         win = self.props.active_window
-        if win:
+        if isinstance(win, StreamlineWindow):
             win.on_refresh_button_clicked(None)
 
     def create_action(self, name, callback, shortcuts=None):
