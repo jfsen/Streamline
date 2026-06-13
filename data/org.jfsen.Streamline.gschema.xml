@@ -54,12 +54,6 @@
             <description
             >Show alternating background colors on chat messages</description>
         </key>
-        <key name="chat-pause-emotes" type="b">
-            <default>false</default>
-            <summary>Hide emotes on focus loss</summary>
-            <description
-            >Hide all emotes when the window loses focus to save resources</description>
-        </key>
         <key name="chat-disable-emote-animations" type="b">
             <default>false</default>
             <summary>Disable emote animations</summary>
@@ -79,19 +73,19 @@
             >Show a blue tint behind a user's first message in the channel</description>
         </key>
         <key name="chat-highlight-mod" type="b">
-            <default>true</default>
+            <default>false</default>
             <summary>Highlight moderator messages</summary>
             <description
             >Show a green tint behind messages from moderators</description>
         </key>
         <key name="chat-highlight-vip" type="b">
-            <default>true</default>
+            <default>false</default>
             <summary>Highlight VIP messages</summary>
             <description
             >Show a pink tint behind messages from VIPs</description>
         </key>
         <key name="chat-highlight-partner" type="b">
-            <default>true</default>
+            <default>false</default>
             <summary>Highlight Partner messages</summary>
             <description
             >Show a purple tint behind messages from Twitch Partners</description>
