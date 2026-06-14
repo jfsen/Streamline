@@ -19,7 +19,7 @@ from ..config import (
     MAX_MESSAGES,
 )
 from ..emotes import ThirdPartyEmotes
-from ..twitch_chat import TwitchChat
+from ..twitch_chat import ConnectionState, TwitchChat
 from .config import STYLE as _CHAT_STYLE
 
 _ = gettext.gettext
@@ -78,6 +78,12 @@ def _build_html(
     page = page.replace("BANNERFONT", s["banner_font"])
     page = page.replace("BANNERPAD", s["banner_padding"])
     page = page.replace("MORE_MSG", json.dumps(_("More messages below")))
+    page = page.replace("RECONNECT_CONNECTING", json.dumps(_("Connecting to chat…")))
+    page = page.replace(
+        "RECONNECT_RETRYING", json.dumps(_("Reconnecting… (attempt {0})"))
+    )
+    page = page.replace("RECONNECT_DISCONNECTED", json.dumps(_("Disconnected.")))
+    page = page.replace("RECONNECT_BUTTON", json.dumps(_("Reconnect")))
     page = page.replace("BODYCLASS", "dark" if dark else "light")
     page = page.replace("BADGE_SVGS", json.dumps(_BADGE_INLINES))
 
@@ -160,6 +166,7 @@ class ChatPage(Adw.NavigationPage):
         self._streamer = streamer
         self._display_name = display_name
         self._chat = None
+        self._cleaned_up = False
         self._msg_count = 0
         self._third_party_emotes = None
         self._alternating_bg = alternating_bg
@@ -199,6 +206,7 @@ class ChatPage(Adw.NavigationPage):
                 streamer,
                 on_message=self._on_message,
                 prefer_static_emotes=self._disable_emote_animations,
+                on_state_change=self._on_irc_state_change,
             )
             self._chat.start()
 
@@ -216,6 +224,10 @@ class ChatPage(Adw.NavigationPage):
         user_content = self._webview.get_user_content_manager()
         user_content.register_script_message_handler("chat")
         user_content.connect("script-message-received::chat", lambda *a: None)
+        user_content.register_script_message_handler("reconnect")
+        user_content.connect(
+            "script-message-received::reconnect", self._on_reconnect_message
+        )
 
         self._webview.load_html(
             _build_html(
@@ -334,6 +346,8 @@ class ChatPage(Adw.NavigationPage):
             )
 
     def _on_message(self, msg):
+        if self._cleaned_up:
+            return
         self._msg_count += 1
         if self._msg_count > MAX_MESSAGES:
             self._msg_count -= CULL_CHUNK
@@ -413,6 +427,7 @@ class ChatPage(Adw.NavigationPage):
 
     def cleanup(self):
         """Stop chat and release resources. Idempotent."""
+        self._cleaned_up = True
         if self._style_manager is not None:
             self._style_manager.disconnect_by_func(self._on_theme_changed)
             self._style_manager = None
@@ -436,6 +451,25 @@ class ChatPage(Adw.NavigationPage):
 
     def _on_hidden(self, page):
         self.cleanup()
+
+    def _on_irc_state_change(self, state: ConnectionState, retry_count: int) -> None:
+        """Inject connection state into the WebView to update the banner."""
+        if self._cleaned_up or self._webview is None:
+            return
+        self._webview.evaluate_javascript(
+            f"setConnectionState('{state.value}',{retry_count})",
+            -1,
+            None,
+            None,
+            None,
+            None,
+            None,
+        )
+
+    def _on_reconnect_message(self, _manager, _result) -> None:
+        """Handle the reconnect button click from the WebView."""
+        if self._chat is not None:
+            self._chat.reconnect()
 
     def _on_detach(self, button):
         """Open the chat in a separate window and go back to the streamer list."""

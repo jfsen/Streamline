@@ -76,11 +76,52 @@
                 border-top: 1px solid transparent;
             }
 
+            /* Reconnect / connection-state banner — fixed to the top of the viewport */
+            #reconnect-banner {
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                padding: BANNERPAD;
+                text-align: center;
+                z-index: 100;
+                font: BANNERFONT;
+                background: COLORBANNERBG;
+                color: COLORBANNERFG;
+                display: none;
+                border-bottom: 1px solid transparent;
+            }
+            #reconnect-banner .spinner {
+                display: inline-block;
+                width: 14px;
+                height: 14px;
+                border: 2px solid transparent;
+                border-top-color: currentColor;
+                border-radius: 50%;
+                animation: reconnect-spin 0.8s linear infinite;
+                margin-right: 6px;
+                vertical-align: middle;
+            }
+            @keyframes reconnect-spin {
+                to { transform: rotate(360deg); }
+            }
+            #reconnect-banner .reconnect-btn {
+                margin-left: 8px;
+                padding: 2px 10px;
+                font: BANNERFONT;
+                cursor: pointer;
+                border: 1px solid currentColor;
+                border-radius: 4px;
+                background: transparent;
+                color: inherit;
+            }
+
             ROWCSS
         </style>
     </head>
 
     <body class="BODYCLASS">
+        <div id="reconnect-banner"></div>
         <div id="chat"></div>
 
         <script>
@@ -89,6 +130,12 @@
 
             // Localised banner text, injected by Python's gettext.
             var _moreMsg = MORE_MSG;
+
+            // Localised reconnect strings, injected by Python's gettext.
+            var _reconnectConnecting = RECONNECT_CONNECTING;
+            var _reconnectRetrying = RECONNECT_RETRYING;
+            var _reconnectDisconnected = RECONNECT_DISCONNECTED;
+            var _reconnectButton = RECONNECT_BUTTON;
 
             // Chat highlight preferences — set by _build_html().
             // Keys: firstMsg, mod, vip, partner, broadcaster
@@ -476,6 +523,38 @@
                     chat.insertAdjacentHTML("beforeend", html);
                     io.observe(chat.lastElementChild); // track for lazy unloading
                     _scrollToBottom();
+                };
+
+                // ── window.setConnectionState ────────────────────────
+                // Called from Python via evaluate_javascript() to update
+                // the reconnect banner.  Pass "connected" to hide it.
+
+                window.setConnectionState = function (state, retryCount) {
+                    var banner = document.getElementById("reconnect-banner");
+                    if (!banner) return;
+
+                    if (state === "connected") {
+                        banner.style.display = "none";
+                        banner.innerHTML = "";
+                        return;
+                    }
+
+                    banner.style.display = "block";
+                    var html = '<span class="spinner"></span>';
+
+                    if (state === "connecting") {
+                        html += _reconnectConnecting;
+                    } else if (state === "reconnecting") {
+                        html += _reconnectRetrying.replace("{0}", retryCount);
+                    } else if (state === "disconnected") {
+                        html = _reconnectDisconnected;
+                        html +=
+                            '<button class="reconnect-btn" onclick="window.webkit.messageHandlers.reconnect.postMessage(\'\')">' +
+                            _reconnectButton +
+                            "</button>";
+                    }
+
+                    banner.innerHTML = html;
                 };
             })();
         </script>

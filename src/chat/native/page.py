@@ -23,7 +23,7 @@ from ..config import (
     MAX_MESSAGES,
 )
 from ..emotes import ThirdPartyEmotes
-from ..twitch_chat import TwitchChat
+from ..twitch_chat import ConnectionState, TwitchChat
 from .config import NATIVE_STYLE
 
 _ = gettext.gettext
@@ -581,6 +581,7 @@ class NativeChatPage(Adw.NavigationPage):
         self._highlight_broadcaster = highlight_broadcaster
 
         self._chat: TwitchChat | None = None
+        self._cleaned_up = False
         self._third_party_emotes: ThirdPartyEmotes | None = None
         self._dark = (
             Adw.StyleManager.get_default().get_dark() if theme != "light" else False
@@ -662,12 +663,51 @@ class NativeChatPage(Adw.NavigationPage):
         self._more_button.connect("clicked", self._on_more_clicked)
 
         overlay = Gtk.Overlay()
+        overlay.set_vexpand(True)
+        overlay.set_hexpand(True)
         overlay.set_child(self._scrolled)
         overlay.add_overlay(self._more_button)
         overlay.set_measure_overlay(self._more_button, True)
 
+        # ── Reconnect banner ───────────────────────────────
+        self._reconnect_revealer = Gtk.Revealer()
+        self._reconnect_revealer.set_transition_type(
+            Gtk.RevealerTransitionType.SLIDE_DOWN
+        )
+        self._reconnect_revealer.set_transition_duration(250)
+
+        reconnect_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
+        reconnect_box.set_margin_start(12)
+        reconnect_box.set_margin_end(12)
+        reconnect_box.set_margin_top(4)
+        reconnect_box.set_margin_bottom(4)
+        reconnect_box.add_css_class("reconnect-banner")
+
+        self._reconnect_spinner = Gtk.Spinner()
+        self._reconnect_spinner.set_visible(False)
+        reconnect_box.append(self._reconnect_spinner)
+
+        self._reconnect_label = Gtk.Label()
+        self._reconnect_label.set_halign(Gtk.Align.START)
+        self._reconnect_label.set_hexpand(True)
+        reconnect_box.append(self._reconnect_label)
+
+        self._reconnect_button = Gtk.Button(label=_("Reconnect"))
+        self._reconnect_button.set_visible(False)
+        self._reconnect_button.connect("clicked", self._on_reconnect_clicked)
+        reconnect_box.append(self._reconnect_button)
+
+        self._reconnect_revealer.set_child(reconnect_box)
+
         self._apply_banner_style()
         self._update_card_css()
+
+        # ── Content assembly ────────────────────────────────
+        content_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+        content_box.set_vexpand(True)
+        content_box.set_hexpand(True)
+        content_box.append(self._reconnect_revealer)
+        content_box.append(overlay)
 
         # ── Toolbar ─────────────────────────────────────────
         toolbar = Adw.ToolbarView()
@@ -684,7 +724,7 @@ class NativeChatPage(Adw.NavigationPage):
             header.pack_end(detach_button)
 
         toolbar.add_top_bar(header)
-        toolbar.set_content(overlay)
+        toolbar.set_content(content_box)
         self.set_child(toolbar)
 
         self.connect("hidden", self._on_hidden)
@@ -713,6 +753,7 @@ class NativeChatPage(Adw.NavigationPage):
                 streamer,
                 on_message=self._on_message,
                 prefer_static_emotes=self._disable_emote_animations,
+                on_state_change=self._on_irc_state_change,
             )
             self._chat.start()
 
@@ -919,6 +960,8 @@ class NativeChatPage(Adw.NavigationPage):
     # ── Message processing ────────────────────────────────────
 
     def _on_message(self, msg: dict) -> None:
+        if self._cleaned_up:
+            return
         self._item_count += 1
 
         is_system = msg.get("system", False)
@@ -1239,6 +1282,12 @@ class NativeChatPage(Adw.NavigationPage):
             f"  padding: {ns['banner_padding']}; "
             f"  background: {theme['banner_bg']}; "
             f"  color: {theme['banner_fg']}; "
+            f"}}"
+            f".reconnect-banner {{ "
+            f"  font: {ns['banner_font']}; "
+            f"  padding: {ns['banner_padding']}; "
+            f"  background: {theme['banner_bg']}; "
+            f"  color: {theme['banner_fg']}; "
             f"}}",
             -1,
         )
@@ -1246,6 +1295,8 @@ class NativeChatPage(Adw.NavigationPage):
         ctx.add_provider(provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
         if self._more_button.get_child():
             self._more_button.get_child().set_css_classes([])
+        rctx = self._reconnect_revealer.get_style_context()
+        rctx.add_provider(provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
 
     # ── Lifecycle ───────────────────────────────────────────
 
@@ -1267,6 +1318,7 @@ class NativeChatPage(Adw.NavigationPage):
 
     def cleanup(self) -> None:
         """Stop chat and release resources.  Idempotent."""
+        self._cleaned_up = True
         # Invalidate all pending scroll retries before tearing down.
         self._scroll_gen += 1
         if self._style_manager is not None:
@@ -1290,6 +1342,39 @@ class NativeChatPage(Adw.NavigationPage):
         self._cards.clear()
         self._item_count = 0
         self._next_is_alt = False
+
+    def _on_irc_state_change(self, state: ConnectionState, retry_count: int) -> None:
+        """Update the reconnect banner in response to IRC state transitions."""
+        if self._cleaned_up:
+            return
+        if state == ConnectionState.CONNECTING:
+            self._reconnect_label.set_text(_("Connecting to chat…"))
+            self._reconnect_spinner.set_visible(True)
+            self._reconnect_spinner.start()
+            self._reconnect_button.set_visible(False)
+            self._reconnect_revealer.set_reveal_child(True)
+        elif state == ConnectionState.CONNECTED:
+            self._reconnect_spinner.stop()
+            self._reconnect_revealer.set_reveal_child(False)
+        elif state == ConnectionState.RECONNECTING:
+            self._reconnect_label.set_text(
+                _("Reconnecting… (attempt {})").format(retry_count)
+            )
+            self._reconnect_spinner.set_visible(True)
+            self._reconnect_spinner.start()
+            self._reconnect_button.set_visible(False)
+            self._reconnect_revealer.set_reveal_child(True)
+        elif state == ConnectionState.DISCONNECTED:
+            self._reconnect_spinner.stop()
+            self._reconnect_spinner.set_visible(False)
+            self._reconnect_label.set_text(_("Disconnected."))
+            self._reconnect_button.set_visible(True)
+            self._reconnect_revealer.set_reveal_child(True)
+
+    def _on_reconnect_clicked(self, button: Gtk.Button) -> None:
+        """Initiate a manual reconnection from the DISCONNECTED state."""
+        if self._chat is not None:
+            self._chat.reconnect()
 
     def _on_detach(self, button: Gtk.Button) -> None:
         """Open the chat in a separate window and pop this page."""

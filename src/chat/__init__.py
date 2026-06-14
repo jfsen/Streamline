@@ -7,4 +7,4 @@ from .config import (
     TWITCH_EMOTE_CDN,
 )
 from .emotes import ThirdPartyEmotes
-from .twitch_chat import TwitchChat
+from .twitch_chat import ConnectionState, TwitchChat

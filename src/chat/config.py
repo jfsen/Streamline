@@ -91,6 +91,19 @@ EMOTE_CACHE_TTL = {
 IRC_HOST = "irc.chat.twitch.tv"
 IRC_PORT = 6667
 
+# ── Reconnection ─────────────────────────────────────────────
+#
+# Exponential-backoff reconnection with jitter.  After
+# ``RECONNECT_MAX_ATTEMPTS`` consecutive failures the client
+# gives up and transitions to DISCONNECTED.
+# Consumer:  twitch_chat.py
+
+RECONNECT_BASE_DELAY = 1.0  # seconds – initial delay
+RECONNECT_MAX_DELAY = 60.0  # seconds – cap
+RECONNECT_JITTER = 0.2  # fraction – ±20 % random jitter
+RECONNECT_MAX_ATTEMPTS = 10  # consecutive failures before giving up
+PING_TIMEOUT = 120  # seconds – no data → treat as dead
+
 # Fallback username colour used when the IRC tags don't include a
 # ``color`` attribute.
 FALLBACK_USER_COLOR = "#9147ff"  # Twitch purple

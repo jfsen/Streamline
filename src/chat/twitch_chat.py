@@ -1,6 +1,8 @@
 """Twitch IRC chat client (read-only, anonymous)."""
 
+import enum
 import logging
+import random
 import re
 import socket
 import threading
@@ -11,15 +13,37 @@ from .config import (
     FALLBACK_USER_COLOR,
     IRC_HOST,
     IRC_PORT,
+    PING_TIMEOUT,
+    RECONNECT_BASE_DELAY,
+    RECONNECT_JITTER,
+    RECONNECT_MAX_ATTEMPTS,
+    RECONNECT_MAX_DELAY,
     TWITCH_EMOTE_CDN,
     TWITCH_EMOTE_CDN_STATIC,
 )
 
 logger = logging.getLogger("IRCChat")
 
+
+class ConnectionState(enum.Enum):
+    """Public connection states emitted via ``on_state_change``."""
+
+    CONNECTING = "connecting"
+    CONNECTED = "connected"
+    RECONNECTING = "reconnecting"
+    DISCONNECTED = "disconnected"
+
+
+# Twitch IRC tags for extracting display name and color
+_TAG_RE = re.compile(r"@([^ ]+) ")
+_COLOR_RE = re.compile(r"color=#([0-9A-Fa-f]{6})")
+_DISPLAY_NAME_RE = re.compile(r"display-name=([^;]+)")
+_EMOTES_RE = re.compile(r"emotes=([^;]+)")
+_BADGES_RE = re.compile(r"badges=([^;]+)")
+_BADGE_INFO_RE = re.compile(r"badge-info=([^;]+)")
+_FIRST_MSG_RE = re.compile(r"first-msg=([^;]+)")
+
 # Known badge names — only these are rendered from the IRC badges tag.
-# Keys are IRC badge IDs; values are the display name used in tooltips.
-# Not included: "bits"
 _BADGE_NAMES = {
     "broadcaster": "Broadcaster",
     "moderator": "Moderator",
@@ -34,73 +58,164 @@ _BADGE_NAMES = {
     "no_video": "No Video",
 }
 
-# Twitch IRC tags for extracting display name and color
-_TAG_RE = re.compile(r"@([^ ]+) ")
-_COLOR_RE = re.compile(r"color=#([0-9A-Fa-f]{6})")
-_DISPLAY_NAME_RE = re.compile(r"display-name=([^;]+)")
-_EMOTES_RE = re.compile(r"emotes=([^;]+)")
-_BADGES_RE = re.compile(r"badges=([^;]+)")
-_BADGE_INFO_RE = re.compile(r"badge-info=([^;]+)")
-_FIRST_MSG_RE = re.compile(r"first-msg=([^;]+)")
-
 
 class TwitchChat:
-    """Connects to Twitch IRC and emits messages via a callback."""
+    """Connects to Twitch IRC and emits messages via a callback.
 
-    def __init__(self, channel, on_message, prefer_static_emotes=False):
+    Automatically reconnects on connection loss with exponential
+    back-off and jitter.  Gives up after ``RECONNECT_MAX_ATTEMPTS``
+    consecutive failures and transitions to ``DISCONNECTED``.
+    """
+
+    def __init__(
+        self,
+        channel,
+        on_message,
+        prefer_static_emotes=False,
+        on_state_change=None,
+    ):
         self._channel = channel.lstrip("#").lower()
         self._on_message = on_message
         self._prefer_static_emotes = prefer_static_emotes
+        self._on_state_change = on_state_change
         self._sock = None
         self._running = False
+        self._retry_count = 0
+        self._state = ConnectionState.DISCONNECTED
+        # threading.Event used for interruptible sleep between retries.
+        self._wake_event = threading.Event()
+
+    # ── Public API ─────────────────────────────────────────
+
+    @property
+    def state(self):
+        """Current ``ConnectionState``."""
+        return self._state
 
     def start(self):
+        """Begin connecting.  Idempotent — safe to call multiple times."""
+        if self._running:
+            return
         self._running = True
+        self._wake_event.clear()
+        self._retry_count = 0
+        self._set_state(ConnectionState.CONNECTING)
         threading.Thread(target=self._connect, daemon=True).start()
 
     def stop(self):
+        """Disconnect and stop retrying.  Idempotent.
+
+        Does *not* emit a state change — the caller is expected to
+        be tearing down the UI and any ``GLib.idle_add`` callback
+        would race with widget destruction.
+        """
         self._running = False
-        if self._sock:
-            try:
-                self._sock.shutdown(socket.SHUT_RDWR)
-            except OSError:
-                pass
-            self._sock.close()
-            self._sock = None
+        self._wake_event.set()  # interrupt any sleep
+        self._close_socket()
 
-    def _connect(self):
-        logger.debug("Connecting to IRC for #%s", self._channel)
+    def reconnect(self):
+        """Manual reconnect after the client has given up.
+
+        Resets the retry counter so that a fresh round of attempts
+        begins.  No-op unless the current state is ``DISCONNECTED``.
+        """
+        if self._state != ConnectionState.DISCONNECTED:
+            return
+        self._running = True
+        self._wake_event.clear()
+        self._retry_count = 0
+        self._set_state(ConnectionState.CONNECTING)
+        threading.Thread(target=self._connect, daemon=True).start()
+
+    # ── Internal helpers ───────────────────────────────────
+
+    def _set_state(self, state):
+        """Thread-safe state transition that fires the callback on the
+        GLib main loop when the state actually changes."""
+        if self._state == state:
+            return
+        self._state = state
+        if self._on_state_change is not None:
+            GLib.idle_add(self._on_state_change, state, self._retry_count)
+
+    def _close_socket(self):
+        if self._sock is None:
+            return
         try:
-            self._sock = socket.create_connection((IRC_HOST, IRC_PORT), timeout=10)
-            self._sock.settimeout(None)
-            self._send_raw("PASS", "justinfan12345")
-            self._send_raw("NICK", "justinfan12345")
-            self._send_raw("CAP REQ", ":twitch.tv/tags")
-            logger.debug("Requested twitch.tv/tags")
-            self._send_raw("CAP REQ", ":twitch.tv/commands")
-            logger.debug("Requested twitch.tv/commands")
-            self._send_raw("JOIN", f"#{self._channel}")
-            logger.debug("Joined #%s", self._channel)
-
-            buf = b""
-            while self._running:
-                try:
-                    data = self._sock.recv(4096)
-                    if not data:
-                        break
-                    buf += data
-                    while b"\r\n" in buf:
-                        line, buf = buf.split(b"\r\n", 1)
-                        self._handle_line(line.decode("utf-8"))
-                except (OSError, UnicodeDecodeError):
-                    break
+            self._sock.shutdown(socket.SHUT_RDWR)
         except OSError:
-            logger.debug("Failed to connect to IRC for #%s", self._channel)
+            pass
+        try:
+            self._sock.close()
+        except OSError:
+            pass
+        self._sock = None
 
     def _send_raw(self, command, *args):
         if self._sock:
             msg = f"{command} {' '.join(args)}\r\n"
             self._sock.sendall(msg.encode())
+
+    # ── Connection loop ────────────────────────────────────
+
+    def _connect(self):
+        """Reconnection loop — blocks until ``_running`` is cleared."""
+        while self._running:
+            try:
+                self._sock = socket.create_connection((IRC_HOST, IRC_PORT), timeout=10)
+                self._sock.settimeout(PING_TIMEOUT)
+                self._send_raw("PASS", "justinfan12345")
+                self._send_raw("NICK", "justinfan12345")
+                self._send_raw("CAP REQ", ":twitch.tv/tags")
+                self._send_raw("CAP REQ", ":twitch.tv/commands")
+                self._send_raw("JOIN", f"#{self._channel}")
+
+                self._retry_count = 0  # reset on success
+                self._set_state(ConnectionState.CONNECTED)
+
+                buf = b""
+                while self._running:
+                    try:
+                        data = self._sock.recv(4096)
+                        if not data:
+                            break
+                        buf += data
+                        while b"\r\n" in buf:
+                            line, buf = buf.split(b"\r\n", 1)
+                            self._handle_line(line.decode("utf-8"))
+                    except socket.timeout:
+                        # No data for PING_TIMEOUT seconds — connection dead.
+                        break
+                    except (OSError, UnicodeDecodeError):
+                        break
+            except OSError:
+                pass
+            finally:
+                self._close_socket()
+
+            if not self._running:
+                break
+
+            self._retry_count += 1
+            if self._retry_count > RECONNECT_MAX_ATTEMPTS:
+                self._set_state(ConnectionState.DISCONNECTED)
+                self._running = False
+                break
+
+            self._set_state(ConnectionState.RECONNECTING)
+
+            # Exponential back-off with jitter.
+            base = RECONNECT_BASE_DELAY * (2 ** (self._retry_count - 1))
+            delay = min(base, RECONNECT_MAX_DELAY)
+            jitter = delay * RECONNECT_JITTER * (random.random() * 2 - 1)
+            delay = max(0.5, delay + jitter)
+
+            # Interruptible sleep.
+            self._wake_event.wait(delay)
+            if not self._running:
+                break
+
+    # ── Line handlers ──────────────────────────────────────
 
     @staticmethod
     def _empty_msg(text):
@@ -163,11 +278,7 @@ class TwitchChat:
 
     @staticmethod
     def _tier_short(tier_name):
-        """Shorten a sub-plan-name tag value.
-
-        "Channel Subscription (Tier 1)" → "Tier 1"
-        "Prime" / "Twitch Prime" → "Prime"
-        """
+        """Shorten a sub-plan-name tag value."""
         if not tier_name:
             return "?"
         if "Prime" in tier_name:
@@ -220,15 +331,11 @@ class TwitchChat:
         if not msg_id:
             return None
 
-        # ── Subscriptions: custom short messages ─────────────
-
         if msg_id in ("sub", "resub"):
             return self._build_sub_msg(tags, msg_id == "resub")
 
         if msg_id in ("subgift", "anonsubgift"):
             return self._build_subgift_msg(tags, msg_id == "anonsubgift")
-
-        # ── Raid: skip if < 10 viewers ───────────────────────
 
         if msg_id == "raid":
             vc = self._tag_val(tags, "msg-param-viewerCount")
@@ -238,12 +345,8 @@ class TwitchChat:
             count = vc or "?"
             return self._empty_msg(f"{name} is raiding with {count} viewers!")
 
-        # ── Skip unwanted types ──────────────────────────────
-
         if msg_id in ("bitsbadgetier", "viewermilestone"):
             return None
-
-        # ── Everything else: use Twitch's system-msg ─────────
 
         sys_msg = self._tag_val(tags, "system-msg")
         if sys_msg:
@@ -263,18 +366,14 @@ class TwitchChat:
 
         msg = self._parse_clearchat(line)
         if msg:
-            logger.debug("CLEARCHAT → %r", msg["text"])
             GLib.idle_add(self._on_message, msg)
             return
 
         msg = self._parse_usernotice(line)
         if msg:
-            logger.debug("USERNOTICE → %r", msg["text"])
             GLib.idle_add(self._on_message, msg)
             return
 
-        # Log unhandled lines (ROOMSTATE, USERSTATE, NOTICE, etc.) at
-        # debug level so we can see what Twitch is actually sending.
         if not line.startswith("PONG") and "PRIVMSG" not in line:
             logger.debug("Unhandled IRC: %s", line)
 
@@ -291,8 +390,6 @@ class TwitchChat:
         user, text = body.split(" :", 1)
 
         # Detect CTCP ACTION (/me) — IRC convention used by Twitch.
-        # Save the offset so emote positions can be adjusted after parsing,
-        # since the IRC tag references the original (pre-strip) text.
         action = False
         action_offset = 0
         if text.startswith("\x01ACTION ") and text.endswith("\x01"):
@@ -342,7 +439,6 @@ class TwitchChat:
                     (s - action_offset, e - action_offset) for s, e in em["positions"]
                 ]
 
-        # Detect moderator from badges (avoids parsing the tags again).
         mod = any(b[1] == "moderator" for b in badges)
         vip = any(b[1] == "vip" for b in badges)
         partner = any(b[1] == "partner" for b in badges)
@@ -364,13 +460,7 @@ class TwitchChat:
 
 
 def _parse_badges(tag_value, badge_info_value=None):
-    """Parse the badges tag into a list of [display_name, raw_id, tenure] triples.
-
-    tenure is an integer month count for subscriber badges (from badge-info),
-    or None for all other badge types.
-    """
-    # Extract subscriber tenure from badge-info if present.
-    # badge-info format: "subscriber/12" or "subscriber/12,founder/0"
+    """Parse the badges tag into a list of [display_name, raw_id, tenure] triples."""
     sub_tenure = None
     if badge_info_value:
         for bi in badge_info_value.split(","):
