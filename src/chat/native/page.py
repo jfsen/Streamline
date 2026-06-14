@@ -582,6 +582,7 @@ class NativeChatPage(Adw.NavigationPage):
 
         self._chat: TwitchChat | None = None
         self._cleaned_up = False
+        self._banner_css_provider: Gtk.CssProvider | None = None
         self._third_party_emotes: ThirdPartyEmotes | None = None
         self._dark = (
             Adw.StyleManager.get_default().get_dark() if theme != "light" else False
@@ -1275,6 +1276,16 @@ class NativeChatPage(Adw.NavigationPage):
     def _apply_banner_style(self) -> None:
         ns = NATIVE_STYLE
         theme = ns["dark"] if self._dark else ns["light"]
+
+        # Remove previous provider to avoid accumulating on theme switches.
+        if self._banner_css_provider is not None:
+            self._more_button.get_style_context().remove_provider(
+                self._banner_css_provider
+            )
+            self._reconnect_revealer.get_style_context().remove_provider(
+                self._banner_css_provider
+            )
+
         provider = Gtk.CssProvider()
         provider.load_from_data(
             f".more-msg-banner {{ "
@@ -1291,6 +1302,8 @@ class NativeChatPage(Adw.NavigationPage):
             f"}}",
             -1,
         )
+        self._banner_css_provider = provider
+
         ctx = self._more_button.get_style_context()
         ctx.add_provider(provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
         if self._more_button.get_child():

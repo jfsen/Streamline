@@ -6,6 +6,7 @@ import random
 import re
 import socket
 import threading
+import time
 
 from gi.repository import GLib
 
@@ -13,6 +14,8 @@ from .config import (
     FALLBACK_USER_COLOR,
     IRC_HOST,
     IRC_PORT,
+    PING_CHECK_INTERVAL,
+    PING_INTERVAL,
     PING_TIMEOUT,
     RECONNECT_BASE_DELAY,
     RECONNECT_JITTER,
@@ -44,6 +47,8 @@ _BADGE_INFO_RE = re.compile(r"badge-info=([^;]+)")
 _FIRST_MSG_RE = re.compile(r"first-msg=([^;]+)")
 
 # Known badge names — only these are rendered from the IRC badges tag.
+# Keys are IRC badge IDs; values are the display name used in tooltips.
+# Not included: "bits"
 _BADGE_NAMES = {
     "broadcaster": "Broadcaster",
     "moderator": "Moderator",
@@ -79,6 +84,7 @@ class TwitchChat:
         self._prefer_static_emotes = prefer_static_emotes
         self._on_state_change = on_state_change
         self._sock = None
+        self._socket_lock = threading.Lock()
         self._running = False
         self._retry_count = 0
         self._state = ConnectionState.DISCONNECTED
@@ -105,13 +111,15 @@ class TwitchChat:
     def stop(self):
         """Disconnect and stop retrying.  Idempotent.
 
-        Does *not* emit a state change — the caller is expected to
+        Transitions to ``DISCONNECTED`` without firing the
+        ``on_state_change`` callback — the caller is expected to
         be tearing down the UI and any ``GLib.idle_add`` callback
         would race with widget destruction.
         """
         self._running = False
         self._wake_event.set()  # interrupt any sleep
         self._close_socket()
+        self._state = ConnectionState.DISCONNECTED
 
     def reconnect(self):
         """Manual reconnect after the client has given up.
@@ -131,25 +139,24 @@ class TwitchChat:
 
     def _set_state(self, state):
         """Thread-safe state transition that fires the callback on the
-        GLib main loop when the state actually changes."""
-        if self._state == state:
-            return
+        GLib main loop."""
         self._state = state
         if self._on_state_change is not None:
             GLib.idle_add(self._on_state_change, state, self._retry_count)
 
     def _close_socket(self):
-        if self._sock is None:
-            return
-        try:
-            self._sock.shutdown(socket.SHUT_RDWR)
-        except OSError:
-            pass
-        try:
-            self._sock.close()
-        except OSError:
-            pass
-        self._sock = None
+        with self._socket_lock:
+            if self._sock is None:
+                return
+            try:
+                self._sock.shutdown(socket.SHUT_RDWR)
+            except OSError:
+                pass
+            try:
+                self._sock.close()
+            except OSError:
+                pass
+            self._sock = None
 
     def _send_raw(self, command, *args):
         if self._sock:
@@ -163,7 +170,8 @@ class TwitchChat:
         while self._running:
             try:
                 self._sock = socket.create_connection((IRC_HOST, IRC_PORT), timeout=10)
-                self._sock.settimeout(PING_TIMEOUT)
+                # Short timeout so we can send proactive PINGs.
+                self._sock.settimeout(PING_CHECK_INTERVAL)
                 self._send_raw("PASS", "justinfan12345")
                 self._send_raw("NICK", "justinfan12345")
                 self._send_raw("CAP REQ", ":twitch.tv/tags")
@@ -174,18 +182,35 @@ class TwitchChat:
                 self._set_state(ConnectionState.CONNECTED)
 
                 buf = b""
+                last_data = time.monotonic()
+                ping_sent_at: float | None = None
+
                 while self._running:
                     try:
                         data = self._sock.recv(4096)
                         if not data:
                             break
+                        last_data = time.monotonic()
+                        ping_sent_at = None  # any data counts as a response
                         buf += data
                         while b"\r\n" in buf:
                             line, buf = buf.split(b"\r\n", 1)
                             self._handle_line(line.decode("utf-8"))
                     except socket.timeout:
-                        # No data for PING_TIMEOUT seconds — connection dead.
-                        break
+                        now = time.monotonic()
+                        idle = now - last_data
+                        if ping_sent_at is None:
+                            # No PING sent yet — send one once we've been
+                            # idle long enough.
+                            if idle >= PING_INTERVAL:
+                                self._send_raw("PING", ":tmi.twitch.tv")
+                                ping_sent_at = now
+                        elif (now - ping_sent_at) >= PING_INTERVAL:
+                            # PING sent but no response — connection dead.
+                            break
+                        # Absolute maximum silence.
+                        if idle >= PING_TIMEOUT:
+                            break
                     except (OSError, UnicodeDecodeError):
                         break
             except OSError:
@@ -366,11 +391,13 @@ class TwitchChat:
 
         msg = self._parse_clearchat(line)
         if msg:
+            logger.debug("CLEARCHAT → %r", msg["text"])
             GLib.idle_add(self._on_message, msg)
             return
 
         msg = self._parse_usernotice(line)
         if msg:
+            logger.debug("USERNOTICE → %r", msg["text"])
             GLib.idle_add(self._on_message, msg)
             return
 

@@ -102,7 +102,18 @@ RECONNECT_BASE_DELAY = 1.0  # seconds – initial delay
 RECONNECT_MAX_DELAY = 60.0  # seconds – cap
 RECONNECT_JITTER = 0.2  # fraction – ±20 % random jitter
 RECONNECT_MAX_ATTEMPTS = 10  # consecutive failures before giving up
-PING_TIMEOUT = 120  # seconds – no data → treat as dead
+
+# Keepalive: the client sends a proactive PING after
+# ``PING_INTERVAL`` seconds of silence and, once a PING
+# has been sent, treats the connection as dead after
+# another ``PING_INTERVAL`` seconds without a response.
+# ``PING_TIMEOUT`` is the absolute maximum silence
+# tolerated before the connection is dropped regardless.
+# ``PING_CHECK_INTERVAL`` is the socket read timeout —
+# how often we wake to evaluate whether a PING is needed.
+PING_CHECK_INTERVAL = 10  # seconds – socket read timeout
+PING_INTERVAL = 15  # seconds – idle threshold & response deadline
+PING_TIMEOUT = 180  # seconds – absolute maximum silence
 
 # Fallback username colour used when the IRC tags don't include a
 # ``color`` attribute.
