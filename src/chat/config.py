@@ -51,6 +51,10 @@ CHAT_THEME = {
     },
 }
 
+# Fallback username colour used when the IRC tags don't include a
+# ``color`` attribute.
+FALLBACK_USER_COLOR = "#9147ff"  # Twitch purple
+
 # ── Behaviour ───────────────────────────────────────────────
 #
 # Runtime behaviour tunables — message limits, flush batching,
@@ -114,10 +118,6 @@ RECONNECT_MAX_ATTEMPTS = 10  # consecutive failures before giving up
 PING_CHECK_INTERVAL = 10  # seconds – socket read timeout
 PING_INTERVAL = 15  # seconds – idle threshold & response deadline
 PING_TIMEOUT = 180  # seconds – absolute maximum silence
-
-# Fallback username colour used when the IRC tags don't include a
-# ``color`` attribute.
-FALLBACK_USER_COLOR = "#9147ff"  # Twitch purple
 
 # ── Emote CDNs ──────────────────────────────────────────────
 #
