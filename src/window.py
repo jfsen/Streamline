@@ -586,8 +586,15 @@ class StreamlineWindow(Adw.ApplicationWindow):
         stream_section = Adw.ShortcutsSection(title=_("Stream Management"))
         stream_section.add(Adw.ShortcutsItem.new(_("Follow"), "<primary>n"))
         stream_section.add(Adw.ShortcutsItem.new(_("Quick Play"), "<primary>p"))
-        stream_section.add(Adw.ShortcutsItem.new(_("Refresh Streams"), "<primary>r"))
-        stream_section.add(Adw.ShortcutsItem.new(_("Refresh Streams"), "F5"))
+        try:
+            refresh_item = Adw.ShortcutsItem.new(_("Refresh Streams"), "<primary>r")
+            refresh_item.set_property("accelerator2", "F5")
+            stream_section.add(refresh_item)
+        except (AttributeError, TypeError):
+            stream_section.add(
+                Adw.ShortcutsItem.new(_("Refresh Streams"), "<primary>r")
+            )
+            stream_section.add(Adw.ShortcutsItem.new(_("Refresh Streams"), "F5"))
         dialog.add(stream_section)
 
         dialog.present(self)
