@@ -230,4 +230,5 @@ popover.streamer-more-popover list row {
 popover.streamer-more-popover .detach-button {
     margin-left: 6px;
     margin-right: 6px;
+    -gtk-icon-size: 14px;
 }

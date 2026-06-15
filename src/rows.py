@@ -230,15 +230,6 @@ class StreamerRowManager:
         chat_label.set_margin_start(12)
         chat_label.set_margin_end(12)
         chat_label.set_hexpand(True)
-        chat_click = Gtk.GestureClick.new()
-        chat_click.connect(
-            "released",
-            lambda g, n, x, y: (
-                popover.popdown(),
-                self.window.show_chat_page(streamer),
-            ),
-        )
-        chat_label.add_controller(chat_click)
         chat_box.append(chat_label)
 
         detach_btn = Gtk.Button.new_from_icon_name("window-new-symbolic")
@@ -256,6 +247,15 @@ class StreamerRowManager:
         chat_box.append(detach_btn)
 
         chat_row.set_child(chat_box)
+        chat_click = Gtk.GestureClick.new()
+        chat_click.connect(
+            "released",
+            lambda g, n, x, y: (
+                popover.popdown(),
+                self.window.show_chat_page(streamer),
+            ),
+        )
+        chat_row.add_controller(chat_click)
         listbox.append(chat_row)
 
         # ── Show VODs ──
@@ -264,6 +264,8 @@ class StreamerRowManager:
         vods_label.set_margin_end(12)
         vods_label.set_margin_top(4)
         vods_label.set_margin_bottom(4)
+        vods_row = Gtk.ListBoxRow()
+        vods_row.set_child(vods_label)
         vods_click = Gtk.GestureClick.new()
         vods_click.connect(
             "released",
@@ -272,9 +274,7 @@ class StreamerRowManager:
                 self.window.show_vods_page(streamer),
             ),
         )
-        vods_label.add_controller(vods_click)
-        vods_row = Gtk.ListBoxRow()
-        vods_row.set_child(vods_label)
+        vods_row.add_controller(vods_click)
         listbox.append(vods_row)
 
         # ── Unfollow ──
@@ -283,6 +283,8 @@ class StreamerRowManager:
         unfollow_label.set_margin_end(12)
         unfollow_label.set_margin_top(4)
         unfollow_label.set_margin_bottom(4)
+        unfollow_row = Gtk.ListBoxRow()
+        unfollow_row.set_child(unfollow_label)
         unfollow_click = Gtk.GestureClick.new()
         unfollow_click.connect(
             "released",
@@ -291,9 +293,7 @@ class StreamerRowManager:
                 self.window.unfollow_streamer(streamer),
             ),
         )
-        unfollow_label.add_controller(unfollow_click)
-        unfollow_row = Gtk.ListBoxRow()
-        unfollow_row.set_child(unfollow_label)
+        unfollow_row.add_controller(unfollow_click)
         listbox.append(unfollow_row)
 
         popover.set_child(listbox)
