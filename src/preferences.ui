@@ -202,7 +202,7 @@
 
         <child>
           <object class="AdwPreferencesGroup">
-            <property name="title" translatable="yes">Chat</property>
+            <property name="title" translatable="yes">General</property>
             <property
                             name="description"
                             translatable="yes"
@@ -258,7 +258,7 @@
             <property
                             name="description"
                             translatable="yes"
-                        >Apply tinted backgrounds to certain message types</property>
+                        >Apply tinted backgrounds to certain message types. Changes apply to newly opened chats</property>
             <child>
               <object class="AdwSwitchRow" id="chat_highlight_first_msg_switch">
                 <property
