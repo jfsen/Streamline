@@ -11,7 +11,7 @@ IS_FLATPAK = os.path.exists("/.flatpak-info")
 # Consumers:  main.py  (APP_ID, VERSION),  window.py  (APP_ID via GSettings)
 
 APP_ID = "org.jfsen.Streamline"
-VERSION = "3.3.0"
+VERSION = "3.4.0"
 
 # ── Window ──────────────────────────────────────────────────
 #

@@ -11,7 +11,7 @@
 
 <p align="center">
   <a href="https://github.com/jfsen/Streamline/blob/main/COPYING"><img src="https://img.shields.io/badge/license-GPL--3.0-blue.svg" alt="License: GPL-3.0-or-later"/></a>
-  <a href="https://github.com/jfsen/Streamline/releases"><img src="https://img.shields.io/badge/release-3.3.0-brightgreen.svg" alt="Release: 3.3.0"/></a>
+  <a href="https://github.com/jfsen/Streamline/releases"><img src="https://img.shields.io/badge/release-3.4.0-brightgreen.svg" alt="Release: 3.4.0"/></a>
 </p>
 
 ---

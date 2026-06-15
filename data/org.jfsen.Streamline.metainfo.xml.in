@@ -32,6 +32,42 @@
   </branding>
 
   <releases>
+    <release version="3.4.0" date="2026-06-15">
+      <description translate="no">
+        <p>Streamline 3.4 — polish, consistency, and smarter defaults.</p>
+        <ul>
+          <li
+                    >Chat preferences reorganized into a dedicated Chat page with General and Highlighting groups</li>
+          <li
+                    >Merged Chat and Detached Chat menu items into a single row with inline detach icon</li>
+          <li
+                    >VOD thumbnail cache now purges stale images per-streamer on refresh</li>
+          <li>Fixed VOD card background bleeding through behind thumbnails</li>
+          <li
+                    >Fixed dark/light theme detection on the "system" theme setting</li>
+          <li>Ctrl+R and F5 merged into a single Keyboard Shortcuts entry</li>
+          <li
+                    >Online glow and count pill now share the same 3s stay / 2s fade timing</li>
+          <li
+                    >Row hover uses currentColor for consistent light/dark system theme appearance</li>
+          <li
+                    >Removed redundant "Stream playback failed" toast when a stream is offline</li>
+          <li
+                    >Offline streamers with profile pictures no longer show a play-icon overlay or tooltip</li>
+          <li
+                    >Chat now handles automatic reconnection with proactive keepalive PINGs</li>
+          <li
+                    >Chat service messages (timeouts, subs, raids) are now parsed and rendered</li>
+          <li
+                    >Added chat highlighting for user roles (moderators, VIPs, partners, broadcaster)</li>
+          <li
+                    >Badge SVGs inlined and subscriber tenure added to badge tooltips</li>
+          <li
+                    >Fixed missing widget realization cleanup when clearing chat messages</li>
+          <li>Updated German translation</li>
+        </ul>
+      </description>
+    </release>
     <release version="3.3.0" date="2026-06-11">
       <description translate="no">
         <p
