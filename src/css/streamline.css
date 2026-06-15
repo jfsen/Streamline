@@ -55,17 +55,17 @@ list.boxed-list.streamer-list > row.offline-row {
 
 /* ── Just-went-online row highlight ── */
 list.boxed-list.streamer-list > row.just-went-online {
-    animation: went-online-pulse 4s ease-out forwards;
+    animation: went-online-pulse 5s ease-out forwards;
 }
 
 @keyframes went-online-pulse {
     0% {
         background-color: alpha(@success_bg_color, 0.22);
     }
-    6% {
+    5% {
         background-color: alpha(@success_bg_color, 0.18);
     }
-    75% {
+    60% {
         background-color: alpha(@success_bg_color, 0.18);
     }
     100% {
@@ -93,7 +93,7 @@ list.boxed-list.streamer-list > row.just-went-online {
     min-height: 0;
     margin: 0;
     opacity: 1;
-    transition: opacity 1000ms ease-out;
+    transition: opacity 2000ms ease-out;
 }
 
 .online-pill.fading {

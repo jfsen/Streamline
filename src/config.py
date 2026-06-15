@@ -121,10 +121,10 @@ VOD_REFRESH_COOLDOWN = 60
 # Consumer:  rows.py
 
 # How long the "just went online" highlight glow stays on a row.
-ROW_HIGHLIGHT_MS = 4000
+ROW_HIGHLIGHT_MS = 5000
 
 # How long the online/offline-change pill badge is shown before fading.
 PILL_SHOW_MS = 3000
 
 # Duration of the pill fade-out animation.
-PILL_FADE_MS = 1000
+PILL_FADE_MS = 2000
