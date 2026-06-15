@@ -144,7 +144,8 @@ class StreamerRowManager:
             play_button.add_css_class("flat")
             play_button.add_css_class("avatar-play-button")
             play_button.set_valign(Gtk.Align.CENTER)
-            play_button.set_tooltip_text(_("Play stream"))
+            if row.is_online:
+                play_button.set_tooltip_text(_("Play stream"))
             play_button.set_overflow(Gtk.Overflow.HIDDEN)
             if not row.is_online:
                 play_button.add_css_class("offline-stream-button")
@@ -164,9 +165,10 @@ class StreamerRowManager:
                 pic.set_pixel_size(48)
                 overlay.set_child(pic)
 
-                icon = Gtk.Image.new_from_icon_name("media-playback-start-symbolic")
-                icon.add_css_class("avatar-play-icon")
-                overlay.add_overlay(icon)
+                if row.is_online:
+                    icon = Gtk.Image.new_from_icon_name("media-playback-start-symbolic")
+                    icon.add_css_class("avatar-play-icon")
+                    overlay.add_overlay(icon)
             else:
                 placeholder = Gtk.Image.new_from_icon_name(
                     "media-playback-start-symbolic"
@@ -271,9 +273,10 @@ class StreamerRowManager:
         pic.set_pixel_size(48)
         overlay.set_child(pic)
 
-        icon = Gtk.Image.new_from_icon_name("media-playback-start-symbolic")
-        icon.add_css_class("avatar-play-icon")
-        overlay.add_overlay(icon)
+        if row.is_online:
+            icon = Gtk.Image.new_from_icon_name("media-playback-start-symbolic")
+            icon.add_css_class("avatar-play-icon")
+            overlay.add_overlay(icon)
 
         button.set_child(overlay)
 
