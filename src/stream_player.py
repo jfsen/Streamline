@@ -69,10 +69,13 @@ class StreamPlayer:
                         bufsize=1,
                     )
 
+                    stream_not_available = False
+
                     for line in self._current_process.stdout:
                         logger.debug("Streamlink: %s", line.strip())
 
                         if "No playable streams found on this URL" in line:
+                            stream_not_available = True
                             GLib.idle_add(
                                 self.window.show_toast, _("Stream not available"), 3
                             )
@@ -87,7 +90,10 @@ class StreamPlayer:
                         logger.debug(
                             "Process ended (code %s)", self._current_process.returncode
                         )
-                        if self._current_process.returncode != 0:
+                        if (
+                            self._current_process.returncode != 0
+                            and not stream_not_available
+                        ):
                             GLib.idle_add(
                                 self.window.show_toast, _("Stream playback failed"), 3
                             )
