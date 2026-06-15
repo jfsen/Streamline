@@ -1,7 +1,7 @@
 import gettext
 from html import unescape
 
-from gi.repository import Adw, Gio, GLib, Gtk
+from gi.repository import Adw, GLib, Gtk
 
 from .config import PILL_FADE_MS, PILL_SHOW_MS, RESOURCE_BASE, ROW_HIGHLIGHT_MS
 
@@ -212,50 +212,101 @@ class StreamerRowManager:
         menu_button.set_valign(Gtk.Align.CENTER)
         menu_button.set_tooltip_text(_("More"))
 
-        # Create menu model
-        menu = Gio.Menu.new()
+        # Build custom popover (replaces Gio.Menu so we can have a
+        # split Chat row: click the label for in-page, click the
+        # detach icon for a popup window.)
+        popover = Gtk.Popover()
+        popover.add_css_class("streamer-more-popover")
+        popover.set_has_arrow(False)
 
-        # Add menu items - no icons needed
-        menu_items = [
-            (_("Chat"), "chat", self.window.show_chat_page),
-            (_("Detached Chat"), "detached-chat", self.window.show_chat_popup),
-            (_("Show VODs"), "show-vods", self.window.show_vods_page),
-            (_("Unfollow"), "unfollow", self.window.unfollow_streamer),
-        ]
+        listbox = Gtk.ListBox()
+        listbox.set_selection_mode(Gtk.SelectionMode.NONE)
 
-        for label, action_name, handler in menu_items:
-            item = Gio.MenuItem.new(label, f"row.{action_name}")
-            menu.append_item(item)
+        # ── Chat row (label + detach icon) ──
+        chat_row = Gtk.ListBoxRow()
+        chat_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=0)
 
-        # Create popup menu
-        popover = Gtk.PopoverMenu.new_from_model(menu)
+        chat_label = Gtk.Label(label=_("Chat"), xalign=0)
+        chat_label.set_margin_start(12)
+        chat_label.set_margin_end(12)
+        chat_label.set_hexpand(True)
+        chat_click = Gtk.GestureClick.new()
+        chat_click.connect(
+            "released",
+            lambda g, n, x, y: (
+                popover.popdown(),
+                self.window.show_chat_page(streamer),
+            ),
+        )
+        chat_label.add_controller(chat_click)
+        chat_box.append(chat_label)
+
+        detach_btn = Gtk.Button.new_from_icon_name("window-new-symbolic")
+        detach_btn.add_css_class("flat")
+        detach_btn.add_css_class("detach-button")
+        detach_btn.set_valign(Gtk.Align.CENTER)
+        detach_btn.set_tooltip_text(_("Open in detached window"))
+        detach_btn.connect(
+            "clicked",
+            lambda btn: (
+                popover.popdown(),
+                self.window.show_chat_popup(streamer),
+            ),
+        )
+        chat_box.append(detach_btn)
+
+        chat_row.set_child(chat_box)
+        listbox.append(chat_row)
+
+        # ── Show VODs ──
+        vods_label = Gtk.Label(label=_("Show VODs"), xalign=0)
+        vods_label.set_margin_start(12)
+        vods_label.set_margin_end(12)
+        vods_label.set_margin_top(4)
+        vods_label.set_margin_bottom(4)
+        vods_click = Gtk.GestureClick.new()
+        vods_click.connect(
+            "released",
+            lambda g, n, x, y: (
+                popover.popdown(),
+                self.window.show_vods_page(streamer),
+            ),
+        )
+        vods_label.add_controller(vods_click)
+        vods_row = Gtk.ListBoxRow()
+        vods_row.set_child(vods_label)
+        listbox.append(vods_row)
+
+        # ── Unfollow ──
+        unfollow_label = Gtk.Label(label=_("Unfollow"), xalign=0)
+        unfollow_label.set_margin_start(12)
+        unfollow_label.set_margin_end(12)
+        unfollow_label.set_margin_top(4)
+        unfollow_label.set_margin_bottom(4)
+        unfollow_click = Gtk.GestureClick.new()
+        unfollow_click.connect(
+            "released",
+            lambda g, n, x, y: (
+                popover.popdown(),
+                self.window.unfollow_streamer(streamer),
+            ),
+        )
+        unfollow_label.add_controller(unfollow_click)
+        unfollow_row = Gtk.ListBoxRow()
+        unfollow_row.set_child(unfollow_label)
+        listbox.append(unfollow_row)
+
+        popover.set_child(listbox)
         menu_button.set_popover(popover)
 
-        # Add actions to the row
-        action_group = Gio.SimpleActionGroup.new()
-        row.insert_action_group("row", action_group)
-
-        # Create the actions
-        chat_action = None
-        detach_action = None
-        for _label, action_name, handler in menu_items:
-            action = Gio.SimpleAction.new(action_name, None)
-            if action_name == "chat":
-                chat_action = action
-            elif action_name == "detached-chat":
-                detach_action = action
-            action.connect("activate", lambda act, param, h=handler: h(streamer))
-            action_group.add_action(action)
-
-        def _sync_chat_actions(popover):
+        # Gray out chat when one is already open for this streamer.
+        def _sync_chat_row(popover):
             if popover.get_visible():
                 chat_open = streamer in self.window._active_chats
-                if chat_action:
-                    chat_action.set_enabled(not chat_open)
-                if detach_action:
-                    detach_action.set_enabled(not chat_open)
+                chat_label.set_sensitive(not chat_open)
+                detach_btn.set_sensitive(not chat_open)
 
-        popover.connect("notify::visible", lambda p, *_: _sync_chat_actions(p))
+        popover.connect("notify::visible", lambda p, *_: _sync_chat_row(p))
 
         row.add_suffix(menu_button)
 

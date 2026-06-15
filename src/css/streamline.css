@@ -216,3 +216,18 @@ list.boxed-list.streamer-list
     .avatar-play-button.offline-stream-button {
     opacity: 0.8;
 }
+
+/* ── More-menu popover ── */
+popover.streamer-more-popover > contents {
+    padding: 0;
+}
+
+popover.streamer-more-popover list row {
+    padding-top: 6px;
+    padding-bottom: 6px;
+}
+
+popover.streamer-more-popover .detach-button {
+    margin-left: 6px;
+    margin-right: 6px;
+}
