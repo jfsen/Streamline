@@ -133,7 +133,7 @@ class VODPage(Adw.NavigationPage):
         try:
             vods = self.twitch.get_user_vods(self.streamer)
             self.save_vods_cache(vods)
-            GLib.idle_add(self.display_vods, vods)
+            GLib.idle_add(self.display_vods, vods, True)
         except requests.ConnectionError:
             self._invalidate_vods_cache()
             GLib.idle_add(
@@ -197,16 +197,40 @@ class VODPage(Adw.NavigationPage):
             self.display_vods(cached)
 
     @staticmethod
-    def _thumbnail_cache_dir():
-        d = Path(GLib.get_user_cache_dir()) / "Streamline" / "vods" / "thumbnails"
+    def _thumbnail_cache_dir(streamer):
+        d = (
+            Path(GLib.get_user_cache_dir())
+            / "Streamline"
+            / "vods"
+            / "thumbnails"
+            / streamer
+        )
         d.mkdir(parents=True, exist_ok=True)
         return d
 
-    def _thumbnail_path(self, url):
+    def _thumbnail_path(self, streamer, url):
         if not url:
             return None
         name = hashlib.sha256(url.encode()).hexdigest()[:16] + ".jpg"
-        return self._thumbnail_cache_dir() / name
+        return self._thumbnail_cache_dir(streamer) / name
+
+    def _purge_thumbnails(self, streamer, vods):
+        """Delete cached thumbnails that are no longer in the VOD list."""
+        keep = set()
+        for vod in vods:
+            url = vod.get("thumbnail_url", "")
+            if url:
+                path = self._thumbnail_path(streamer, url)
+                if path:
+                    keep.add(path.name)
+        cache_dir = self._thumbnail_cache_dir(streamer)
+        try:
+            for f in cache_dir.iterdir():
+                if f.name not in keep:
+                    f.unlink()
+                    logger.debug("Purged stale thumbnail: %s", f.name)
+        except OSError:
+            pass
 
     def _build_vod_card(self, vod, created_at, duration):
         """Build a card-style row with thumbnail, title, metadata, and buttons."""
@@ -216,7 +240,9 @@ class VODPage(Adw.NavigationPage):
 
         # ── Thumbnail ───────────────────────────────────────
         thumb_url = vod.get("thumbnail_url", "")
-        thumb_path = self._thumbnail_path(thumb_url) if thumb_url else None
+        thumb_path = (
+            self._thumbnail_path(self.streamer, thumb_url) if thumb_url else None
+        )
         if thumb_path and thumb_path.exists():
             picture = Gtk.Picture.new_for_filename(str(thumb_path))
         else:
@@ -340,11 +366,15 @@ class VODPage(Adw.NavigationPage):
                         )
         return GLib.SOURCE_REMOVE
 
-    def display_vods(self, vods):
+    def display_vods(self, vods, purge=False):
         """Display VODs in the list box."""
         self.list_box.set_visible(False)
         while row := self.list_box.get_first_child():
             self.list_box.remove(row)
+
+        # Purge stale thumbnails on fresh fetches
+        if purge:
+            self._purge_thumbnails(self.streamer, vods)
 
         # Toggle boxed-list: cards when thumbnails are on, compact list when off
         if self._show_thumbnails:
