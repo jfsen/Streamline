@@ -19,7 +19,7 @@ list.boxed-list.streamer-list > row {
 }
 
 list.boxed-list.streamer-list > row:hover {
-    background-color: mix(@card_bg_color, @accent_bg_color, 0.06);
+    background-color: alpha(currentColor, 0.02);
 }
 
 list.boxed-list.streamer-list > row:first-child {
