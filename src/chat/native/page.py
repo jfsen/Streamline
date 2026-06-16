@@ -177,24 +177,6 @@ class EmoteTextureCache:
         return Gdk.Texture.new_from_bytes(GLib.Bytes.new(png_buf.getvalue()))
 
 
-def _apply_texture(widget: Gtk.Picture, url: str, data: Gdk.Texture | list) -> bool:
-    """Set an emote's texture; *data* is either a static Gdk.Texture
-    or a list of (texture, delay_ms) tuples for animated GIFs.
-
-    Returns immediately if the widget has been removed from the
-    tree (e.g. culled while the emote was downloading).
-    """
-    if not widget.get_root():
-        return GLib.SOURCE_REMOVE
-
-    if isinstance(data, Gdk.Texture):
-        widget.set_paintable(data)
-    else:
-        _anim_register(widget, url, data)
-    widget.queue_resize()
-    return GLib.SOURCE_REMOVE
-
-
 # ── Animated GIF frame extraction ─────────────────────────────
 
 
@@ -230,179 +212,34 @@ def _decode_animated_frames(img) -> list:
 
 _EMOTE_CACHE = EmoteTextureCache()
 
-
-# ── Shared animation registry ─────────────────────────────────
-# One timer per unique emote URL; all visible instances stay
-# frame-synced and only one timeout is active per URL.
-
-_anim_registry: dict[str, dict] = {}
+# ── Module-level helpers (dispatch via widget._page) ──────────
 
 
-def _is_scrolled_visible(widget: Gtk.Widget) -> bool:
-    """Return True if *widget* intersects the visible area of its
-    associated GtkScrolledWindow.
+def _apply_texture(widget: Gtk.Picture, url: str, data: Gdk.Texture | list) -> bool:
+    """Set an emote's texture; *data* is either a static Gdk.Texture
+    or a list of (texture, delay_ms) tuples for animated GIFs.
 
-    Caches the last result on ``widget._last_visible`` to avoid
-    repeated coordinate translation on every frame tick.
+    Returns immediately if the widget has been removed from the
+    tree (e.g. culled while the emote was downloading).
     """
-    scrolled = getattr(widget, "_scrolled_window", None)
-    if scrolled is None:
-        return True  # no scrolled window set — assume visible
+    if not widget.get_root():
+        return GLib.SOURCE_REMOVE
 
-    if not scrolled.get_realized():
-        return getattr(widget, "_last_visible", True)
-
-    result = widget.translate_coordinates(scrolled, 0, 0)
-    if not result:
-        return getattr(widget, "_last_visible", True)
-
-    # PyGObject returns a plain (x, y), (ok, (x, y)), or
-    # (ok, x, y) depending on the binding version.
-    if len(result) == 2:
-        a, b = result
-        if isinstance(b, (tuple, list)) and len(b) == 2:
-            ok, (x, y) = result
-        else:
-            ok, x, y = True, a, b
-    elif len(result) == 3:
-        ok, x, y = result
+    if isinstance(data, Gdk.Texture):
+        widget.set_paintable(data)
     else:
-        return getattr(widget, "_last_visible", True)
-
-    if not ok:
-        return getattr(widget, "_last_visible", True)
-
-    widget_h = widget.get_allocated_height()
-    scrolled_h = scrolled.get_allocated_height()
-    visible = y + widget_h > 0 and y < scrolled_h
-    widget._last_visible = visible
-    return visible
-
-
-def _anim_shared_tick(url: str) -> bool:
-    """Advance the shared animation for *url* by one frame."""
-    info = _anim_registry.get(url)
-    if info is None:
-        return GLib.SOURCE_REMOVE
-
-    frames = info["frames"]
-    idx = (info["frame_idx"] + 1) % len(frames)
-    info["frame_idx"] = idx
-    texture, delay = frames[idx]
-
-    dead = []
-    for widget in info["widgets"]:
-        if getattr(widget, "_anim_paused", False):
-            continue
-        if not _is_scrolled_visible(widget):
-            continue
-        try:
-            widget.set_paintable(texture)
-        except Exception:
-            dead.append(widget)
-    for w in dead:
-        info["widgets"].discard(w)
-
-    if not info["widgets"]:
-        _anim_registry.pop(url, None)
-        return GLib.SOURCE_REMOVE
-
-    if delay > 0:
-        info["timer_id"] = GLib.timeout_add(delay, _anim_shared_tick, url)
+        page = getattr(widget, "_page", None)
+        if page is not None:
+            page._anim_register(url, widget, data)
+    widget.queue_resize()
     return GLib.SOURCE_REMOVE
 
 
-def _anim_register(widget: Gtk.Picture, url: str, frames: list) -> None:
-    """Register *widget* in the shared animation for *url*."""
-    if not frames:
-        return
-
-    widget._anim_url = url
-    widget._anim_paused = False
-
-    if url not in _anim_registry:
-        _anim_registry[url] = {
-            "frames": frames,
-            "widgets": {widget},
-            "timer_id": None,
-            "frame_idx": 0,
-        }
-        texture, delay = frames[0]
-        widget.set_paintable(texture)
-        if delay > 0:
-            _anim_registry[url]["timer_id"] = GLib.timeout_add(
-                delay, _anim_shared_tick, url
-            )
-    else:
-        info = _anim_registry[url]
-        info["widgets"].add(widget)
-        texture, _ = frames[info["frame_idx"]]
-        widget.set_paintable(texture)
-
-    # One-shot signal wiring (skip duplicate connections).
-    for func in (_on_anim_map, _on_anim_unmap, _on_anim_destroy):
-        try:
-            widget.disconnect_by_func(func)
-        except TypeError:
-            pass
-    widget.connect("map", _on_anim_map)
-    widget.connect("unmap", _on_anim_unmap)
-    widget.connect("destroy", _on_anim_destroy)
-
-
-def _on_anim_map(widget: Gtk.Picture) -> None:
-    """Sync widget to current shared frame when becoming visible."""
-    if not getattr(widget, "_anim_paused", False):
-        return
-    widget._anim_paused = False
-    url = getattr(widget, "_anim_url", None)
-    if url is None:
-        return
-    info = _anim_registry.get(url)
-    if info is not None:
-        texture, _ = info["frames"][info["frame_idx"]]
-        widget.set_paintable(texture)
-
-
-def _on_anim_unmap(widget: Gtk.Picture) -> None:
-    """Mark widget paused — shared timer will skip it."""
-    widget._anim_paused = True
-
-
 def _on_anim_destroy(widget: Gtk.Picture) -> None:
-    """Remove widget from shared animation; stop timer if last."""
-    _anim_unregister(widget)
-
-
-def _anim_unregister(widget: Gtk.Widget) -> None:
-    """Explicitly remove *widget* from the shared animation
-    registry.  Idempotent — safe to call on any widget.
-
-    Used when culling or cleaning up widgets that haven't been
-    fully destroyed (``unrealize`` doesn't emit ``destroy``).
-    """
-    url = getattr(widget, "_anim_url", None)
-    if url is None:
-        return
-    info = _anim_registry.get(url)
-    if info is None:
-        return
-    info["widgets"].discard(widget)
-    if not info["widgets"]:
-        tid = info.get("timer_id")
-        if tid is not None:
-            GLib.source_remove(tid)
-        _anim_registry.pop(url, None)
-
-
-def _anim_unregister_tree(root: Gtk.Widget) -> None:
-    """Recursively walk *root*'s descendants and unregister
-    any animated emote Picture widgets from ``_anim_registry``."""
-    _anim_unregister(root)
-    child = root.get_first_child()
-    while child is not None:
-        _anim_unregister_tree(child)
-        child = child.get_next_sibling()
+    """Remove widget from its page's animation registry."""
+    page = getattr(widget, "_page", None)
+    if page is not None:
+        page._anim_unregister(widget)
 
 
 # ── Helpers ──────────────────────────────────────────────────
@@ -591,6 +428,8 @@ class NativeChatPage(Adw.NavigationPage):
         self._msg_batch: list[dict] = []
         self._item_count = 0
         self._next_is_alt = False  # alternating bg toggle
+        self._anim_registry: dict[str, dict] = {}
+        self._anim_tick_id: int | None = None
 
         # ── Scroll state ────────────────────────────────────
         # ``_auto_scroll``: True when the viewport is pinned to
@@ -942,9 +781,8 @@ class NativeChatPage(Adw.NavigationPage):
                 pic.set_can_shrink(False)
                 pic.set_content_fit(Gtk.ContentFit.CONTAIN)
                 pic.set_valign(Gtk.Align.CENTER)
-                # Stash the scrolled window so the animation tick can
-                # skip frames when this widget is scrolled out of view.
-                pic._scrolled_window = self._scrolled
+                pic._page = self
+                pic._card = card
                 tooltip = f"{seg['name']} ({seg['source']})"
                 pic.set_tooltip_text(tooltip)
                 text_view.add_child_at_anchor(pic, anchor)
@@ -1052,7 +890,7 @@ class NativeChatPage(Adw.NavigationPage):
                             self._cards.popleft()
                         elif first in self._cards:
                             self._cards.remove(first)
-                        _anim_unregister_tree(first)
+                        self._anim_unregister_tree(first)
                         first.unrealize()
                         self._item_count -= 1
                         culled += 1
@@ -1325,6 +1163,7 @@ class NativeChatPage(Adw.NavigationPage):
         self._suppress_scroll_signal = False
         self._more_button.set_visible(False)
         GLib.idle_add(self._scroll_to_bottom, self._scroll_gen, 0)
+        self._anim_start_tick()
 
     def _on_hidden(self, page) -> None:
         self.cleanup()
@@ -1345,16 +1184,163 @@ class NativeChatPage(Adw.NavigationPage):
             self._chat.stop()
             self._chat = None
         # Unregister animated emotes and drop all cards.
+        self._anim_stop_tick()
         while True:
             child = self._msg_box.get_first_child()
             if child is None:
                 break
-            _anim_unregister_tree(child)
+            self._anim_unregister_tree(child)
             self._msg_box.remove(child)
             child.unrealize()
         self._cards.clear()
         self._item_count = 0
         self._next_is_alt = False
+
+    # ── Animated emote tick (per-page) ───────────────────────
+
+    _ANIM_TICK_MS = 33  # ~30 fps
+
+    def _anim_start_tick(self) -> None:
+        if self._anim_tick_id is None:
+            self._anim_tick_id = GLib.timeout_add(
+                self._ANIM_TICK_MS, self._anim_global_tick
+            )
+
+    def _anim_stop_tick(self) -> None:
+        if self._anim_tick_id is not None:
+            GLib.source_remove(self._anim_tick_id)
+            self._anim_tick_id = None
+        self._anim_registry.clear()
+
+    def _anim_global_tick(self) -> bool:
+        """Single timer for all animated emotes on this page.
+
+        Iterates the page's registry once per tick.  Visibility
+        checks use cached card allocations (no tree-walking).
+        """
+        adj = self._scrolled.get_vadjustment()
+        value = adj.get_value()
+        page_size = adj.get_page_size()
+
+        dead: list[str] = []
+        for url, info in self._anim_registry.items():
+            info["elapsed"] += self._ANIM_TICK_MS
+            frames = info["frames"]
+            idx = info["frame_idx"]
+            delay = frames[idx][1]
+
+            if info["elapsed"] < delay:
+                continue
+
+            # Catch up if we fell behind multiple frames.
+            while info["elapsed"] >= delay:
+                info["elapsed"] -= delay
+                info["frame_idx"] = (info["frame_idx"] + 1) % len(frames)
+                idx = info["frame_idx"]
+                delay = frames[idx][1]
+
+            texture, _ = frames[idx]
+            alive = False
+            dead_widgets: list[Gtk.Widget] = []
+            for widget in info["widgets"]:
+                if getattr(widget, "_anim_paused", False):
+                    alive = True
+                    continue
+                card = getattr(widget, "_card", None)
+                if card is not None:
+                    alloc = card.get_allocation()
+                    if not (
+                        alloc.y + alloc.height > value and alloc.y < value + page_size
+                    ):
+                        alive = True
+                        continue
+                try:
+                    widget.set_paintable(texture)
+                    alive = True
+                except Exception:
+                    dead_widgets.append(widget)
+            for w in dead_widgets:
+                info["widgets"].discard(w)
+            if not alive:
+                dead.append(url)
+
+        for url in dead:
+            del self._anim_registry[url]
+
+        return GLib.SOURCE_CONTINUE
+
+    def _anim_register(self, url: str, widget: Gtk.Picture, frames: list) -> None:
+        """Register *widget* for animated *url* on this page."""
+        if not frames:
+            return
+
+        widget._anim_url = url
+        widget._anim_paused = False
+
+        if url not in self._anim_registry:
+            self._anim_registry[url] = {
+                "frames": frames,
+                "widgets": {widget},
+                "frame_idx": 0,
+                "elapsed": 0,
+            }
+            texture, _ = frames[0]
+            widget.set_paintable(texture)
+        else:
+            info = self._anim_registry[url]
+            info["widgets"].add(widget)
+            texture, _ = frames[info["frame_idx"]]
+            widget.set_paintable(texture)
+
+        # One-shot signal wiring (skip duplicate connections).
+        for func in (self._on_anim_map, self._on_anim_unmap, _on_anim_destroy):
+            try:
+                widget.disconnect_by_func(func)
+            except TypeError:
+                pass
+        widget.connect("map", self._on_anim_map)
+        widget.connect("unmap", self._on_anim_unmap)
+        widget.connect("destroy", _on_anim_destroy)
+
+    def _anim_unregister(self, widget: Gtk.Widget) -> None:
+        """Remove *widget* from this page's animation registry."""
+        url = getattr(widget, "_anim_url", None)
+        if url is None:
+            return
+        info = self._anim_registry.get(url)
+        if info is None:
+            return
+        info["widgets"].discard(widget)
+        if not info["widgets"]:
+            del self._anim_registry[url]
+
+    def _anim_unregister_tree(self, root: Gtk.Widget) -> None:
+        """Recursively unregister *root* and all descendants."""
+        self._anim_unregister(root)
+        child = root.get_first_child()
+        while child is not None:
+            self._anim_unregister_tree(child)
+            child = child.get_next_sibling()
+
+    def _on_anim_map(self, widget: Gtk.Picture) -> None:
+        """Sync widget to current shared frame when becoming visible."""
+        if not getattr(widget, "_anim_paused", False):
+            return
+        widget._anim_paused = False
+        url = getattr(widget, "_anim_url", None)
+        if url is None:
+            return
+        info = self._anim_registry.get(url)
+        if info is not None:
+            texture, _ = info["frames"][info["frame_idx"]]
+            widget.set_paintable(texture)
+
+    @staticmethod
+    def _on_anim_unmap(widget: Gtk.Picture) -> None:
+        """Mark widget paused — tick will skip it."""
+        widget._anim_paused = True
+
+    # ── IRC state ───────────────────────────────────────────
 
     def _on_irc_state_change(self, state: ConnectionState, retry_count: int) -> None:
         """Update the reconnect banner in response to IRC state transitions."""
