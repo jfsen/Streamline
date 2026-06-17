@@ -378,6 +378,12 @@ class TwitchChat:
         if msg_id in ("bitsbadgetier", "viewermilestone"):
             return None
 
+        if msg_id == "announcement":
+            # /announce — body text follows "#channel :"
+            body = parts[1].split(" :", 1)[1] if " :" in parts[1] else ""
+            name = self._tag_val(tags, "display-name") or "Someone"
+            return self._empty_msg(f"📢 {name}: {body}")
+
         sys_msg = self._tag_val(tags, "system-msg")
         if sys_msg:
             return self._empty_msg(sys_msg)
