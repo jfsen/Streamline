@@ -302,19 +302,24 @@ class TwitchChat:
         return m.group(1).replace("\\s", " ") if m else None
 
     @staticmethod
-    def _tier_short(tier_name):
-        """Shorten a sub-plan-name tag value."""
-        if not tier_name:
+    def _tier_label(plan_id):
+        """Convert a sub-plan ID to a human-readable label."""
+        if not plan_id:
             return "?"
-        if "Prime" in tier_name:
+        if plan_id == "Prime":
             return "Prime"
-        m = re.search(r"Tier\s+\d+", tier_name)
-        return m.group(0) if m else tier_name
+        if plan_id == "1000":
+            return "Tier 1"
+        if plan_id == "2000":
+            return "Tier 2"
+        if plan_id == "3000":
+            return "Tier 3"
+        return "Tier 1"
 
     def _build_sub_msg(self, tags, is_resub):
         """Build a subscription message from USERNOTICE tags."""
         name = self._tag_val(tags, "display-name") or "Someone"
-        tier = self._tier_short(self._tag_val(tags, "msg-param-sub-plan-name"))
+        tier = self._tier_label(self._tag_val(tags, "msg-param-sub-plan"))
 
         if not is_resub:
             return self._empty_msg(f"{name} subscribed with {tier}!")
@@ -331,7 +336,7 @@ class TwitchChat:
     def _build_subgift_msg(self, tags, is_anon):
         """Build a gift-sub message from USERNOTICE tags."""
         recipient = self._tag_val(tags, "msg-param-recipient-display-name") or "Someone"
-        tier = self._tier_short(self._tag_val(tags, "msg-param-sub-plan-name"))
+        tier = self._tier_label(self._tag_val(tags, "msg-param-sub-plan"))
 
         if is_anon:
             return self._empty_msg(f"Anonymous gifted {tier} to {recipient}!")
