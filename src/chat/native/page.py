@@ -242,6 +242,20 @@ def _on_anim_destroy(widget: Gtk.Picture) -> None:
         page._anim_unregister(widget)
 
 
+def _anim_disconnect_handlers(root: Gtk.Widget) -> None:
+    """Disconnect the destroy handler from *root* and all
+    descendants so unrealize during cleanup doesn't trigger
+    a callback into a torn-down registry."""
+    try:
+        root.disconnect_by_func(_on_anim_destroy)
+    except TypeError:
+        pass
+    child = root.get_first_child()
+    while child is not None:
+        _anim_disconnect_handlers(child)
+        child = child.get_next_sibling()
+
+
 # ── Helpers ──────────────────────────────────────────────────
 
 
@@ -1002,6 +1016,8 @@ class NativeChatPage(Adw.NavigationPage):
         Retries up to 3 times (≈48 ms total at 16 ms intervals) so the
         GTK layout phase has time to settle the adjustment's upper bound.
         """
+        if self._cleaned_up or self._scrolled is None:
+            return GLib.SOURCE_REMOVE
         if gen != self._scroll_gen:
             return GLib.SOURCE_REMOVE
         if retry >= 3:
@@ -1026,6 +1042,8 @@ class NativeChatPage(Adw.NavigationPage):
         from ``_flush_messages`` has already updated the adjustment's
         upper bound before we set the value.
         """
+        if self._cleaned_up or self._scrolled is None:
+            return GLib.SOURCE_REMOVE
         if gen != self._scroll_gen:
             return GLib.SOURCE_REMOVE
 
@@ -1180,21 +1198,35 @@ class NativeChatPage(Adw.NavigationPage):
             GLib.source_remove(self._batch_flush_id)
             self._batch_flush_id = None
             self._flush_messages()
+        # Stop animation tick and clear registry.
+        self._anim_stop_tick()
+        # Stop chat — null out the state-change callback first so
+        # no idle_add callbacks can fire after we start tearing down.
         if self._chat:
+            self._chat._on_state_change = None
             self._chat.stop()
             self._chat = None
         # Unregister animated emotes and drop all cards.
-        self._anim_stop_tick()
         while True:
             child = self._msg_box.get_first_child()
             if child is None:
                 break
             self._anim_unregister_tree(child)
+            # Disconnect the destroy handler so unrealize doesn't
+            # trigger a callback into a now-empty registry.
+            _anim_disconnect_handlers(child)
             self._msg_box.remove(child)
             child.unrealize()
         self._cards.clear()
         self._item_count = 0
         self._next_is_alt = False
+        # Drop held references so the GC can free them.
+        self._third_party_emotes = None
+        self._card_css_provider = None
+        self._tv_css_provider = None
+        self._chat = None
+        self._scrolled = None
+        self._msg_box = None
 
     # ── Animated emote tick (per-page) ───────────────────────
 
