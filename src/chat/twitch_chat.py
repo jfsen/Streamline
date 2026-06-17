@@ -61,6 +61,7 @@ _BADGE_NAMES = {
     "global_mod": "Global Mod",
     "no_audio": "No Audio",
     "no_video": "No Video",
+    "premium": "Prime",
 }
 
 
