@@ -515,7 +515,13 @@ def _parse_badges(tag_value, badge_info_value=None):
     for badge in tag_value.split(","):
         badge = badge.strip()
         if "/" in badge:
-            name, _version = badge.split("/", 1)
+            name, version = badge.split("/", 1)
+            if name == "predictions":
+                # Version is the colour + tier, e.g. "blue-1", "pink-2".
+                # SVG files are named predictions-blue-1.svg etc.
+                badge_id = f"{name}-{version}"
+                result.append(["Prediction", badge_id, None])
+                continue
             display = _BADGE_NAMES.get(name)
             if display:
                 tenure = sub_tenure if name == "subscriber" else None
