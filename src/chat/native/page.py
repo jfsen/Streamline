@@ -5,6 +5,7 @@ ListView, no row recycling.  This avoids the measurement / resize-timing
 bugs that plague Gtk.TextView inside recycled list rows.
 """
 
+import gc
 import gettext
 import hashlib
 import logging
@@ -39,7 +40,7 @@ for _f in _BADGE_DIR.glob("*.svg"):
 # ── Emote image cache ──────────────────────────────────────────
 
 _EMOTE_IMAGE_DIR = Path(GLib.get_user_cache_dir()) / "Streamline" / "emotes" / "images"
-_MAX_EMOTE_TEXTURES = 500
+_MAX_EMOTE_TEXTURES = 200  # individual Gdk.Texture objects (frames count separately)
 
 
 class EmoteTextureCache:
@@ -63,6 +64,7 @@ class EmoteTextureCache:
         # Cached value is either a Gdk.Texture (static) or a
         # list of (Gdk.Texture, delay_ms) tuples (animated).
         self._textures: OrderedDict[str, Gdk.Texture | list] = OrderedDict()
+        self._texture_count = 0  # counts individual Gdk.Texture objects
         self._pending: dict[str, list[tuple[Gtk.Widget, bool]]] = {}
         self._lock = threading.Lock()
         _EMOTE_IMAGE_DIR.mkdir(parents=True, exist_ok=True)
@@ -139,8 +141,16 @@ class EmoteTextureCache:
             if decoded is not None:
                 self._textures[url] = decoded
                 self._textures.move_to_end(url)
-                while len(self._textures) > _MAX_EMOTE_TEXTURES:
-                    self._textures.popitem(last=False)
+                if isinstance(decoded, list):
+                    self._texture_count += len(decoded)
+                else:
+                    self._texture_count += 1
+                while self._texture_count > _MAX_EMOTE_TEXTURES:
+                    _k, old = self._textures.popitem(last=False)
+                    if isinstance(old, list):
+                        self._texture_count -= len(old)
+                    else:
+                        self._texture_count -= 1
             widgets = self._pending.pop(url, [])
 
         if decoded is not None:
@@ -243,16 +253,35 @@ def _on_anim_destroy(widget: Gtk.Picture) -> None:
 
 
 def _anim_disconnect_handlers(root: Gtk.Widget) -> None:
-    """Disconnect the destroy handler from *root* and all
-    descendants so unrealize during cleanup doesn't trigger
-    a callback into a torn-down registry."""
+    """Disconnect animation signal handlers from *root* and all
+    descendants so unrealize during cleanup/culling doesn't trigger
+    callbacks into a torn-down registry."""
+    # Module-level destroy handler — disconnect_by_func works.
     try:
         root.disconnect_by_func(_on_anim_destroy)
     except TypeError:
         pass
+    # Instance map/unmap handlers — stored as handler IDs.
+    for attr in ("_anim_map_id", "_anim_unmap_id"):
+        hid = getattr(root, attr, None)
+        if hid is not None and root.handler_is_connected(hid):
+            root.disconnect(hid)
     child = root.get_first_child()
     while child is not None:
         _anim_disconnect_handlers(child)
+        child = child.get_next_sibling()
+
+
+def _clear_text_buffers(root: Gtk.Widget) -> None:
+    """Clear the TextBuffer of any Gtk.TextView in *root* and its
+    descendants, freeing the held text memory immediately."""
+    if isinstance(root, Gtk.TextView):
+        buf = root.get_buffer()
+        if buf is not None:
+            buf.set_text("")
+    child = root.get_first_child()
+    while child is not None:
+        _clear_text_buffers(child)
         child = child.get_next_sibling()
 
 
@@ -905,11 +934,15 @@ class NativeChatPage(Adw.NavigationPage):
                         elif first in self._cards:
                             self._cards.remove(first)
                         self._anim_unregister_tree(first)
+                        _anim_disconnect_handlers(first)
+                        _clear_text_buffers(first)
                         first.unrealize()
                         self._item_count -= 1
                         culled += 1
                     if culled == 0:
                         break
+
+                gc.collect()
 
                 if not was_auto and culled_total_height > 0:
                     # Defer restoration until after the layout pass so
@@ -1215,6 +1248,7 @@ class NativeChatPage(Adw.NavigationPage):
             # Disconnect the destroy handler so unrealize doesn't
             # trigger a callback into a now-empty registry.
             _anim_disconnect_handlers(child)
+            _clear_text_buffers(child)
             self._msg_box.remove(child)
             child.unrealize()
         self._cards.clear()
@@ -1227,6 +1261,7 @@ class NativeChatPage(Adw.NavigationPage):
         self._chat = None
         self._scrolled = None
         self._msg_box = None
+        gc.collect()
 
     # ── Animated emote tick (per-page) ───────────────────────
 
@@ -1325,14 +1360,13 @@ class NativeChatPage(Adw.NavigationPage):
             widget.set_paintable(texture)
 
         # One-shot signal wiring (skip duplicate connections).
-        for func in (self._on_anim_map, self._on_anim_unmap, _on_anim_destroy):
-            try:
-                widget.disconnect_by_func(func)
-            except TypeError:
-                pass
-        widget.connect("map", self._on_anim_map)
-        widget.connect("unmap", self._on_anim_unmap)
-        widget.connect("destroy", _on_anim_destroy)
+        for attr in ("_anim_map_id", "_anim_unmap_id", "_anim_destroy_id"):
+            hid = getattr(widget, attr, None)
+            if hid is not None and widget.handler_is_connected(hid):
+                widget.disconnect(hid)
+        widget._anim_map_id = widget.connect("map", self._on_anim_map)
+        widget._anim_unmap_id = widget.connect("unmap", self._on_anim_unmap)
+        widget._anim_destroy_id = widget.connect("destroy", _on_anim_destroy)
 
     def _anim_unregister(self, widget: Gtk.Widget) -> None:
         """Remove *widget* from this page's animation registry."""
