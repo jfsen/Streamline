@@ -1230,7 +1230,7 @@ class NativeChatPage(Adw.NavigationPage):
 
     # ── Animated emote tick (per-page) ───────────────────────
 
-    _ANIM_TICK_MS = 33  # ~30 fps
+    _ANIM_TICK_MS = 40  # 25 fps
 
     def _anim_start_tick(self) -> None:
         if self._anim_tick_id is None:
