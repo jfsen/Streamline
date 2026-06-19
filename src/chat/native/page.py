@@ -473,6 +473,7 @@ class NativeChatPage(Adw.NavigationPage):
         self._next_is_alt = False  # alternating bg toggle
         self._anim_registry: dict[str, dict] = {}
         self._anim_tick_id: int | None = None
+        self._toplevel_active_id: int | None = None
 
         # ── Scroll state ────────────────────────────────────
         # ``_auto_scroll``: True when the viewport is pinned to
@@ -1215,9 +1216,28 @@ class NativeChatPage(Adw.NavigationPage):
         self._more_button.set_visible(False)
         GLib.idle_add(self._scroll_to_bottom, self._scroll_gen, 0)
         self._anim_start_tick()
+        # Watch toplevel focus — after workspace suspend/resume,
+        # TextViews may have word-wrapped at a stale width.  Force
+        # re-layout as soon as the window becomes active again.
+        root = self.get_root()
+        if root is not None:
+            self._toplevel_active_id = root.connect(
+                "notify::is-active", self._on_toplevel_active
+            )
 
     def _on_hidden(self, page) -> None:
         self.cleanup()
+
+    def _on_toplevel_active(self, window, _pspec) -> None:
+        """Force re-layout when the window regains focus.
+
+        After a workspace suspend/resume, GTK may have given
+        widgets stale (zero-width) allocations.  TextViews that
+        word-wrapped at that stale width end up super-tall.
+        Queuing a resize here fixes them before the user notices.
+        """
+        if window.is_active():
+            self._msg_box.queue_resize()
 
     def cleanup(self) -> None:
         """Stop chat and release resources.  Idempotent."""
@@ -1261,6 +1281,11 @@ class NativeChatPage(Adw.NavigationPage):
         self._chat = None
         self._scrolled = None
         self._msg_box = None
+        if self._toplevel_active_id is not None:
+            root = self.get_root()
+            if root is not None:
+                root.disconnect(self._toplevel_active_id)
+            self._toplevel_active_id = None
         gc.collect()
 
     # ── Animated emote tick (per-page) ───────────────────────
