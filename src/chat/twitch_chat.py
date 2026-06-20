@@ -58,10 +58,10 @@ _BADGE_NAMES = {
     "partner": "Partner",
     "staff": "Staff",
     "admin": "Admin",
-    "global_mod": "Global Mod",
+    "global_mod": "Global Moderator",
     "no_audio": "No Audio",
     "no_video": "No Video",
-    "premium": "Prime",
+    "premium": "Free Subscription Tier",
 }
 
 

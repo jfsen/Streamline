@@ -15,9 +15,9 @@
      rx="3"
      fill="#8200e6"
      id="rect1"
-     style="fill:#00a9e3;fill-opacity:1" />
+     style="fill:#4aaed8;fill-opacity:1" />
   <path
      id="rect7"
-     style="fill:#ffffff;fill-opacity:1;stroke-width:5;stroke-linecap:round;stroke-linejoin:bevel;paint-order:markers stroke fill"
-     d="M 9.0000002,5.074219 5.8261721,8.248047 2.8359377,5.2578128 v 6.6679682 c 0,0.554002 0.446,1 1,1 H 14.164062 c 0.554002,0 1,-0.445999 1,-1 V 5.2578128 L 12.173828,8.248047 Z" />
+     style="fill:#ffffff;fill-opacity:1;stroke-width:4.62797;stroke-linecap:round;stroke-linejoin:bevel;paint-order:markers stroke fill"
+     d="M 9,4.5 6.2809036,8.748047 2,3.5 3.7190964,12.425781 C 3.8238711,12.969785 6.5253745,14.5 7,14.5 h 4 c 0.474627,0 3.280903,-1.520218 3.280903,-2.074219 L 16,3.5 11.719096,8.748047 Z" />
 </svg>
