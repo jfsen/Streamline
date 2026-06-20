@@ -6,8 +6,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: streamline 3.4.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-06-15 17:20+0200\n"
-"PO-Revision-Date: 2026-06-15 17:20+0200\n"
+"POT-Creation-Date: 2026-06-20 14:34+0200\n"
+"PO-Revision-Date: 2026-06-20 12:00+0200\n"
 "Last-Translator: jfsen\n"
 "Language-Team: none\n"
 "Language: de\n"
@@ -139,8 +139,8 @@ msgid "Load a backup file to follow streamers"
 msgstr "Lade eine Sicherungsdatei, um Streamern zu folgen"
 
 #: src/preferences.ui:175
-msgid "Twitch API"
-msgstr "Twitch API"
+msgid "API credentials"
+msgstr "API-Anmeldedaten"
 
 #: src/preferences.ui:179
 msgid ""
@@ -202,7 +202,9 @@ msgstr "Chat-Hervorhebung"
 msgid ""
 "Apply tinted backgrounds to certain message types. Changes apply to newly "
 "opened chats"
-msgstr "Eingefärbte Hintergründe für bestimmte Nachrichtentypen anwenden. Änderungen gelten für neu geöffnete Chats"
+msgstr ""
+"Eingefärbte Hintergründe für bestimmte Nachrichtentypen anwenden. Änderungen "
+"gelten für neu geöffnete Chats"
 
 #: src/preferences.ui:267
 msgid "First Messages"
@@ -233,8 +235,8 @@ msgid "Partners"
 msgstr "Partner"
 
 #: src/preferences.ui:298
-msgid "Purple tint for messages from Twitch Partners"
-msgstr "Violette Einfärbung für Nachrichten von Twitch-Partnern"
+msgid "Purple tint for messages from Partners"
+msgstr "Violette Einfärbung für Nachrichten von Partnern"
 
 #: src/preferences.ui:306
 msgid "Broadcaster"
@@ -307,8 +309,8 @@ msgid "Unfollow"
 msgstr "Entfolgen"
 
 #: src/dialogs.py:66
-msgid "Enter Twitch usernames (separate multiple with commas):"
-msgstr "Gib Twitch-Benutzernamen ein (mehrere mit Kommas trennen):"
+msgid "Enter the streamer username (separate multiple with commas):"
+msgstr "Gib Streamer-Benutzernamen ein (mehrere mit Kommas trennen):"
 
 #: src/dialogs.py:91
 msgid "Open a stream without following:"
@@ -319,8 +321,8 @@ msgid "Play"
 msgstr "Starten"
 
 #: src/dialogs.py:116
-msgid "Twitch API Credentials"
-msgstr "Twitch API-Anmeldedaten"
+msgid "API Credentials"
+msgstr "API-Anmeldedaten"
 
 #: src/dialogs.py:118
 msgid ""
@@ -545,41 +547,41 @@ msgstr "{} Sek."
 msgid "{}h {}m"
 msgstr "{} Std. {} Min."
 
-#: src/chat/chat_window.py:37 src/chat/native/page.py:568
+#: src/chat/chat_window.py:37 src/chat/native/page.py:448
 #: src/chat/webkit/page.py:158
 #, python-brace-format
 msgid "Chat: {}"
 msgstr "Chat: {}"
 
-#: src/chat/native/page.py:656 src/chat/webkit/page.py:80
+#: src/chat/native/page.py:539 src/chat/webkit/page.py:80
 msgid "More messages below"
 msgstr "Weitere Nachrichten unten"
 
-#: src/chat/native/page.py:696 src/chat/webkit/page.py:86
+#: src/chat/native/page.py:579 src/chat/webkit/page.py:86
 msgid "Reconnect"
 msgstr "Neu verbinden"
 
-#: src/chat/native/page.py:721 src/chat/webkit/page.py:262
+#: src/chat/native/page.py:604 src/chat/webkit/page.py:262
 msgid "Detach chat"
 msgstr "Chat ausgliedern"
 
-#: src/chat/native/page.py:1364 src/chat/webkit/page.py:81
+#: src/chat/native/page.py:1441 src/chat/webkit/page.py:81
 msgid "Connecting to chat…"
 msgstr "Verbinde mit Chat…"
 
-#: src/chat/native/page.py:1374
+#: src/chat/native/page.py:1451
 #, python-brace-format
 msgid "Reconnecting… (attempt {})"
 msgstr "Verbinde neu… (Versuch {})"
 
-#: src/chat/native/page.py:1383 src/chat/webkit/page.py:85
+#: src/chat/native/page.py:1460 src/chat/webkit/page.py:85
 msgid "Disconnected."
 msgstr "Getrennt."
 
 #: src/chat/webkit/page.py:83
 #, python-brace-format
 msgid "Reconnecting… (attempt {0})"
-msgstr ""
+msgstr "Verbinde neu… (Versuch {0})"
 
 #: src/vod_page.py:31
 #, python-brace-format
@@ -596,7 +598,8 @@ msgstr "Fehler beim Laden der VODs"
 
 #: src/vod_page.py:142
 msgid "No internet connection. Check your network and try again."
-msgstr "Keine Internetverbindung. Überprüfe dein Netzwerk und versuche es erneut."
+msgstr ""
+"Keine Internetverbindung. Überprüfe dein Netzwerk und versuche es erneut."
 
 #: src/vod_page.py:182 src/window.py:308
 #, python-brace-format
@@ -644,11 +647,10 @@ msgstr "API-Ratenlimit"
 
 #: src/window.py:256 src/window.py:339
 msgid ""
-"Twitch API rate limit reached. Please wait a few minutes before refreshing "
-"again."
+"API rate limit reached. Please wait a few minutes before refreshing again."
 msgstr ""
-"Twitch-API-Ratenlimit erreicht. Bitte warte ein paar Minuten, bevor du "
-"erneut aktualisierst."
+"API-Ratenlimit erreicht. Bitte warte ein paar Minuten, bevor du erneut "
+"aktualisierst."
 
 #: src/window.py:262 src/window.py:270 src/window.py:345 src/window.py:353
 msgid "API Error"
@@ -735,6 +737,16 @@ msgstr "Stream-Verwaltung"
 #: src/window.py:590 src/window.py:595 src/window.py:597
 msgid "Refresh Streams"
 msgstr "Streams aktualisieren"
+
+#~ msgid ""
+#~ "Twitch API rate limit reached. Please wait a few minutes before "
+#~ "refreshing again."
+#~ msgstr ""
+#~ "Twitch-API-Ratenlimit erreicht. Bitte warte ein paar Minuten, bevor du "
+#~ "erneut aktualisierst."
+
+#~ msgid "Twitch API"
+#~ msgstr "Twitch API"
 
 #~ msgid "Watch Twitch streams in your local media player"
 #~ msgstr "Schaue Twitch-Streams in deinem lokalen Mediaplayer"

@@ -253,7 +253,7 @@ class StreamlineWindow(Adw.ApplicationWindow):
                     self._show_error_dialog,
                     _("API Rate Limit"),
                     _(
-                        "Twitch API rate limit reached. Please wait a few minutes before refreshing again."
+                        "API rate limit reached. Please wait a few minutes before refreshing again."
                     ),
                 )
             else:
@@ -336,7 +336,7 @@ class StreamlineWindow(Adw.ApplicationWindow):
                     self._on_refresh_error,
                     _("API Rate Limit"),
                     _(
-                        "Twitch API rate limit reached. Please wait a few minutes before refreshing again."
+                        "API rate limit reached. Please wait a few minutes before refreshing again."
                     ),
                 )
             else:

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-06-15 17:20+0200\n"
+"POT-Creation-Date: 2026-06-20 14:34+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -138,7 +138,7 @@ msgid "Load a backup file to follow streamers"
 msgstr ""
 
 #: src/preferences.ui:175
-msgid "Twitch API"
+msgid "API credentials"
 msgstr ""
 
 #: src/preferences.ui:179
@@ -228,7 +228,7 @@ msgid "Partners"
 msgstr ""
 
 #: src/preferences.ui:298
-msgid "Purple tint for messages from Twitch Partners"
+msgid "Purple tint for messages from Partners"
 msgstr ""
 
 #: src/preferences.ui:306
@@ -302,7 +302,7 @@ msgid "Unfollow"
 msgstr ""
 
 #: src/dialogs.py:66
-msgid "Enter Twitch usernames (separate multiple with commas):"
+msgid "Enter the streamer username (separate multiple with commas):"
 msgstr ""
 
 #: src/dialogs.py:91
@@ -314,7 +314,7 @@ msgid "Play"
 msgstr ""
 
 #: src/dialogs.py:116
-msgid "Twitch API Credentials"
+msgid "API Credentials"
 msgstr ""
 
 #: src/dialogs.py:118
@@ -520,34 +520,34 @@ msgstr ""
 msgid "{}h {}m"
 msgstr ""
 
-#: src/chat/chat_window.py:37 src/chat/native/page.py:568
+#: src/chat/chat_window.py:37 src/chat/native/page.py:448
 #: src/chat/webkit/page.py:158
 #, python-brace-format
 msgid "Chat: {}"
 msgstr ""
 
-#: src/chat/native/page.py:656 src/chat/webkit/page.py:80
+#: src/chat/native/page.py:539 src/chat/webkit/page.py:80
 msgid "More messages below"
 msgstr ""
 
-#: src/chat/native/page.py:696 src/chat/webkit/page.py:86
+#: src/chat/native/page.py:579 src/chat/webkit/page.py:86
 msgid "Reconnect"
 msgstr ""
 
-#: src/chat/native/page.py:721 src/chat/webkit/page.py:262
+#: src/chat/native/page.py:604 src/chat/webkit/page.py:262
 msgid "Detach chat"
 msgstr ""
 
-#: src/chat/native/page.py:1364 src/chat/webkit/page.py:81
+#: src/chat/native/page.py:1441 src/chat/webkit/page.py:81
 msgid "Connecting to chat…"
 msgstr ""
 
-#: src/chat/native/page.py:1374
+#: src/chat/native/page.py:1451
 #, python-brace-format
 msgid "Reconnecting… (attempt {})"
 msgstr ""
 
-#: src/chat/native/page.py:1383 src/chat/webkit/page.py:85
+#: src/chat/native/page.py:1460 src/chat/webkit/page.py:85
 msgid "Disconnected."
 msgstr ""
 
@@ -617,8 +617,7 @@ msgstr ""
 
 #: src/window.py:256 src/window.py:339
 msgid ""
-"Twitch API rate limit reached. Please wait a few minutes before refreshing "
-"again."
+"API rate limit reached. Please wait a few minutes before refreshing again."
 msgstr ""
 
 #: src/window.py:262 src/window.py:270 src/window.py:345 src/window.py:353

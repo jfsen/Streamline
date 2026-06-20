@@ -172,7 +172,7 @@
 
         <child>
           <object class="AdwPreferencesGroup">
-            <property name="title" translatable="yes">Twitch API</property>
+            <property name="title" translatable="yes">API credentials</property>
             <property
                             name="description"
                             translatable="yes"
@@ -295,7 +295,7 @@
                 <property
                                     name="subtitle"
                                     translatable="yes"
-                                >Purple tint for messages from Twitch Partners</property>
+                                >Purple tint for messages from Partners</property>
               </object>
             </child>
             <child>

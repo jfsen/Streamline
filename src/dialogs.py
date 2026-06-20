@@ -63,7 +63,7 @@ class StreamlineDialogs:
         """Show dialog to follow new streamer(s)."""
         dialog, entry = self.create_input_dialog(
             heading=_("Follow"),
-            body=_("Enter Twitch usernames (separate multiple with commas):"),
+            body=_("Enter the streamer username (separate multiple with commas):"),
             default_response="follow",
         )
 
@@ -113,7 +113,7 @@ class StreamlineDialogs:
         """Show dialog to input Twitch API credentials."""
         dialog = Adw.MessageDialog(
             transient_for=self.parent,
-            heading=_("Twitch API Credentials"),
+            heading=_("API Credentials"),
             body=_(
                 "Enter your Twitch Client ID and Client Secret to enable the app:\n\n"
                 "You can get these at https://dev.twitch.tv/console/apps"
