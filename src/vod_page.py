@@ -365,12 +365,14 @@ class VODPage(Adw.NavigationPage):
         return GLib.SOURCE_REMOVE
 
     def display_vods(self, vods, purge=False):
-        """Display VODs in the list box."""
+        """Display VODs in the list box.
+
+        When purge=True, stale thumbnails are cleaned up (use on fresh API fetches).
+        """
         self.list_box.set_visible(False)
         while row := self.list_box.get_first_child():
             self.list_box.remove(row)
 
-        # Purge stale thumbnails on fresh fetches
         if purge:
             self._purge_thumbnails(self.streamer, vods)
 
