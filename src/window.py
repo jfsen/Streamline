@@ -230,22 +230,19 @@ class StreamlineWindow(Adw.ApplicationWindow):
         # Fetch fresh stream data in a background thread
         threading.Thread(target=self._background_fetch_streams, daemon=True).start()
 
-    def _background_fetch_streams(self):
-        """Fetch stream data in a background thread, then update UI on main thread."""
-        assert self.twitch is not None
-        try:
-            online, offline, info = self.twitch.get_streams(self.all_streamers)
-            GLib.idle_add(self._on_streams_fetched, online, offline, info)
-        except requests.ConnectionError:
+    def _show_fetch_error(self, error):
+        """Route a fetch error to the appropriate UI callback."""
+        if isinstance(error, requests.ConnectionError):
             GLib.idle_add(
                 self._show_error_dialog,
                 _("Connection Error"),
                 _(
-                    "Could not fetch streamer data. Please check your internet connection."
+                    "Could not fetch streamer data. "
+                    "Please check your internet connection."
                 ),
             )
-        except requests.HTTPError as e:
-            status = e.response.status_code if e.response else None
+        elif isinstance(error, requests.HTTPError):
+            status = error.response.status_code if error.response else None
             if status == 401:
                 GLib.idle_add(self._prompt_for_credentials)
             elif status == 429:
@@ -253,7 +250,8 @@ class StreamlineWindow(Adw.ApplicationWindow):
                     self._show_error_dialog,
                     _("API Rate Limit"),
                     _(
-                        "API rate limit reached. Please wait a few minutes before refreshing again."
+                        "API rate limit reached. "
+                        "Please wait a few minutes before refreshing again."
                     ),
                 )
             else:
@@ -264,12 +262,21 @@ class StreamlineWindow(Adw.ApplicationWindow):
                         status
                     ),
                 )
-        except Exception as e:
+        else:
             GLib.idle_add(
                 self._show_error_dialog,
                 _("API Error"),
-                _("Failed to fetch streamer data: {}").format(str(e)[:100]),
+                _("Failed to fetch streamer data: {}").format(str(error)[:100]),
             )
+
+    def _background_fetch_streams(self):
+        """Fetch stream data in a background thread, then update UI on main thread."""
+        assert self.twitch is not None
+        try:
+            online, offline, info = self.twitch.get_streams(self.all_streamers)
+            GLib.idle_add(self._on_streams_fetched, online, offline, info)
+        except Exception as e:
+            self._show_fetch_error(e)
 
     def _on_streams_fetched(self, online, offline, info):
         """Callback from background thread: update UI with fresh stream data."""
@@ -299,11 +306,11 @@ class StreamlineWindow(Adw.ApplicationWindow):
             self.show_toast(_("API not available"))
             return
 
-        # Check cache status
+        # Check cache status: enforce cooldown
         cached_data, seconds_until_refresh = self.twitch._load_streams_cache()
 
-        if cached_data is not None:
-            # Data is still cached, inform user how long until refresh is available
+        if seconds_until_refresh > 0:
+            # Data is still within cooldown, inform user how long until refresh is available
             self.show_toast(
                 _("Please wait {}s before refreshing").format(seconds_until_refresh)
             )
@@ -319,40 +326,8 @@ class StreamlineWindow(Adw.ApplicationWindow):
         try:
             online, offline, info = self.twitch.get_streams(self.all_streamers)
             GLib.idle_add(self._on_refresh_complete, online, offline, info)
-        except requests.ConnectionError:
-            GLib.idle_add(
-                self._on_refresh_error,
-                _("Connection Error"),
-                _(
-                    "Could not fetch streamer data. Please check your internet connection."
-                ),
-            )
-        except requests.HTTPError as e:
-            status = e.response.status_code if e.response else None
-            if status == 401:
-                GLib.idle_add(self._prompt_for_credentials)
-            elif status == 429:
-                GLib.idle_add(
-                    self._on_refresh_error,
-                    _("API Rate Limit"),
-                    _(
-                        "API rate limit reached. Please wait a few minutes before refreshing again."
-                    ),
-                )
-            else:
-                GLib.idle_add(
-                    self._on_refresh_error,
-                    _("API Error"),
-                    _("HTTP error {} occurred while fetching streamer data.").format(
-                        status
-                    ),
-                )
         except Exception as e:
-            GLib.idle_add(
-                self._on_refresh_error,
-                _("API Error"),
-                _("Failed to fetch streamer data: {}").format(str(e)[:100]),
-            )
+            GLib.idle_add(self._on_refresh_error, e)
 
     def _on_refresh_complete(self, online, offline, info):
         """Callback from background thread: update UI with fresh stream data."""
@@ -361,13 +336,13 @@ class StreamlineWindow(Adw.ApplicationWindow):
         self.update_action_rows(online, offline, info)
         self._start_avatar_downloads(online, offline)
 
-    def _on_refresh_error(self, heading, message):
-        """Callback from background thread: show error and re-enable refresh."""
+    def _on_refresh_error(self, error):
+        """Callback from background thread: show error and re-enable refresh button."""
         self.refresh_button.set_sensitive(True)
         # Expire cache cooldown so next manual refresh attempt is not blocked
         if self.twitch is not None:
             self.twitch._invalidate_streams_cache()
-        self._show_error_dialog(heading, message)
+        self._show_fetch_error(error)
 
     def update_action_rows(self, online_streamers, offline_streamers, streamer_info):
         """Update the online and offline streamer lists."""
@@ -627,10 +602,6 @@ class StreamlineWindow(Adw.ApplicationWindow):
             user_data = self.twitch.user_cache.get(streamer, {})
             display_name = user_data.get("name", streamer)
         page = VODPage(self, streamer, display_name, self.twitch, self.player)
-        # Store weak reference to track the current VOD page
-        from weakref import proxy
-
-        self._current_vod_page = proxy(page)
         self.navigation_view.push(page)
 
     def show_chat_page(self, streamer):
@@ -732,12 +703,3 @@ class StreamlineWindow(Adw.ApplicationWindow):
         )
         self._active_chats[streamer] = popup
         popup.present()
-
-    def _cleanup_vod_page(self, page):
-        """Clean up VOD page references"""
-        if hasattr(self, "_current_vod_page"):
-            delattr(self, "_current_vod_page")
-
-    def _create_input_dialog(self, heading, body, default_response="ok"):
-        """Create reusable input dialog"""
-        return self.dialogs.create_input_dialog(heading, body, default_response)
