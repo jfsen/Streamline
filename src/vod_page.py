@@ -480,7 +480,7 @@ class VODPage(Adw.NavigationPage):
                 halign=Gtk.Align.CENTER,
                 valign=Gtk.Align.CENTER,
             )
-            inner.set_size_request(-1, 64)
+            inner.set_size_request(-1, 48)
 
             label = Gtk.Label(label=label_text)
             label.set_halign(Gtk.Align.CENTER)
