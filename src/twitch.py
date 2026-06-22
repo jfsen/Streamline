@@ -255,7 +255,12 @@ class TwitchAPI:
         return self._CACHE_DIR / "streams.json"
 
     def _load_streams_cache(self):
-        """Load streams data from cache if available and not expired."""
+        """Load streams data from cache.
+
+        Always returns cached data if available, regardless of expiry.
+        Returns (data, cooldown_remaining) where cooldown_remaining is the
+        seconds until refresh is allowed (negative means refresh is allowed now).
+        """
         try:
             with open(self._get_streams_cache_path()) as f:
                 cache_data = json.load(f)
@@ -266,10 +271,7 @@ class TwitchAPI:
                 STREAMS_CACHE_COOLDOWN - (now - cache_time).total_seconds()
             )
 
-            if seconds_until_refresh > 0:
-                return cache_data["data"], int(seconds_until_refresh)
-
-            return None, 0
+            return cache_data["data"], int(seconds_until_refresh)
         except (json.JSONDecodeError, KeyError, OSError, FileNotFoundError):
             return None, 0
 
@@ -325,7 +327,7 @@ class TwitchAPI:
         """Get stream information for multiple users."""
         # Try to load from cache first
         cached_data, seconds_until_refresh = self._load_streams_cache()
-        if cached_data is not None:
+        if cached_data is not None and seconds_until_refresh > 0:
             logger.debug(
                 "Using cached stream data (refresh in %ss)", seconds_until_refresh
             )
