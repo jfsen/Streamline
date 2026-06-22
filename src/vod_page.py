@@ -330,6 +330,10 @@ class VODPage(Adw.NavigationPage):
             r.raise_for_status()
             path.write_bytes(r.content)
             GLib.idle_add(self._apply_thumbnail, picture, path)
+        except requests.HTTPError as e:
+            # 403 is expected for still-processing VODs — suppress the noise
+            if e.response is not None and e.response.status_code != 403:
+                logger.debug("Thumbnail download failed: %s", e)
         except Exception as e:
             logger.debug("Thumbnail download failed: %s", e)
 
