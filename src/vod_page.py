@@ -347,21 +347,16 @@ class VODPage(Adw.NavigationPage):
                 # Replace in parent
                 parent = picture.get_parent()
                 if parent and isinstance(parent, Gtk.Box):
-                    # Find index of old picture
-                    idx = -1
+                    # Find the sibling before the old picture
+                    prev = None
                     child = parent.get_first_child()
-                    i = 0
-                    while child:
+                    while child is not None:
                         if child == picture:
-                            idx = i
                             break
+                        prev = child
                         child = child.get_next_sibling()
-                        i += 1
-                    if idx >= 0:
-                        parent.remove(picture)
-                        parent.insert_child_after(
-                            pic, None if idx == 0 else parent.get_first_child()
-                        )
+                    parent.remove(picture)
+                    parent.insert_child_after(pic, prev)
         return GLib.SOURCE_REMOVE
 
     def display_vods(self, vods, purge=False):
