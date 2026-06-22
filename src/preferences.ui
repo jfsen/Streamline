@@ -56,7 +56,7 @@
                 <property
                                     name="subtitle"
                                     translatable="yes"
-                                >Show thumbnail previews for VODs as cards</property>
+                                >Show thumbnail previews for VODs</property>
               </object>
             </child>
           </object>

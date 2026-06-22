@@ -163,6 +163,20 @@ list.streamer-list:not(.boxed-list) > row:hover > .card {
     background-color: alpha(@view_fg_color, 0.06);
 }
 
+.card.show-more-card {
+    border: 1px dashed alpha(@view_fg_color, 0.15);
+    border-radius: 10px;
+    background-color: alpha(@view_fg_color, 0.03);
+    transition:
+        background-color 200ms ease,
+        border-color 200ms ease;
+}
+
+.card.show-more-card:hover {
+    background-color: alpha(@accent_bg_color, 0.1);
+    border-color: alpha(@accent_bg_color, 0.3);
+}
+
 /* ── Button hover effects ── */
 list.boxed-list.streamer-list > row button.flat {
     transition:

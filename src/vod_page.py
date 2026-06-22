@@ -20,6 +20,8 @@ logger = logging.getLogger("VODPage")
 class VODPage(Adw.NavigationPage):
     __gtype_name__ = "VODPage"
 
+    VODS_PER_PAGE = 10
+
     # Template children
     list_box = Gtk.Template.Child()
     toast_overlay = Gtk.Template.Child()
@@ -52,6 +54,9 @@ class VODPage(Adw.NavigationPage):
         )
 
         # Load VODs (show spinner immediately, fetch in background)
+        self._all_vods = []
+        self._shown_count = 0
+        self._show_more_row = None
         self._load_vods()
 
     def show_toast(self, message, timeout=2):
@@ -360,16 +365,25 @@ class VODPage(Adw.NavigationPage):
         return GLib.SOURCE_REMOVE
 
     def display_vods(self, vods, purge=False):
-        """Display VODs in the list box.
+        """Store VODs and render the first page.
 
         When purge=True, stale thumbnails are cleaned up (use on fresh API fetches).
         """
-        self.list_box.set_visible(False)
-        while row := self.list_box.get_first_child():
-            self.list_box.remove(row)
+        self._all_vods = vods
+        self._shown_count = 0
+        self._show_more_row = None
 
         if purge:
             self._purge_thumbnails(self.streamer, vods)
+
+        self._render_initial(vods)
+
+    def _render_initial(self, vods):
+        """Clear the list and render the first batch of VODs plus a Show-more
+        button when there are more."""
+        self.list_box.set_visible(False)
+        while row := self.list_box.get_first_child():
+            self.list_box.remove(row)
 
         # Toggle boxed-list: cards when thumbnails are on, compact list when off
         if self._show_thumbnails:
@@ -388,39 +402,111 @@ class VODPage(Adw.NavigationPage):
             self.list_box.set_visible(True)
             return
 
-        for vod in vods:
-            created_at = self.twitch.format_date(vod["created_at"])
-            duration = self.twitch.format_duration(vod["duration"])
+        count = min(self.VODS_PER_PAGE, len(vods))
+        for vod in vods[:count]:
+            self.list_box.append(self._build_vod_row(vod))
+        self._shown_count = count
 
-            if self._show_thumbnails:
-                row = self._build_vod_card(vod, created_at, duration)
-            else:
-                row = Adw.ActionRow(
-                    title=GLib.markup_escape_text(vod["title"]),
-                    subtitle=f"{created_at} • {duration}",
-                )
-                row.set_title_lines(1)
-                row.set_tooltip_text(vod["title"])
-
-                play_button = Gtk.Button(icon_name="media-playback-start-symbolic")
-                play_button.add_css_class("flat")
-                play_button.set_valign(Gtk.Align.CENTER)
-                play_button.set_tooltip_text(_("Play VOD"))
-                play_button.connect("clicked", lambda btn, v=vod: self.play_vod(v))
-                row.add_suffix(play_button)
-
-                browser_button = Gtk.Button(icon_name="web-browser-symbolic")
-                browser_button.add_css_class("flat")
-                browser_button.set_valign(Gtk.Align.CENTER)
-                browser_button.set_tooltip_text(_("Open VOD in browser"))
-                browser_button.connect(
-                    "clicked", lambda btn, v=vod: self.open_in_browser(v)
-                )
-                row.add_suffix(browser_button)
-
-            self.list_box.append(row)
+        # When thumbnails are off there's no download to stagger — show
+        # everything and its formatting is cheap.
+        if not self._show_thumbnails:
+            for vod in vods[count:]:
+                self.list_box.append(self._build_vod_row(vod))
+            self._shown_count = len(vods)
+        elif count < len(vods):
+            self._append_show_more()
 
         self.list_box.set_visible(True)
+
+    def _on_show_more(self, *args):
+        """Append the next batch of VODs without rebuilding, so scroll
+        position is preserved."""
+        if self._show_more_row:
+            # Row is a ListBoxRow; remove it from the parent ListBox
+            parent = self._show_more_row.get_parent()
+            if parent:
+                parent.remove(self._show_more_row)
+            self._show_more_row = None
+
+        start = self._shown_count
+        end = min(start + self.VODS_PER_PAGE, len(self._all_vods))
+        for vod in self._all_vods[start:end]:
+            self.list_box.append(self._build_vod_row(vod))
+        self._shown_count = end
+
+        if end < len(self._all_vods):
+            self._append_show_more()
+
+    def _build_vod_row(self, vod):
+        """Build a single VOD row (card or compact) and return it."""
+        created_at = self.twitch.format_date(vod["created_at"])
+        duration = self.twitch.format_duration(vod["duration"])
+
+        if self._show_thumbnails:
+            return self._build_vod_card(vod, created_at, duration)
+
+        row = Adw.ActionRow(
+            title=GLib.markup_escape_text(vod["title"]),
+            subtitle=f"{created_at} • {duration}",
+        )
+        row.set_title_lines(1)
+        row.set_tooltip_text(vod["title"])
+
+        play_button = Gtk.Button(icon_name="media-playback-start-symbolic")
+        play_button.add_css_class("flat")
+        play_button.set_valign(Gtk.Align.CENTER)
+        play_button.set_tooltip_text(_("Play VOD"))
+        play_button.connect("clicked", lambda btn, v=vod: self.play_vod(v))
+        row.add_suffix(play_button)
+
+        browser_button = Gtk.Button(icon_name="web-browser-symbolic")
+        browser_button.add_css_class("flat")
+        browser_button.set_valign(Gtk.Align.CENTER)
+        browser_button.set_tooltip_text(_("Open VOD in browser"))
+        browser_button.connect("clicked", lambda btn, v=vod: self.open_in_browser(v))
+        row.add_suffix(browser_button)
+        return row
+
+    def _build_show_more_row(self, remaining):
+        """Build a card-styled row that loads more VODs when clicked."""
+        label_text = _("Show more…")
+
+        if self._show_thumbnails:
+            row = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+            row.add_css_class("card")
+            row.add_css_class("show-more-card")
+
+            inner = Gtk.Box(
+                halign=Gtk.Align.CENTER,
+                valign=Gtk.Align.CENTER,
+            )
+            inner.set_size_request(-1, 64)
+
+            label = Gtk.Label(label=label_text)
+            label.set_halign(Gtk.Align.CENTER)
+            inner.append(label)
+            row.append(inner)
+
+            click = Gtk.GestureClick.new()
+            click.connect("released", lambda g, n, x, y: self._on_show_more())
+            row.add_controller(click)
+            return row
+
+        # Compact style: activatable ActionRow
+        row = Adw.ActionRow(title=label_text)
+        row.set_activatable(True)
+        row.connect("activated", lambda r: self._on_show_more())
+        return row
+
+    def _append_show_more(self):
+        """Append a Show-more button for the next unseen batch."""
+        remaining = len(self._all_vods) - self._shown_count
+        to_show = min(self.VODS_PER_PAGE, remaining)
+        inner = self._build_show_more_row(to_show)
+        row = Gtk.ListBoxRow()
+        row.set_child(inner)
+        self._show_more_row = row
+        self.list_box.append(row)
 
     def play_vod(self, vod):
         """Play VOD using streamlink."""

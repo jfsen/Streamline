@@ -107,7 +107,7 @@ STREAMS_CACHE_COOLDOWN = 60
 #             vod_page.py  (VOD_CACHE_TTL, VOD_REFRESH_COOLDOWN)
 
 # Number of VODs requested from the Twitch API per fetch.
-VOD_FETCH_LIMIT = 20
+VOD_FETCH_LIMIT = 100
 
 # VOD cache lifetime in seconds.
 VOD_CACHE_TTL = 3600  # 1 hour
