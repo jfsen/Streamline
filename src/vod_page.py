@@ -2,11 +2,9 @@ import gettext
 import hashlib
 import json
 import logging
-import re
 import threading
 from datetime import datetime, timezone
 from pathlib import Path
-from weakref import proxy
 
 import requests
 from gi.repository import Adw, Gdk, Gio, GLib, Gtk
@@ -30,8 +28,7 @@ class VODPage(Adw.NavigationPage):
     def __init__(self, parent, streamer, display_name, twitch, player):
         super().__init__(title=_("{}'s VODs").format(display_name))
 
-        # Use weak reference for parent
-        self.parent = proxy(parent)
+        self.parent = parent
         self.streamer = streamer
         self.twitch = twitch
         self.player = player
