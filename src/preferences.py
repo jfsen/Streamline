@@ -105,13 +105,6 @@ class StreamlinePreferences(Adw.PreferencesDialog):
         ):
             settings.bind(key, row, "active", Gio.SettingsBindFlags.DEFAULT)
 
-        # The native chat engine supports animated emotes — no need
-        # to grey out the toggle.  The callback exists for future use.
-        self.chat_native_engine_switch.connect(
-            "notify::active", self._on_native_engine_toggled
-        )
-        self._on_native_engine_toggled(self.chat_native_engine_switch, None)
-
         # ── Conditional visibility (custom-path / custom-quality) ──
         settings.connect("changed::player-type", self._sync_visibility)
         settings.connect("changed::stream-quality", self._sync_visibility)
@@ -137,11 +130,6 @@ class StreamlinePreferences(Adw.PreferencesDialog):
         self.custom_quality_row.set_visible(
             settings.get_string("stream-quality") == "Custom"
         )
-
-    def _on_native_engine_toggled(self, native_switch, _pspec):
-        """The native engine now supports animated emotes, so the
-        toggle is always sensitive regardless of engine choice."""
-        pass
 
     # ── Export streamers ─────────────────────────────────────
 
