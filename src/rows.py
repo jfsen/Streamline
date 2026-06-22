@@ -1,5 +1,6 @@
 import gettext
 from html import unescape
+from pathlib import Path
 
 from gi.repository import Adw, GLib, Gtk
 
@@ -134,8 +135,6 @@ class StreamerRowManager:
                     "profile_image_url", ""
                 )
                 if url:
-                    from pathlib import Path
-
                     p = Path(self.window.twitch._get_avatars_dir()) / f"{streamer}.jpg"
                     if p.exists():
                         avatar_path = str(p)
