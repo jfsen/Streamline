@@ -394,12 +394,8 @@ class VODPage(Adw.NavigationPage):
             return
 
         for vod in vods:
-            created_at = vod["created_at"]
-            if created_at.startswith("20"):  # raw ISO timestamp
-                created_at = self.twitch._format_date(created_at)
-            duration = vod["duration"]
-            if re.search(r"\dh", duration):  # raw Twitch format like "2h29m45s"
-                duration = self.twitch._format_duration(duration)
+            created_at = self.twitch.format_date(vod["created_at"])
+            duration = self.twitch.format_duration(vod["duration"])
 
             if self._show_thumbnails:
                 row = self._build_vod_card(vod, created_at, duration)

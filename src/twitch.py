@@ -149,15 +149,17 @@ class TwitchAPI:
             pass
 
     def _save_token_cache(self):
-        """Save access token to cache with expiration."""
+        """Save access token to cache with expiration (atomic write)."""
         try:
             self._ensure_cache_dir()
             cache_data = {
                 "access_token": self.access_token,
                 "expires_at": self.token_expires_at.isoformat(),
             }
-            with open(self._get_token_cache_path(), "w") as f:
+            tmp_path = self._get_token_cache_path().with_suffix(".tmp")
+            with open(tmp_path, "w") as f:
                 json.dump(cache_data, f, indent=4)
+            tmp_path.rename(self._get_token_cache_path())
         except OSError:
             logger.debug("Failed to save token cache")
 
@@ -258,7 +260,6 @@ class TwitchAPI:
             with open(self._get_streams_cache_path()) as f:
                 cache_data = json.load(f)
 
-            # Check if cache is expired (1 minute)
             cache_time = datetime.fromisoformat(cache_data["timestamp"])
             now = datetime.now(timezone.utc)
             seconds_until_refresh = (
@@ -505,7 +506,7 @@ class TwitchAPI:
             logger.debug("Failed to fetch VODs: %s", str(e))
             raise
 
-    def _format_date(self, date_str):
+    def format_date(self, date_str):
         """Format ISO date string to a human-friendly relative time."""
         date = datetime.fromisoformat(date_str.replace("Z", "+00:00"))
         now = datetime.now(timezone.utc)
@@ -533,7 +534,7 @@ class TwitchAPI:
 
         return date.strftime("%b %d")
 
-    def _format_duration(self, duration_str):
+    def format_duration(self, duration_str):
         """Convert Twitch duration string (e.g. '1h23m45s') to '1h 23m'."""
         h = re.search(r"(\d+)h", duration_str)
         m = re.search(r"(\d+)m", duration_str)
@@ -548,7 +549,7 @@ class TwitchAPI:
                 parts.append(_("{}s").format(s.group(1)))
         return " ".join(parts) if parts else duration_str
 
-    def _calculate_uptime(self, start_time):
+    def calculate_uptime(self, start_time):
         """Calculate stream uptime."""
         start_time = datetime.fromisoformat(start_time.replace("Z", "+00:00"))
         now = datetime.now(timezone.utc)

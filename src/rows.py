@@ -105,7 +105,7 @@ class StreamerRowManager:
             title = unescape(raw_title)  # Unescape special characters
             started_at = info.get("started_at")
             if started_at:
-                uptime = self.window.twitch._calculate_uptime(started_at)
+                uptime = self.window.twitch.calculate_uptime(started_at)
             else:
                 uptime = info.get("uptime", "N/A")
             tooltip = _("Title: {}\nUptime: {}").format(title, uptime)
