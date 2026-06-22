@@ -245,23 +245,20 @@ class VODPage(Adw.NavigationPage):
         )
         if thumb_path and thumb_path.exists():
             picture = Gtk.Picture.new_for_filename(str(thumb_path))
+            picture.set_content_fit(Gtk.ContentFit.COVER)
         else:
-            icon_theme = Gtk.IconTheme.get_for_display(Gdk.Display.get_default())
-            icon = icon_theme.lookup_icon(
-                "video-x-generic-symbolic",
-                None,
-                64,
-                1,
-                Gtk.TextDirection.NONE,
-                Gtk.IconLookupFlags.FORCE_SYMBOLIC,
-            )
-            if icon:
-                picture = Gtk.Picture.new_for_paintable(icon)
-            else:
-                picture = Gtk.Picture.new()
+            picture = Gtk.Box()
+            picture.add_css_class("thumbnail-placeholder")
+            icon = Gtk.Image.new_from_icon_name("camera-video-symbolic")
+            icon.set_pixel_size(48)
+            icon.set_opacity(0.25)
+            icon.set_halign(Gtk.Align.CENTER)
+            icon.set_valign(Gtk.Align.CENTER)
+            icon.set_hexpand(True)
+            icon.set_vexpand(True)
+            picture.append(icon)
         picture.set_hexpand(True)
         picture.set_size_request(-1, 120)
-        picture.set_content_fit(Gtk.ContentFit.COVER)
         picture.add_css_class("thumbnail")
         row.append(picture)
 

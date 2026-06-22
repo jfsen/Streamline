@@ -158,6 +158,11 @@ list.streamer-list:not(.boxed-list) > row:hover > .card {
     border-radius: 10px 10px 0 0;
 }
 
+.card .thumbnail-placeholder {
+    border-radius: 10px 10px 0 0;
+    background-color: alpha(@view_fg_color, 0.06);
+}
+
 /* ── Button hover effects ── */
 list.boxed-list.streamer-list > row button.flat {
     transition:
