@@ -98,7 +98,14 @@ sudo ninja -C builddir uninstall
 
 ### Flatpak
 
-A Flatpak manifest is included in the repository. Build and install with:
+A `.flatpakref` file is attached to each [GitHub release](https://github.com/jfsen/Streamline/releases).
+Download the file and install it:
+
+```bash
+flatpak install ./org.jfsen.Streamline.flatpakref
+```
+
+To build from source instead, use the Flatpak manifest included in the repository:
 
 ```bash
 flatpak-builder --user --install --force-clean build-dir org.jfsen.Streamline.json
