@@ -483,7 +483,11 @@ class TwitchAPI:
             vods = response.json()["data"]
 
             formatted_vods = []
+            filtered = 0
             for vod in vods:
+                if vod.get("viewable") != "public":
+                    filtered += 1
+                    continue
                 formatted_vods.append(
                     {
                         "id": vod["id"],
@@ -496,12 +500,21 @@ class TwitchAPI:
                     }
                 )
 
-            logger.debug(
-                "Found %s VODs for %s in %.2fs",
-                len(formatted_vods),
-                username,
-                time() - start_time,
-            )
+            if filtered:
+                logger.debug(
+                    "Filtered %s non-public VODs, %s public for %s in %.2fs",
+                    filtered,
+                    len(formatted_vods),
+                    username,
+                    time() - start_time,
+                )
+            else:
+                logger.debug(
+                    "Found %s VODs for %s in %.2fs",
+                    len(formatted_vods),
+                    username,
+                    time() - start_time,
+                )
             return formatted_vods
 
         except requests.exceptions.RequestException as e:
