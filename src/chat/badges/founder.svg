@@ -19,11 +19,13 @@
       <stop
          offset="0.10877144"
          stop-color="#f71ca3"
-         id="stop1" />
+         id="stop1"
+         style="stop-color:#f71c91;stop-opacity:1;" />
       <stop
          offset="1"
          stop-color="#7b17bf"
-         id="stop2" />
+         id="stop2"
+         style="stop-color:#1a5fb4;stop-opacity:1;" />
     </linearGradient>
   </defs>
   <rect

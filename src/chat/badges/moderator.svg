@@ -14,7 +14,8 @@
      height="18"
      rx="3"
      fill="#00ad03"
-     id="rect1" />
+     id="rect1"
+     style="fill:#33d17a" />
   <g
      transform="translate(-0.90483317,0.11960062)"
      id="g3">

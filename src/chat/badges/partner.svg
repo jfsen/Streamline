@@ -13,7 +13,8 @@
      fill="#6441a5"
      transform="scale(0.5)"
      d="M 5.3,5.3 18,0 30.7,5.3 36,18 30.7,30.7 18,36 5.3,30.7 0,18 Z"
-     id="path1" />
+     id="path1"
+     style="fill:#613583" />
   <path
      fill="none"
      stroke="#ffffff"

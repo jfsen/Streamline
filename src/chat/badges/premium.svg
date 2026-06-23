@@ -15,9 +15,9 @@
      rx="3"
      fill="#8200e6"
      id="rect1"
-     style="fill:#4aaed8;fill-opacity:1" />
+     style="fill:#62a0ea;fill-opacity:1" />
   <path
      id="rect7"
      style="fill:#ffffff;fill-opacity:1;stroke-width:4.62797;stroke-linecap:round;stroke-linejoin:bevel;paint-order:markers stroke fill"
-     d="M 9,4.5 6.2809036,8.748047 2,3.5 3.7190964,12.425781 C 3.8238711,12.969785 6.5253745,14.5 7,14.5 h 4 c 0.474627,0 3.280903,-1.520218 3.280903,-2.074219 L 16,3.5 11.719096,8.748047 Z" />
+     d="m 9,5 -3,3.5 -4,-4 1,8 c 1,1 4,1 4,1 h 4 c 0,0 3,0 4,-1 l 1,-8 -4,4 z" />
 </svg>
