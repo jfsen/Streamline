@@ -819,7 +819,6 @@ class ChatPage(Adw.NavigationPage):
                 pic.set_size_request(28, 28)
                 pic.set_can_shrink(False)
                 pic.set_content_fit(Gtk.ContentFit.CONTAIN)
-                pic.set_valign(Gtk.Align.CENTER)
                 pic._page = self
                 pic._card = card
                 tooltip = f"{seg['name']} ({seg['source']})"
