@@ -35,11 +35,12 @@ from .window import StreamlineWindow
 class StreamlineApplication(Adw.Application):
     """The main application singleton class."""
 
-    def __init__(self):
+    def __init__(self, version):
         super().__init__(
             application_id="org.jfsen.Streamline",
             flags=Gio.ApplicationFlags.FLAGS_NONE,
         )
+        self._version = version
 
     def do_startup(self):
         """Called when application is starting up."""
@@ -74,7 +75,7 @@ class StreamlineApplication(Adw.Application):
             application_name="Streamline",
             application_icon="org.jfsen.Streamline",
             developer_name="jfsen",
-            version="3.4.0",
+            version=self._version,
             developers=["jfsen"],
             copyright="© 2025 jfsen",
             license_type=Gtk.License.GPL_3_0,
@@ -130,6 +131,10 @@ class StreamlineApplication(Adw.Application):
 
 
 def main(version):
-    """The application's entry point."""
-    app = StreamlineApplication()
+    """The application's entry point.
+
+    Args:
+        version: Version string from the build system (meson @VERSION@).
+    """
+    app = StreamlineApplication(version)
     return app.run(sys.argv)

@@ -32,6 +32,34 @@
   </branding>
 
   <releases>
+    <release version="3.5.0" date="2026-06-23">
+      <description translate="no">
+        <p
+                >Streamline 3.5 — performance, pagination, and infrastructure cleanup.</p>
+        <ul>
+          <li
+                    >VOD fetch limit increased to 100; displayed 10 at a time with a "Show more…" button to stagger thumbnail downloads</li>
+          <li
+                    >Broken VOD thumbnail widget ordering fixed when images load asynchronously</li>
+          <li
+                    >Non-public (subscriber-only) VODs are now filtered out from listings</li>
+          <li
+                    >Cold-start VOD cache now shows stale data immediately instead of an empty list</li>
+          <li
+                    >Shared error handler eliminated 70 lines of duplicated exception handling across fetch paths</li>
+          <li
+                    >Infrastructure constants moved out of config.py to their natural modules (API endpoints, streamlink command, app identity)</li>
+          <li
+                    >Theme system simplified to a single list of CSS filenames — adding a theme is now a one-line change</li>
+          <li
+                    >Version string flows from meson.build through to the About dialog — single source of truth</li>
+          <li
+                    >Removed WebKit chat engine; native GTK chat is now the only option</li>
+          <li>Orphaned twitch.css removed; unused callbacks cleaned up</li>
+          <li>Updated German translation</li>
+        </ul>
+      </description>
+    </release>
     <release version="3.4.0" date="2026-06-15">
       <description translate="no">
         <p>Streamline 3.4 — polish, consistency, and smarter defaults.</p>

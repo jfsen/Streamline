@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: org.jfsen.Streamline\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-06-23 12:16+0200\n"
+"POT-Creation-Date: 2026-06-23 19:28+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -18,7 +18,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 
 #: data/org.jfsen.Streamline.desktop.in:2
-#: data/org.jfsen.Streamline.metainfo.xml.in:7 src/window.py:139
+#: data/org.jfsen.Streamline.metainfo.xml.in:7 src/window.py:152
 #: src/window.ui:6
 msgid "Streamline"
 msgstr ""
@@ -210,7 +210,7 @@ msgstr ""
 msgid "Unfollow"
 msgstr ""
 
-#: src/dialogs.py:65 src/dialogs.py:71 src/window.py:561 src/window.ui:49
+#: src/dialogs.py:65 src/dialogs.py:71 src/window.py:574 src/window.ui:49
 msgid "Follow"
 msgstr ""
 
@@ -218,7 +218,7 @@ msgstr ""
 msgid "Enter the streamer username (separate multiple with commas):"
 msgstr ""
 
-#: src/dialogs.py:90 src/window.py:562 src/window.ui:35
+#: src/dialogs.py:90 src/window.py:575 src/window.ui:35
 msgid "Quick Play"
 msgstr ""
 
@@ -254,7 +254,7 @@ msgid "Save"
 msgstr ""
 
 #. Translators: Replace "translator-credits" with your name/username, and optionally an email or URL.
-#: src/main.py:83
+#: src/main.py:84
 msgid "translator-credits"
 msgstr ""
 
@@ -356,41 +356,41 @@ msgid "Show VODs"
 msgstr ""
 
 #. Show initial toast message
-#: src/stream_player.py:32
+#: src/stream_player.py:43
 msgid "Connecting..."
 msgstr ""
 
-#: src/stream_player.py:80
+#: src/stream_player.py:91
 msgid "Stream not available"
 msgstr ""
 
-#: src/stream_player.py:85
+#: src/stream_player.py:96
 msgid "Waiting for ads to finish..."
 msgstr ""
 
-#: src/stream_player.py:98
+#: src/stream_player.py:109
 msgid "Stream playback failed"
 msgstr ""
 
-#: src/stream_player.py:111
+#: src/stream_player.py:122
 msgid "Error starting playback"
 msgstr ""
 
-#: src/stream_player.py:165
+#: src/stream_player.py:176
 #, python-brace-format
 msgid ""
 "Could not find {path} on your system.\n"
 "Check the path in Preferences → Player → Custom player executable."
 msgstr ""
 
-#: src/stream_player.py:170
+#: src/stream_player.py:181
 msgid ""
 "No custom player executable configured.\n"
 "Set the path to your player in Preferences → Player → Custom player "
 "executable."
 msgstr ""
 
-#: src/stream_player.py:175
+#: src/stream_player.py:186
 #, python-brace-format
 msgid ""
 "Could not find {player} on your system.\n"
@@ -401,50 +401,50 @@ msgid ""
 "• Fedora: sudo dnf install {player}"
 msgstr ""
 
-#: src/stream_player.py:181
+#: src/stream_player.py:192
 msgid "Missing Player"
 msgstr ""
 
-#: src/twitch.py:522
+#: src/twitch.py:538
 msgid "Just now"
 msgstr ""
 
-#: src/twitch.py:524
+#: src/twitch.py:540
 #, python-brace-format
 msgid "{}m ago"
 msgstr ""
 
-#: src/twitch.py:528
+#: src/twitch.py:544
 #, python-brace-format
 msgid "{}h ago"
 msgstr ""
 
-#: src/twitch.py:532
+#: src/twitch.py:548
 #, python-brace-format
 msgid "{}d ago"
 msgstr ""
 
-#: src/twitch.py:535
+#: src/twitch.py:551
 #, python-brace-format
 msgid "{}w ago"
 msgstr ""
 
-#: src/twitch.py:545
+#: src/twitch.py:561
 #, python-brace-format
 msgid "{}h"
 msgstr ""
 
-#: src/twitch.py:547
+#: src/twitch.py:563
 #, python-brace-format
 msgid "{}m"
 msgstr ""
 
-#: src/twitch.py:551
+#: src/twitch.py:567
 #, python-brace-format
 msgid "{}s"
 msgstr ""
 
-#: src/twitch.py:561
+#: src/twitch.py:577
 #, python-brace-format
 msgid "{}h {}m"
 msgstr ""
@@ -466,16 +466,16 @@ msgstr ""
 msgid "Detach chat"
 msgstr ""
 
-#: src/chat/page.py:1438
+#: src/chat/page.py:1437
 msgid "Connecting to chat…"
 msgstr ""
 
-#: src/chat/page.py:1448
+#: src/chat/page.py:1447
 #, python-brace-format
 msgid "Reconnecting… (attempt {})"
 msgstr ""
 
-#: src/chat/page.py:1457
+#: src/chat/page.py:1456
 msgid "Disconnected."
 msgstr ""
 
@@ -496,7 +496,7 @@ msgstr ""
 msgid "No internet connection. Check your network and try again."
 msgstr ""
 
-#: src/vod_page.py:184 src/window.py:314
+#: src/vod_page.py:184 src/window.py:327
 #, python-brace-format
 msgid "Please wait {}s before refreshing"
 msgstr ""
@@ -530,110 +530,110 @@ msgstr ""
 msgid "Error playing VOD: player failed to start"
 msgstr ""
 
-#: src/window.py:237
+#: src/window.py:250
 msgid "Connection Error"
 msgstr ""
 
-#: src/window.py:239
+#: src/window.py:252
 msgid "Could not fetch streamer data. Please check your internet connection."
 msgstr ""
 
-#: src/window.py:250
+#: src/window.py:263
 msgid "API Rate Limit"
 msgstr ""
 
-#: src/window.py:252
+#: src/window.py:265
 msgid ""
 "API rate limit reached. Please wait a few minutes before refreshing again."
 msgstr ""
 
-#: src/window.py:259 src/window.py:267
+#: src/window.py:272 src/window.py:280
 msgid "API Error"
 msgstr ""
 
-#: src/window.py:260
+#: src/window.py:273
 #, python-brace-format
 msgid "HTTP error {} occurred while fetching streamer data."
 msgstr ""
 
-#: src/window.py:268
+#: src/window.py:281
 #, python-brace-format
 msgid "Failed to fetch streamer data: {}"
 msgstr ""
 
-#: src/window.py:305
+#: src/window.py:318
 msgid "API not available"
 msgstr ""
 
-#: src/window.py:334
+#: src/window.py:347
 msgid "Stream data refreshed"
 msgstr ""
 
-#: src/window.py:496
+#: src/window.py:509
 #, python-brace-format
 msgid "Added {}"
 msgstr ""
 
-#: src/window.py:498
+#: src/window.py:511
 #, python-brace-format
 msgid "Added {} streamers"
 msgstr ""
 
-#: src/window.py:501
+#: src/window.py:514
 #, python-brace-format
 msgid "'{}' is invalid"
 msgstr ""
 
-#: src/window.py:503
+#: src/window.py:516
 #, python-brace-format
 msgid "{} invalid names"
 msgstr ""
 
-#: src/window.py:506
+#: src/window.py:519
 #, python-brace-format
 msgid "Already following {}"
 msgstr ""
 
-#: src/window.py:508
+#: src/window.py:521
 msgid "Already following"
 msgstr ""
 
-#: src/window.py:522
+#: src/window.py:535
 #, python-brace-format
 msgid "Error: {}"
 msgstr ""
 
-#: src/window.py:531
+#: src/window.py:544
 msgid "Error Saving Config"
 msgstr ""
 
-#: src/window.py:531
+#: src/window.py:544
 msgid "Could not save configuration"
 msgstr ""
 
 #. Application section
-#: src/window.py:553
+#: src/window.py:566
 msgid "Application"
 msgstr ""
 
-#: src/window.py:554 src/preferences.ui:7
+#: src/window.py:567 src/preferences.ui:7
 msgid "Preferences"
 msgstr ""
 
-#: src/window.py:555
+#: src/window.py:568
 msgid "Show Shortcuts"
 msgstr ""
 
-#: src/window.py:556
+#: src/window.py:569
 msgid "Quit"
 msgstr ""
 
 #. Stream Management section
-#: src/window.py:560
+#: src/window.py:573
 msgid "Stream Management"
 msgstr ""
 
-#: src/window.py:564 src/window.py:569 src/window.py:571
+#: src/window.py:577 src/window.py:582 src/window.py:584
 msgid "Refresh Streams"
 msgstr ""
 
