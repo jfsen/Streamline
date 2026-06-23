@@ -39,7 +39,7 @@ from .config import (
     DEFAULT_WIDTH,
     MIN_HEIGHT,
     MIN_WIDTH,
-    THEME_CSS,
+    THEME_KEYS,
 )
 from .dialogs import StreamlineDialogs
 from .preferences import StreamlinePreferences
@@ -47,6 +47,19 @@ from .rows import StreamerRowManager
 from .stream_player import StreamPlayer
 from .twitch import TwitchAPI
 from .vod_page import VODPage
+
+# ── Application identity ───────────────────────────────────
+
+APP_ID = "org.jfsen.Streamline"
+RESOURCE_BASE = f"/{APP_ID.replace('.', '/')}"
+
+# Map custom theme keys (everything except system/light/dark) to
+# their bundled CSS resource paths.
+THEME_CSS = {
+    k: f"{RESOURCE_BASE}/css/{k}.css"
+    for k in THEME_KEYS
+    if k not in ("system", "light", "dark")
+}
 
 
 @Gtk.Template(resource_path="/org/jfsen/Streamline/window.ui")

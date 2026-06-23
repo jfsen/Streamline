@@ -1,14 +1,25 @@
 import gettext
 import logging
+import os
 import shutil
 import subprocess
 import threading
 
 from gi.repository import GLib
 
-from .config import IS_FLATPAK, QUALITY_PRESETS, STREAMLINK_CMD
+from .config import QUALITY_PRESETS
 
 _ = gettext.gettext
+
+# Detects whether the app is running inside a Flatpak sandbox.
+IS_FLATPAK = os.path.exists("/.flatpak-info")
+
+# Base command used to invoke streamlink.
+# Uses flatpak-spawn inside the Flatpak sandbox, streamlink directly otherwise.
+if IS_FLATPAK:
+    STREAMLINK_CMD = ["flatpak-spawn", "--host", "streamlink"]
+else:
+    STREAMLINK_CMD = ["streamlink"]
 
 logger = logging.getLogger("StreamPlayer")
 

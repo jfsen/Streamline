@@ -12,14 +12,17 @@ from gi.repository import GLib
 
 from .config import (
     STREAMS_CACHE_COOLDOWN,
-    TWITCH_API_BASE,
     TWITCH_STREAMS_TIMEOUT,
     TWITCH_TOKEN_TIMEOUT,
-    TWITCH_TOKEN_URL,
     TWITCH_USERS_TIMEOUT,
     TWITCH_VODS_TIMEOUT,
     VOD_FETCH_LIMIT,
 )
+
+# ── Twitch API endpoints ───────────────────────────────────
+
+TWITCH_TOKEN_URL = "https://id.twitch.tv/oauth2/token"
+TWITCH_API_BASE = "https://api.twitch.tv/helix"
 
 _ = gettext.gettext
 

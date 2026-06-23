@@ -4,7 +4,7 @@ from pathlib import Path
 
 from gi.repository import Adw, GLib, Gtk
 
-from .config import PILL_FADE_MS, PILL_SHOW_MS, RESOURCE_BASE, ROW_HIGHLIGHT_MS
+from .config import PILL_FADE_MS, PILL_SHOW_MS, ROW_HIGHLIGHT_MS
 
 _ = gettext.gettext
 
@@ -64,7 +64,7 @@ class StreamerRowManager:
             return
         cls._CSS_LOADED = True
         css_provider = Gtk.CssProvider()
-        css_provider.load_from_resource(f"{RESOURCE_BASE}/css/streamline.css")
+        css_provider.load_from_resource("/org/jfsen/Streamline/css/streamline.css")
         Gtk.StyleContext.add_provider_for_display(
             display, css_provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
         )
