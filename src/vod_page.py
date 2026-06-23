@@ -467,42 +467,33 @@ class VODPage(Adw.NavigationPage):
         row.add_suffix(browser_button)
         return row
 
-    def _build_show_more_row(self, remaining):
+    def _build_show_more_row(self):
         """Build a card-styled row that loads more VODs when clicked."""
         label_text = _("Show more…")
 
-        if self._show_thumbnails:
-            row = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
-            row.add_css_class("card")
-            row.add_css_class("show-more-card")
+        row = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+        row.add_css_class("card")
+        row.add_css_class("show-more-card")
 
-            inner = Gtk.Box(
-                halign=Gtk.Align.CENTER,
-                valign=Gtk.Align.CENTER,
-            )
-            inner.set_size_request(-1, 48)
+        inner = Gtk.Box(
+            halign=Gtk.Align.CENTER,
+            valign=Gtk.Align.CENTER,
+        )
+        inner.set_size_request(-1, 48)
 
-            label = Gtk.Label(label=label_text)
-            label.set_halign(Gtk.Align.CENTER)
-            inner.append(label)
-            row.append(inner)
+        label = Gtk.Label(label=label_text)
+        label.set_halign(Gtk.Align.CENTER)
+        inner.append(label)
+        row.append(inner)
 
-            click = Gtk.GestureClick.new()
-            click.connect("released", lambda g, n, x, y: self._on_show_more())
-            row.add_controller(click)
-            return row
-
-        # Compact style: activatable ActionRow
-        row = Adw.ActionRow(title=label_text)
-        row.set_activatable(True)
-        row.connect("activated", lambda r: self._on_show_more())
+        click = Gtk.GestureClick.new()
+        click.connect("released", lambda g, n, x, y: self._on_show_more())
+        row.add_controller(click)
         return row
 
     def _append_show_more(self):
         """Append a Show-more button for the next unseen batch."""
-        remaining = len(self._all_vods) - self._shown_count
-        to_show = min(self.VODS_PER_PAGE, remaining)
-        inner = self._build_show_more_row(to_show)
+        inner = self._build_show_more_row()
         row = Gtk.ListBoxRow()
         row.set_child(inner)
         self._show_more_row = row
