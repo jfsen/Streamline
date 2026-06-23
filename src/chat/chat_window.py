@@ -26,7 +26,6 @@ class ChatWindow(Adw.Window):
         disable_emote_animations=False,
         theme="system",
         transient_for=None,
-        native_engine=False,
         highlight_first_msg=True,
         highlight_mod=True,
         highlight_vip=True,
@@ -41,42 +40,23 @@ class ChatWindow(Adw.Window):
         if transient_for:
             self.set_transient_for(transient_for)
 
-        if native_engine:
-            from .native.page import NativeChatPage
+        from .page import ChatPage
 
-            self._chat_page = NativeChatPage(
-                parent=None,
-                streamer=streamer,
-                display_name=display_name,
-                alternating_bg=alternating_bg,
-                disable_emote_animations=disable_emote_animations,
-                theme=theme,
-                twitch=twitch,
-                enable_detach=False,
-                highlight_first_msg=highlight_first_msg,
-                highlight_mod=highlight_mod,
-                highlight_vip=highlight_vip,
-                highlight_partner=highlight_partner,
-                highlight_broadcaster=highlight_broadcaster,
-            )
-        else:
-            from .webkit.page import ChatPage
-
-            self._chat_page = ChatPage(
-                parent=None,
-                streamer=streamer,
-                display_name=display_name,
-                alternating_bg=alternating_bg,
-                disable_emote_animations=disable_emote_animations,
-                theme=theme,
-                twitch=twitch,
-                enable_detach=False,
-                highlight_first_msg=highlight_first_msg,
-                highlight_mod=highlight_mod,
-                highlight_vip=highlight_vip,
-                highlight_partner=highlight_partner,
-                highlight_broadcaster=highlight_broadcaster,
-            )
+        self._chat_page = ChatPage(
+            parent=None,
+            streamer=streamer,
+            display_name=display_name,
+            alternating_bg=alternating_bg,
+            disable_emote_animations=disable_emote_animations,
+            theme=theme,
+            twitch=twitch,
+            enable_detach=False,
+            highlight_first_msg=highlight_first_msg,
+            highlight_mod=highlight_mod,
+            highlight_vip=highlight_vip,
+            highlight_partner=highlight_partner,
+            highlight_broadcaster=highlight_broadcaster,
+        )
         self.set_content(self._chat_page)
 
         self.connect("close-request", self._on_close_request)

@@ -181,7 +181,6 @@ class StreamlineWindow(Adw.ApplicationWindow):
             "chat-disable-emote-animations"
         )
         self.show_profile_pictures = self.settings.get_boolean("show-profile-pictures")
-        self.chat_native_engine = self.settings.get_boolean("chat-native-engine")
         self.chat_highlight_first_msg = self.settings.get_boolean(
             "chat-highlight-first-msg"
         )
@@ -619,42 +618,23 @@ class StreamlineWindow(Adw.ApplicationWindow):
             display_name = user_data.get("name", streamer)
 
         logger.debug("Opening chat page for %s", streamer)
-        if self.chat_native_engine:
-            from .chat.native.page import NativeChatPage
+        from .chat.page import ChatPage
 
-            page = NativeChatPage(
-                self,
-                streamer,
-                display_name=display_name,
-                alternating_bg=self.chat_alternating_bg,
-                disable_emote_animations=self.chat_disable_emote_animations,
-                theme=self.theme,
-                twitch=self.twitch,
-                enable_detach=True,
-                highlight_first_msg=self.chat_highlight_first_msg,
-                highlight_mod=self.chat_highlight_mod,
-                highlight_vip=self.chat_highlight_vip,
-                highlight_partner=self.chat_highlight_partner,
-                highlight_broadcaster=self.chat_highlight_broadcaster,
-            )
-        else:
-            from .chat.webkit.page import ChatPage
-
-            page = ChatPage(
-                self,
-                streamer,
-                display_name=display_name,
-                alternating_bg=self.chat_alternating_bg,
-                disable_emote_animations=self.chat_disable_emote_animations,
-                theme=self.theme,
-                twitch=self.twitch,
-                enable_detach=True,
-                highlight_first_msg=self.chat_highlight_first_msg,
-                highlight_mod=self.chat_highlight_mod,
-                highlight_vip=self.chat_highlight_vip,
-                highlight_partner=self.chat_highlight_partner,
-                highlight_broadcaster=self.chat_highlight_broadcaster,
-            )
+        page = ChatPage(
+            self,
+            streamer,
+            display_name=display_name,
+            alternating_bg=self.chat_alternating_bg,
+            disable_emote_animations=self.chat_disable_emote_animations,
+            theme=self.theme,
+            twitch=self.twitch,
+            enable_detach=True,
+            highlight_first_msg=self.chat_highlight_first_msg,
+            highlight_mod=self.chat_highlight_mod,
+            highlight_vip=self.chat_highlight_vip,
+            highlight_partner=self.chat_highlight_partner,
+            highlight_broadcaster=self.chat_highlight_broadcaster,
+        )
         page.connect(
             "hidden",
             lambda p, s=streamer: (
@@ -690,7 +670,6 @@ class StreamlineWindow(Adw.ApplicationWindow):
             disable_emote_animations=self.chat_disable_emote_animations,
             theme=self.theme,
             transient_for=self,
-            native_engine=self.chat_native_engine,
             highlight_first_msg=self.chat_highlight_first_msg,
             highlight_mod=self.chat_highlight_mod,
             highlight_vip=self.chat_highlight_vip,

@@ -234,18 +234,6 @@
                                 >Use static emote images to reduce resource usage</property>
               </object>
             </child>
-            <child>
-              <object class="AdwSwitchRow" id="chat_native_engine_switch">
-                <property
-                                    name="title"
-                                    translatable="yes"
-                                >Native Chat Engine</property>
-                <property
-                                    name="subtitle"
-                                    translatable="yes"
-                                >Use GTK instead of WebKit for chat rendering.  Much lower memory usage, but higher CPU usage for animated emotes</property>
-              </object>
-            </child>
           </object>
         </child>
 

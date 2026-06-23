@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: streamline 3.4.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-06-22 23:38+0200\n"
+"POT-Creation-Date: 2026-06-23 12:16+0200\n"
 "PO-Revision-Date: 2026-06-20 12:00+0200\n"
 "Last-Translator: jfsen\n"
 "Language-Team: none\n"
@@ -137,73 +137,61 @@ msgstr ""
 "Statische Emote-Bilder verwenden, um CPU- und GPU-Auslastung zu reduzieren"
 
 #: data/org.jfsen.Streamline.gschema.xml:65
-msgid "Use native chat engine"
-msgstr "Native Chat-Engine verwenden"
-
-#: data/org.jfsen.Streamline.gschema.xml:67
-msgid ""
-"Use GTK instead of WebKit for chat rendering. Much lower memory usage, but "
-"higher CPU usage for animated emotes."
-msgstr ""
-"GTK anstelle von WebKit für die Chat-Darstellung verwenden.  Deutlich "
-"geringere Speichernutzung, aber höhere CPU-Auslastung bei animierten Emotes"
-
-#: data/org.jfsen.Streamline.gschema.xml:71
 msgid "Highlight first messages"
 msgstr "Erste Nachrichten hervorheben"
 
-#: data/org.jfsen.Streamline.gschema.xml:73
+#: data/org.jfsen.Streamline.gschema.xml:67
 msgid "Show a blue tint behind a user's first message in the channel"
 msgstr "Blaue Einfärbung für die erste Nachricht eines Nutzers im Kanal"
 
-#: data/org.jfsen.Streamline.gschema.xml:77
+#: data/org.jfsen.Streamline.gschema.xml:71
 msgid "Highlight moderator messages"
 msgstr "Moderator-Nachrichten hervorheben"
 
-#: data/org.jfsen.Streamline.gschema.xml:79
+#: data/org.jfsen.Streamline.gschema.xml:73
 msgid "Show a green tint behind messages from moderators"
 msgstr "Grüne Einfärbung für Nachrichten von Moderatoren"
 
-#: data/org.jfsen.Streamline.gschema.xml:83
+#: data/org.jfsen.Streamline.gschema.xml:77
 msgid "Highlight VIP messages"
 msgstr "VIP-Nachrichten hervorheben"
 
-#: data/org.jfsen.Streamline.gschema.xml:85
+#: data/org.jfsen.Streamline.gschema.xml:79
 msgid "Show a pink tint behind messages from VIPs"
 msgstr "Rosa Einfärbung für Nachrichten von VIPs"
 
-#: data/org.jfsen.Streamline.gschema.xml:89
+#: data/org.jfsen.Streamline.gschema.xml:83
 msgid "Highlight Partner messages"
 msgstr "Partner-Nachrichten hervorheben"
 
-#: data/org.jfsen.Streamline.gschema.xml:91
+#: data/org.jfsen.Streamline.gschema.xml:85
 msgid "Show a purple tint behind messages from Twitch Partners"
 msgstr "Violette Einfärbung für Nachrichten von Twitch-Partnern"
 
-#: data/org.jfsen.Streamline.gschema.xml:95
+#: data/org.jfsen.Streamline.gschema.xml:89
 msgid "Highlight broadcaster messages"
 msgstr "Broadcaster-Nachrichten hervorheben"
 
-#: data/org.jfsen.Streamline.gschema.xml:97
+#: data/org.jfsen.Streamline.gschema.xml:91
 msgid "Show a red tint behind messages from the broadcaster"
 msgstr "Rote Einfärbung für Nachrichten des Broadcasters"
 
-#: data/org.jfsen.Streamline.gschema.xml:101
+#: data/org.jfsen.Streamline.gschema.xml:95
 msgid "Show profile pictures on play buttons"
 msgstr "Profilbilder auf Wiedergabe-Schaltflächen anzeigen"
 
-#: data/org.jfsen.Streamline.gschema.xml:103
+#: data/org.jfsen.Streamline.gschema.xml:97
 msgid ""
 "Replace the play icon with the streamer's profile picture when available"
 msgstr ""
 "Das Wiedergabe-Symbol durch das Profilbild des Streamers ersetzen, wenn "
 "verfügbar"
 
-#: data/org.jfsen.Streamline.gschema.xml:107
+#: data/org.jfsen.Streamline.gschema.xml:101
 msgid "Show VOD thumbnails"
 msgstr "VOD-Vorschaubilder anzeigen"
 
-#: data/org.jfsen.Streamline.gschema.xml:109
+#: data/org.jfsen.Streamline.gschema.xml:103
 msgid "Display thumbnail previews for VODs as cards instead of a plain list"
 msgstr "Vorschaubilder für VODs als Karten statt als einfache Liste anzeigen"
 
@@ -229,7 +217,7 @@ msgstr "Abbrechen"
 msgid "Unfollow"
 msgstr "Entfolgen"
 
-#: src/dialogs.py:65 src/dialogs.py:71 src/window.py:562 src/window.ui:49
+#: src/dialogs.py:65 src/dialogs.py:71 src/window.py:561 src/window.ui:49
 msgid "Follow"
 msgstr "Folgen"
 
@@ -237,7 +225,7 @@ msgstr "Folgen"
 msgid "Enter the streamer username (separate multiple with commas):"
 msgstr "Gib Streamer-Benutzernamen ein (mehrere mit Kommas trennen):"
 
-#: src/dialogs.py:90 src/window.py:563 src/window.ui:35
+#: src/dialogs.py:90 src/window.py:562 src/window.ui:35
 msgid "Quick Play"
 msgstr "Schnellstart"
 
@@ -282,51 +270,51 @@ msgid "translator-credits"
 msgstr "jfsen"
 
 #. ── Combo row models (labels only — values live in GSettings) ──
-#: src/preferences.py:52 src/preferences.py:54
+#: src/preferences.py:51 src/preferences.py:53
 msgid "Custom"
 msgstr "Eigen"
 
-#: src/preferences.py:54
+#: src/preferences.py:53
 msgid "High"
 msgstr "Hoch"
 
-#: src/preferences.py:54
+#: src/preferences.py:53
 msgid "Medium"
 msgstr "Mittel"
 
-#: src/preferences.py:54
+#: src/preferences.py:53
 msgid "Low"
 msgstr "Niedrig"
 
-#: src/preferences.py:169
+#: src/preferences.py:167
 #, python-brace-format
 msgid "Streamers list saved to {}"
 msgstr "Streamer-Liste gespeichert unter {}"
 
-#: src/preferences.py:173
+#: src/preferences.py:171
 #, python-brace-format
 msgid "Error saving file: {}"
 msgstr "Fehler beim Speichern der Datei: {}"
 
-#: src/preferences.py:212
+#: src/preferences.py:210
 msgid "No streamer names found in file"
 msgstr "Keine Streamer-Namen in der Datei gefunden"
 
-#: src/preferences.py:228
+#: src/preferences.py:226
 #, python-brace-format
 msgid "Added {} streamer(s) ({} already followed)"
 msgstr "{} Streamer hinzugefügt ({} wird bereits gefolgt)"
 
-#: src/preferences.py:235
+#: src/preferences.py:233
 #, python-brace-format
 msgid "Added {} streamer(s)"
 msgstr "{} Streamer hinzugefügt"
 
-#: src/preferences.py:238
+#: src/preferences.py:236
 msgid "All streamers already followed"
 msgstr "Allen Streamern wird bereits gefolgt"
 
-#: src/preferences.py:242
+#: src/preferences.py:240
 #, python-brace-format
 msgid "Error importing file: {}"
 msgstr "Fehler beim Importieren der Datei: {}"
@@ -488,41 +476,35 @@ msgstr "{} Sek."
 msgid "{}h {}m"
 msgstr "{} Std. {} Min."
 
-#: src/chat/chat_window.py:37 src/chat/native/page.py:448
-#: src/chat/webkit/page.py:158
+#: src/chat/chat_window.py:36 src/chat/page.py:443
 #, python-brace-format
 msgid "Chat: {}"
 msgstr "Chat: {}"
 
-#: src/chat/native/page.py:539 src/chat/webkit/page.py:80
+#: src/chat/page.py:534
 msgid "More messages below"
 msgstr "Weitere Nachrichten unten"
 
-#: src/chat/native/page.py:579 src/chat/webkit/page.py:86
+#: src/chat/page.py:574
 msgid "Reconnect"
 msgstr "Neu verbinden"
 
-#: src/chat/native/page.py:604 src/chat/webkit/page.py:262
+#: src/chat/page.py:599
 msgid "Detach chat"
 msgstr "Chat ausgliedern"
 
-#: src/chat/native/page.py:1441 src/chat/webkit/page.py:81
+#: src/chat/page.py:1438
 msgid "Connecting to chat…"
 msgstr "Verbinde mit Chat…"
 
-#: src/chat/native/page.py:1451
+#: src/chat/page.py:1448
 #, python-brace-format
 msgid "Reconnecting… (attempt {})"
 msgstr "Verbinde neu… (Versuch {})"
 
-#: src/chat/native/page.py:1460 src/chat/webkit/page.py:85
+#: src/chat/page.py:1457
 msgid "Disconnected."
 msgstr "Getrennt."
-
-#: src/chat/webkit/page.py:83
-#, python-brace-format
-msgid "Reconnecting… (attempt {0})"
-msgstr "Verbinde neu… (Versuch {0})"
 
 #: src/vod_page.py:31
 #, python-brace-format
@@ -542,7 +524,7 @@ msgid "No internet connection. Check your network and try again."
 msgstr ""
 "Keine Internetverbindung. Überprüfe dein Netzwerk und versuche es erneut."
 
-#: src/vod_page.py:184 src/window.py:315
+#: src/vod_page.py:184 src/window.py:314
 #, python-brace-format
 msgid "Please wait {}s before refreshing"
 msgstr "Bitte warte {} s vor dem Aktualisieren"
@@ -567,123 +549,123 @@ msgstr "Dieser Kanal hat keine aktuellen VODs verfügbar"
 msgid "Show more…"
 msgstr "Mehr anzeigen…"
 
-#: src/vod_page.py:515
+#: src/vod_page.py:506
 #, python-brace-format
 msgid "Starting VOD: {}"
 msgstr "Starte VOD: {}"
 
-#: src/vod_page.py:517
+#: src/vod_page.py:508
 msgid "Error playing VOD: player failed to start"
 msgstr "Fehler beim Abspielen des VODs: Player konnte nicht gestartet werden"
 
-#: src/window.py:238
+#: src/window.py:237
 msgid "Connection Error"
 msgstr "Verbindungsfehler"
 
-#: src/window.py:240
+#: src/window.py:239
 msgid "Could not fetch streamer data. Please check your internet connection."
 msgstr ""
 "Konnte Streamer-Daten nicht abrufen. Bitte überprüfe deine "
 "Internetverbindung."
 
-#: src/window.py:251
+#: src/window.py:250
 msgid "API Rate Limit"
 msgstr "API-Ratenlimit"
 
-#: src/window.py:253
+#: src/window.py:252
 msgid ""
 "API rate limit reached. Please wait a few minutes before refreshing again."
 msgstr ""
 "API-Ratenlimit erreicht. Bitte warte ein paar Minuten, bevor du erneut "
 "aktualisierst."
 
-#: src/window.py:260 src/window.py:268
+#: src/window.py:259 src/window.py:267
 msgid "API Error"
 msgstr "API-Fehler"
 
-#: src/window.py:261
+#: src/window.py:260
 #, python-brace-format
 msgid "HTTP error {} occurred while fetching streamer data."
 msgstr "HTTP-Fehler {} beim Abrufen der Streamer-Daten."
 
-#: src/window.py:269
+#: src/window.py:268
 #, python-brace-format
 msgid "Failed to fetch streamer data: {}"
 msgstr "Konnte Streamer-Daten nicht abrufen: {}"
 
-#: src/window.py:306
+#: src/window.py:305
 msgid "API not available"
 msgstr "API nicht verfügbar"
 
-#: src/window.py:335
+#: src/window.py:334
 msgid "Stream data refreshed"
 msgstr "Stream-Daten aktualisiert"
 
-#: src/window.py:497
+#: src/window.py:496
 #, python-brace-format
 msgid "Added {}"
 msgstr "{} hinzugefügt"
 
-#: src/window.py:499
+#: src/window.py:498
 #, python-brace-format
 msgid "Added {} streamers"
 msgstr "{} Streamer hinzugefügt"
 
-#: src/window.py:502
+#: src/window.py:501
 #, python-brace-format
 msgid "'{}' is invalid"
 msgstr "'{}' ist ungültig"
 
-#: src/window.py:504
+#: src/window.py:503
 #, python-brace-format
 msgid "{} invalid names"
 msgstr "{} ungültige Namen"
 
-#: src/window.py:507
+#: src/window.py:506
 #, python-brace-format
 msgid "Already following {}"
 msgstr "Folgst {} bereits"
 
-#: src/window.py:509
+#: src/window.py:508
 msgid "Already following"
 msgstr "Bereits gefolgt"
 
-#: src/window.py:523
+#: src/window.py:522
 #, python-brace-format
 msgid "Error: {}"
 msgstr "Fehler: {}"
 
-#: src/window.py:532
+#: src/window.py:531
 msgid "Error Saving Config"
 msgstr "Fehler beim Speichern der Konfiguration"
 
-#: src/window.py:532
+#: src/window.py:531
 msgid "Could not save configuration"
 msgstr "Konnte Konfiguration nicht speichern"
 
 #. Application section
-#: src/window.py:554
+#: src/window.py:553
 msgid "Application"
 msgstr "Anwendung"
 
-#: src/window.py:555 src/preferences.ui:7
+#: src/window.py:554 src/preferences.ui:7
 msgid "Preferences"
 msgstr "Einstellungen"
 
-#: src/window.py:556
+#: src/window.py:555
 msgid "Show Shortcuts"
 msgstr "Tastenkürzel anzeigen"
 
-#: src/window.py:557
+#: src/window.py:556
 msgid "Quit"
 msgstr "Beenden"
 
 #. Stream Management section
-#: src/window.py:561
+#: src/window.py:560
 msgid "Stream Management"
 msgstr "Stream-Verwaltung"
 
-#: src/window.py:565 src/window.py:570 src/window.py:572
+#: src/window.py:564 src/window.py:569 src/window.py:571
 msgid "Refresh Streams"
 msgstr "Streams aktualisieren"
 
@@ -756,9 +738,8 @@ msgid "VOD Thumbnails"
 msgstr "VOD-Vorschaubilder"
 
 #: src/preferences.ui:59
-#, fuzzy
 msgid "Show thumbnail previews for VODs"
-msgstr "Vorschaubilder für VODs als Karten anzeigen"
+msgstr "Vorschaubilder für VODs anzeigen"
 
 #: src/preferences.ui:67
 msgid "Player"
@@ -850,23 +831,11 @@ msgstr "Emote-Animationen deaktivieren"
 msgid "Use static emote images to reduce resource usage"
 msgstr "Statische Emote-Bilder verwenden, um Ressourcen zu schonen"
 
-#: src/preferences.ui:242
-msgid "Native Chat Engine"
-msgstr "Native Chat-Engine"
-
-#: src/preferences.ui:246
-msgid ""
-"Use GTK instead of WebKit for chat rendering.  Much lower memory usage, but "
-"higher CPU usage for animated emotes"
-msgstr ""
-"GTK anstelle von WebKit für die Chat-Darstellung verwenden.  Deutlich "
-"geringere Speichernutzung, aber höhere CPU-Auslastung bei animierten Emotes"
-
-#: src/preferences.ui:257
+#: src/preferences.ui:245
 msgid "Chat Highlighting"
 msgstr "Chat-Hervorhebung"
 
-#: src/preferences.ui:261
+#: src/preferences.ui:249
 msgid ""
 "Apply tinted backgrounds to certain message types. Changes apply to newly "
 "opened chats"
@@ -874,43 +843,43 @@ msgstr ""
 "Eingefärbte Hintergründe für bestimmte Nachrichtentypen anwenden. Änderungen "
 "gelten für neu geöffnete Chats"
 
-#: src/preferences.ui:267
+#: src/preferences.ui:255
 msgid "First Messages"
 msgstr "Erste Nachrichten"
 
-#: src/preferences.ui:271
+#: src/preferences.ui:259
 msgid "Blue tint for a user's first message in the channel"
 msgstr "Blaue Einfärbung für die erste Nachricht eines Nutzers im Kanal"
 
-#: src/preferences.ui:276
+#: src/preferences.ui:264
 msgid "Moderators"
 msgstr "Moderatoren"
 
-#: src/preferences.ui:280
+#: src/preferences.ui:268
 msgid "Green tint for messages from moderators"
 msgstr "Grüne Einfärbung für Nachrichten von Moderatoren"
 
-#: src/preferences.ui:285
+#: src/preferences.ui:273
 msgid "VIPs"
 msgstr "VIPs"
 
-#: src/preferences.ui:289
+#: src/preferences.ui:277
 msgid "Pink tint for messages from VIPs"
 msgstr "Rosa Einfärbung für Nachrichten von VIPs"
 
-#: src/preferences.ui:294
+#: src/preferences.ui:282
 msgid "Partners"
 msgstr "Partner"
 
-#: src/preferences.ui:298
+#: src/preferences.ui:286
 msgid "Purple tint for messages from Partners"
 msgstr "Violette Einfärbung für Nachrichten von Partnern"
 
-#: src/preferences.ui:306
+#: src/preferences.ui:294
 msgid "Broadcaster"
 msgstr "Broadcaster"
 
-#: src/preferences.ui:310
+#: src/preferences.ui:298
 msgid "Red tint for messages from the broadcaster"
 msgstr "Rote Einfärbung für Nachrichten des Broadcasters"
 
@@ -921,6 +890,32 @@ msgstr "VODs"
 #: src/vod_page.ui:23
 msgid "Refresh VODs"
 msgstr "VODs aktualisieren"
+
+#~ msgid "Use native chat engine"
+#~ msgstr "Native Chat-Engine verwenden"
+
+#~ msgid ""
+#~ "Use GTK instead of WebKit for chat rendering. Much lower memory usage, "
+#~ "but higher CPU usage for animated emotes."
+#~ msgstr ""
+#~ "GTK anstelle von WebKit für die Chat-Darstellung verwenden.  Deutlich "
+#~ "geringere Speichernutzung, aber höhere CPU-Auslastung bei animierten "
+#~ "Emotes"
+
+#, python-brace-format
+#~ msgid "Reconnecting… (attempt {0})"
+#~ msgstr "Verbinde neu… (Versuch {0})"
+
+#~ msgid "Native Chat Engine"
+#~ msgstr "Native Chat-Engine"
+
+#~ msgid ""
+#~ "Use GTK instead of WebKit for chat rendering.  Much lower memory usage, "
+#~ "but higher CPU usage for animated emotes"
+#~ msgstr ""
+#~ "GTK anstelle von WebKit für die Chat-Darstellung verwenden.  Deutlich "
+#~ "geringere Speichernutzung, aber höhere CPU-Auslastung bei animierten "
+#~ "Emotes"
 
 #~ msgid ""
 #~ "Twitch API rate limit reached. Please wait a few minutes before "

@@ -2,12 +2,11 @@
 
 # ── Shared theme ───────────────────────────────────────────
 #
-# Typography, banner, and colour-palette constants shared by
-# both the native GTK and WebKit chat engines.  Each engine's
-# own config.py imports this and layers engine-specific keys
-# (card backgrounds, row spacing, etc.) on top.
+# Typography, banner, and colour-palette constants.  These
+# include both the base palette and GTK-specific card keys
+# (card backgrounds, badge sizing, etc.).
 #
-# Consumers:  native/config.py, webkit/config.py
+# Consumer:  page.py
 
 CHAT_THEME = {
     # --- typography -------------------------------------------------
@@ -51,6 +50,36 @@ CHAT_THEME = {
     },
 }
 
+# ── Visual (GTK) ───────────────────────────────────────────
+#
+# Extends the shared ``CHAT_THEME`` with GTK-specific card
+# styling keys (backgrounds, badge sizing, etc.).
+# Consumer:  page.py
+
+CHAT_STYLE = {
+    **CHAT_THEME,
+    # --- message card (GTK-only) -------------------------------------
+    "card_radius": 8,  # px – corner rounding
+    "card_margin": "3px 6px",  # spacing between cards
+    "card_padding": "5px 10px",  # internal padding
+    # --- identity (badges + username) ----------------------------------
+    "badge_spacing": 2,  # px between adjacent badges and badges / name
+    "badge_size": 18,  # px square
+    # --- colour palettes (dark / light) ------------------------------
+    "dark": {
+        **CHAT_THEME["dark"],
+        "card_bg": "rgba(255,255,255,0.06)",
+        "card_sep": "rgba(255,255,255,0.10)",
+        "alt_row": "rgba(255,255,255,0.02)",  # alternating row tint
+    },
+    "light": {
+        **CHAT_THEME["light"],
+        "card_bg": "rgba(0,0,0,0.04)",
+        "card_sep": "rgba(0,0,0,0.08)",
+        "alt_row": "rgba(0,0,0,0.02)",  # alternating row tint
+    },
+}
+
 # Fallback username colour used when the IRC tags don't include a
 # ``color`` attribute.
 FALLBACK_USER_COLOR = "#9147ff"  # Twitch purple
@@ -60,7 +89,7 @@ FALLBACK_USER_COLOR = "#9147ff"  # Twitch purple
 # Runtime behaviour tunables — message limits, flush batching,
 # and process lifetime.
 #
-# Consumers:  webkit/page.py, native/page.py,  emotes.py  (CACHE_TTL)
+# Consumers:  page.py,  emotes.py  (CACHE_TTL)
 
 # Messages beyond this count trigger culling from the DOM.
 MAX_MESSAGES = 500

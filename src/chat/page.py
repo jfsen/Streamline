@@ -1,4 +1,4 @@
-"""Alternative chat page using native GTK widgets instead of WebKit.
+"""Chat page using native GTK widgets.
 
 Cards are appended directly to a Gtk.Box inside a ScrolledWindow — no
 ListView, no row recycling.  This avoids the measurement / resize-timing
@@ -17,22 +17,22 @@ from pathlib import Path
 import requests
 from gi.repository import Adw, Gdk, Gio, GLib, Gtk
 
-from ..config import (
+from .config import (
+    CHAT_STYLE,
     CULL_CHUNK,
     FALLBACK_USER_COLOR,
     FLUSH_MS,
     MAX_MESSAGES,
 )
-from ..emotes import ThirdPartyEmotes
-from ..twitch_chat import ConnectionState, TwitchChat
-from .config import NATIVE_STYLE
+from .emotes import ThirdPartyEmotes
+from .twitch_chat import ConnectionState, TwitchChat
 
 _ = gettext.gettext
-logger = logging.getLogger("NativeChatPage")
+logger = logging.getLogger("ChatPage")
 
 # ── Badge SVGs (loaded once at module level) ───────────────
 
-_BADGE_DIR = Path(__file__).parent.parent / "badges"
+_BADGE_DIR = Path(__file__).parent / "badges"
 _BADGE_SVGS = {}
 for _f in _BADGE_DIR.glob("*.svg"):
     _BADGE_SVGS[_f.stem] = _f.read_text()
@@ -290,8 +290,7 @@ def _clear_text_buffers(root: Gtk.Widget) -> None:
 
 def _clamp_color(hex_color: str, dark: bool) -> Gdk.RGBA:
     """Clamp a username colour so it remains legible on the current
-    background.  Logic mirrors the JS ``clampColor()`` in the WebKit
-    chat page."""
+    background."""
 
     hex_clean = hex_color.lstrip("#")
     r = int(hex_clean[0:2], 16) / 255.0
@@ -420,12 +419,8 @@ def _rgba_to_hex(rgba: Gdk.RGBA) -> str:
 # ── The page ─────────────────────────────────────────────────
 
 
-class NativeChatPage(Adw.NavigationPage):
-    """A read-only Twitch chat page rendered with native GTK widgets.
-
-    Constructor signature matches ``ChatPage`` so callers can trivially
-    switch between the two implementations.
-    """
+class ChatPage(Adw.NavigationPage):
+    """A read-only Twitch chat page rendered with native GTK widgets."""
 
     # ── constructor ─────────────────────────────────────────
 
@@ -647,7 +642,7 @@ class NativeChatPage(Adw.NavigationPage):
 
     def _update_card_css(self) -> None:
         """Rebuild the shared card CSS provider for the current theme."""
-        ns = NATIVE_STYLE
+        ns = CHAT_STYLE
         theme = ns["dark"] if self._dark else ns["light"]
         # Use two classes so alternating rows can pick a different bg.
         self._card_css_provider.load_from_data(
@@ -712,7 +707,7 @@ class NativeChatPage(Adw.NavigationPage):
 
     def _build_card(self, msg: dict) -> Gtk.Widget:
         """Create one message card widget from the raw message dict."""
-        ns = NATIVE_STYLE
+        ns = CHAT_STYLE
         theme = ns["dark"] if self._dark else ns["light"]
 
         # ── Card frame ───────────────────────────────────────
@@ -1135,7 +1130,7 @@ class NativeChatPage(Adw.NavigationPage):
 
     def _restyle_identity(self, identity: Gtk.Box) -> None:
         """Update the username label colour for the current theme."""
-        ns = NATIVE_STYLE
+        ns = CHAT_STYLE
 
         child = identity.get_last_child()
         if child is None or not isinstance(child, Gtk.Label):
@@ -1158,13 +1153,13 @@ class NativeChatPage(Adw.NavigationPage):
 
     def _restyle_body(self, text_view: Gtk.TextView) -> None:
         """Update text colour in the TextView body for the new theme."""
-        theme = NATIVE_STYLE["dark"] if self._dark else NATIVE_STYLE["light"]
+        theme = CHAT_STYLE["dark"] if self._dark else CHAT_STYLE["light"]
         tag = text_view.get_buffer().get_tag_table().lookup("body")
         if tag is not None:
             tag.set_property("foreground", theme["text_color"])
 
     def _apply_banner_style(self) -> None:
-        ns = NATIVE_STYLE
+        ns = CHAT_STYLE
         theme = ns["dark"] if self._dark else ns["light"]
 
         # Remove previous provider to avoid accumulating on theme switches.
@@ -1236,7 +1231,7 @@ class NativeChatPage(Adw.NavigationPage):
         word-wrapped at that stale width end up super-tall.
         Queuing a resize here fixes them before the user notices.
         """
-        if window.is_active():
+        if window.is_active() and self._msg_box is not None:
             self._msg_box.queue_resize()
 
     def cleanup(self) -> None:
@@ -1259,6 +1254,13 @@ class NativeChatPage(Adw.NavigationPage):
             self._chat._on_state_change = None
             self._chat.stop()
             self._chat = None
+        # Disconnect toplevel-active watcher before clearing widgets,
+        # so a stray notify::is-active can't touch a freed msg_box.
+        if self._toplevel_active_id is not None:
+            root = self.get_root()
+            if root is not None:
+                root.disconnect(self._toplevel_active_id)
+            self._toplevel_active_id = None
         # Unregister animated emotes and drop all cards.
         while True:
             child = self._msg_box.get_first_child()
@@ -1281,11 +1283,6 @@ class NativeChatPage(Adw.NavigationPage):
         self._chat = None
         self._scrolled = None
         self._msg_box = None
-        if self._toplevel_active_id is not None:
-            root = self.get_root()
-            if root is not None:
-                root.disconnect(self._toplevel_active_id)
-            self._toplevel_active_id = None
         gc.collect()
 
     # ── Animated emote tick (per-page) ───────────────────────
@@ -1472,7 +1469,7 @@ class NativeChatPage(Adw.NavigationPage):
             return
         parent = self.parent
         root = self.get_root()
-        from ..chat_window import ChatWindow
+        from .chat_window import ChatWindow
 
         popup = ChatWindow(
             twitch=getattr(parent, "twitch", None),
@@ -1482,7 +1479,6 @@ class NativeChatPage(Adw.NavigationPage):
             disable_emote_animations=self._disable_emote_animations,
             theme="dark" if self._dark else "light",
             transient_for=root,
-            native_engine=True,
             highlight_first_msg=self._highlight_first_msg,
             highlight_mod=self._highlight_mod,
             highlight_vip=self._highlight_vip,

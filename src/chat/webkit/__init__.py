@@ -1,1 +1,0 @@
-"""WebKit-based chat page."""
