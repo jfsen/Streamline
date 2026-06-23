@@ -10,13 +10,13 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/jfsen/Streamline/blob/main/COPYING"><img src="https://img.shields.io/badge/license-GPL--3.0-blue.svg" alt="License: GPL-3.0-or-later"/></a>
-  <a href="https://github.com/jfsen/Streamline/releases"><img src="https://img.shields.io/badge/release-3.4.0-brightgreen.svg" alt="Release: 3.4.0"/></a>
+  <a href="https://github.com/jfsen/Streamline/blob/main/COPYING"><img src="https://img.shields.io/badge/license-GPL--3.0-green.svg" alt="License: GPL-3.0-or-later"/></a>
+  <a href="https://github.com/jfsen/Streamline/releases"><img src="https://img.shields.io/github/v/release/jfsen/Streamline?filter=v*" alt="Release"/></a>
 </p>
 
 ---
 
-Streamline is a GTK4/libadwaita application that lets you follow your favorite Twitch streamers, check their online status, and watch them in your preferred media player — **mpv**, **VLC**, or any custom player — all without a web browser. It also supports browsing and playing channel VODs, all powered by [Streamlink](https://streamlink.github.io/).
+Streamline is a GTK4/libadwaita application that lets you follow your favorite Twitch streamers, check their online status, and watch them in your preferred media player — **mpv**, **VLC**, or a [Streamlink](https://streamlink.github.io/)-compatible custom player — all without a web browser. It also supports browsing and playing channel VODs.
 
 ## Features
 
@@ -24,11 +24,10 @@ Streamline is a GTK4/libadwaita application that lets you follow your favorite T
 - **Live status** — See who's online and who's offline at a glance
 - **Stream playback** — Watch live streams via Streamlink with mpv, VLC, or any custom player
 - **VOD browser** — Browse and play past broadcasts (VODs) from followed channels
+- **Chat** — Place a chat window next to the stream to see how people react
 - **Quick Play** — Watch a one-off stream without following the channel
 - **Quality presets** — Choose from High, Medium, Low, or set a custom quality string
-- **Low-latency streaming** — Enable low-latency mode for faster playback
-- **Custom themes** — Pick from Dark, Light, Bronze, Anthracite, and Red
-- **Export** — Save your streamer list to a text file
+- **Backup** — Save your streamer list to a text file
 
 ## Screenshots
 
@@ -66,7 +65,7 @@ sudo pacman -S --needed meson python python-gobject gtk4 libadwaita \
 
 **Debian / Ubuntu**
 ```bash
-sudo apt install meson python3 python3-gi python3-gi-cairo gir1.2-gtk-4.0 \
+sudo apt install meson python3 python3-gi gir1.2-gtk-4.0 \
   gir1.2-adw-1 python3-requests python3-pillow streamlink mpv desktop-file-utils appstream
 ```
 
@@ -76,36 +75,25 @@ sudo dnf install meson python3 python3-gobject gtk4 libadwaita \
   python3-requests python3-pillow streamlink mpv desktop-file-utils appstream-glib
 ```
 
-> WebKit-based chat (optional): install `webkitgtk-6.0` (Arch) / `gir1.2-webkit-6.0` (Debian) / `webkitgtk6.0` (Fedora).
-
 ### Build and install (system-wide)
 
 ```bash
 git clone https://github.com/jfsen/Streamline.git
 cd Streamline
-meson setup builddir --prefix=/usr --wipe
+meson setup builddir --prefix=/usr
 meson compile -C builddir
 sudo meson install -C builddir
-sudo glib-compile-schemas /usr/share/glib-2.0/schemas/
 ```
+
+> **Reconfiguring**: if you need to change build options later, re-run `meson setup` with `--wipe` to start fresh.
+
+For a per-user install, use `--prefix=~/.local` instead of `--prefix=/usr` and
+omit `sudo`.
 
 ### Uninstall
 
 ```bash
 sudo ninja -C builddir uninstall
-```
-
-Or remove the installed files manually:
-
-```bash
-sudo rm -f /usr/bin/streamline
-sudo rm -rf /usr/share/streamline
-sudo rm -f /usr/share/applications/org.jfsen.Streamline.desktop
-sudo rm -f /usr/share/metainfo/org.jfsen.Streamline.metainfo.xml
-sudo rm -f /usr/share/glib-2.0/schemas/org.jfsen.Streamline.gschema.xml
-sudo rm -f /usr/share/dbus-1/services/org.jfsen.Streamline.service
-sudo rm -rf /usr/share/icons/hicolor/*/apps/org.jfsen.Streamline*
-sudo rm -f /usr/share/locale/*/LC_MESSAGES/org.jfsen.Streamline.mo
 ```
 
 ### Flatpak
@@ -134,13 +122,15 @@ On first launch, Streamline will prompt you for your Twitch API credentials. You
 
 All preferences are available under **Preferences** (<kbd>Ctrl</kbd>+<kbd>,</kbd>):
 
-- **Player** — mpv, VLC, or a custom player executable
+- **Player** — mpv, VLC, or a custom player executable.
+  Custom players need to be compatible with Streamlink.
 - **Stream quality** — High, Medium, Low, or Custom.
   When set to *Custom*, you can enter a [Streamlink stream type](https://streamlink.github.io/cli.html#cmdoption-stream-types) string.
   Examples: `best` (default), `1080p60`, `720p,720p60`, `audio_only`, `worst`.
-- **Theme** — System, Light, Dark, Bronze, Anthracite, Red
-- **Low latency** — Toggle low-latency stream playback
-- **Export streamers** — Save your followed channels to a text file
+- **Theme** — System, Light, Dark, Anthracite, Justin, Oxide
+- **Low latency** — Toggle low-latency stream playback.
+  May cause issues on slow connections.
+- **Chat** — Toggle alternating message backgrounds, animated emotes and message highlights
 
 ## License
 
