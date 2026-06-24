@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: streamline 3.4.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-06-23 22:43+0200\n"
+"POT-Creation-Date: 2026-06-24 22:10+0200\n"
 "PO-Revision-Date: 2026-06-20 12:00+0200\n"
 "Last-Translator: jfsen\n"
 "Language-Team: none\n"
@@ -526,17 +526,12 @@ msgstr "Anonym hat {tier} an {recipient} verschenkt!"
 msgid "{gifter} gifted {tier} to {recipient}!"
 msgstr "{gifter} hat {tier} an {recipient} verschenkt!"
 
-#: src/chat/twitch_chat.py:399
-#, python-brace-format
-msgid "Raiding {target} with {count} viewers!"
-msgstr "Raide {target} mit {count} Zuschauern!"
-
-#: src/chat/twitch_chat.py:410
+#: src/chat/twitch_chat.py:395
 #, python-brace-format
 msgid "{name} is raiding with {count} viewers!"
 msgstr "{name} raidet mit {count} Zuschauern!"
 
-#: src/chat/twitch_chat.py:422
+#: src/chat/twitch_chat.py:407
 #, python-brace-format
 msgid "📢 {name}: {body}"
 msgstr "📢 {name}: {body}"
@@ -549,25 +544,20 @@ msgstr "Weitere Nachrichten unten"
 msgid "Reconnect"
 msgstr "Neu verbinden"
 
-#: src/chat/page.py:619
+#: src/chat/page.py:599
 msgid "Detach chat"
 msgstr "Chat ausgliedern"
 
-#: src/chat/page.py:866
-#, python-brace-format
-msgid "📢 Raiding {target} with {count} viewers!"
-msgstr "📢 Raide {target} mit {count} Zuschauern!"
-
-#: src/chat/page.py:1477
+#: src/chat/page.py:1437
 msgid "Connecting to chat…"
 msgstr "Verbinde mit Chat…"
 
-#: src/chat/page.py:1487
+#: src/chat/page.py:1447
 #, python-brace-format
 msgid "Reconnecting… (attempt {})"
 msgstr "Verbinde neu… (Versuch {})"
 
-#: src/chat/page.py:1496
+#: src/chat/page.py:1456
 msgid "Disconnected."
 msgstr "Getrennt."
 
@@ -955,6 +945,14 @@ msgstr "VODs"
 #: src/vod_page.ui:23
 msgid "Refresh VODs"
 msgstr "VODs aktualisieren"
+
+#, python-brace-format
+#~ msgid "Raiding {target} with {count} viewers!"
+#~ msgstr "Raide {target} mit {count} Zuschauern!"
+
+#, python-brace-format
+#~ msgid "📢 Raiding {target} with {count} viewers!"
+#~ msgstr "📢 Raide {target} mit {count} Zuschauern!"
 
 #~ msgid "Use native chat engine"
 #~ msgstr "Native Chat-Engine verwenden"

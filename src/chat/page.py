@@ -578,25 +578,6 @@ class ChatPage(Adw.NavigationPage):
 
         self._reconnect_revealer.set_child(reconnect_box)
 
-        # ── Outgoing raid banner ───────────────────────────
-        self._raid_revealer = Gtk.Revealer()
-        self._raid_revealer.set_transition_type(Gtk.RevealerTransitionType.SLIDE_DOWN)
-        self._raid_revealer.set_transition_duration(250)
-
-        raid_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
-        raid_box.set_margin_start(12)
-        raid_box.set_margin_end(12)
-        raid_box.set_margin_top(4)
-        raid_box.set_margin_bottom(4)
-        raid_box.add_css_class("outgoing-raid-banner")
-
-        self._raid_label = Gtk.Label()
-        self._raid_label.set_halign(Gtk.Align.START)
-        self._raid_label.set_hexpand(True)
-        raid_box.append(self._raid_label)
-
-        self._raid_revealer.set_child(raid_box)
-
         self._apply_banner_style()
         self._update_card_css()
 
@@ -605,7 +586,6 @@ class ChatPage(Adw.NavigationPage):
         content_box.set_vexpand(True)
         content_box.set_hexpand(True)
         content_box.append(self._reconnect_revealer)
-        content_box.append(self._raid_revealer)
         content_box.append(overlay)
 
         # ── Toolbar ─────────────────────────────────────────
@@ -859,17 +839,6 @@ class ChatPage(Adw.NavigationPage):
     def _on_message(self, msg: dict) -> None:
         if self._cleaned_up:
             return
-
-        # Outgoing raid — show a persistent banner at the top of chat
-        if msg.get("outgoing_raid"):
-            self._raid_label.set_text(
-                _("📢 Raiding {target} with {count} viewers!").format(
-                    target=msg["outgoing_raid"],
-                    count=msg.get("raid_count", "?"),
-                )
-            )
-            self._raid_revealer.set_reveal_child(True)
-
         self._item_count += 1
 
         is_system = msg.get("system", False)
@@ -1200,9 +1169,6 @@ class ChatPage(Adw.NavigationPage):
             self._reconnect_revealer.get_style_context().remove_provider(
                 self._banner_css_provider
             )
-            self._raid_revealer.get_style_context().remove_provider(
-                self._banner_css_provider
-            )
 
         provider = Gtk.CssProvider()
         provider.load_from_data(
@@ -1217,12 +1183,6 @@ class ChatPage(Adw.NavigationPage):
             f"  padding: {ns['banner_padding']}; "
             f"  background: {theme['banner_bg']}; "
             f"  color: {theme['banner_fg']}; "
-            f"}}"
-            f".outgoing-raid-banner {{ "
-            f"  font: {ns['banner_font']}; "
-            f"  padding: {ns['banner_padding']}; "
-            f"  background: {theme['broadcaster_bg']}; "
-            f"  color: {theme['text_color']}; "
             f"}}",
             -1,
         )

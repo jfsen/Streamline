@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: org.jfsen.Streamline\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-06-23 22:43+0200\n"
+"POT-Creation-Date: 2026-06-24 22:10+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -499,17 +499,12 @@ msgstr ""
 msgid "{gifter} gifted {tier} to {recipient}!"
 msgstr ""
 
-#: src/chat/twitch_chat.py:399
-#, python-brace-format
-msgid "Raiding {target} with {count} viewers!"
-msgstr ""
-
-#: src/chat/twitch_chat.py:410
+#: src/chat/twitch_chat.py:395
 #, python-brace-format
 msgid "{name} is raiding with {count} viewers!"
 msgstr ""
 
-#: src/chat/twitch_chat.py:422
+#: src/chat/twitch_chat.py:407
 #, python-brace-format
 msgid "📢 {name}: {body}"
 msgstr ""
@@ -522,25 +517,20 @@ msgstr ""
 msgid "Reconnect"
 msgstr ""
 
-#: src/chat/page.py:619
+#: src/chat/page.py:599
 msgid "Detach chat"
 msgstr ""
 
-#: src/chat/page.py:866
-#, python-brace-format
-msgid "📢 Raiding {target} with {count} viewers!"
-msgstr ""
-
-#: src/chat/page.py:1477
+#: src/chat/page.py:1437
 msgid "Connecting to chat…"
 msgstr ""
 
-#: src/chat/page.py:1487
+#: src/chat/page.py:1447
 #, python-brace-format
 msgid "Reconnecting… (attempt {})"
 msgstr ""
 
-#: src/chat/page.py:1496
+#: src/chat/page.py:1456
 msgid "Disconnected."
 msgstr ""
 

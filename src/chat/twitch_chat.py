@@ -387,25 +387,10 @@ class TwitchChat:
 
         if msg_id == "raid":
             vc = self._tag_val(tags, "msg-param-viewerCount")
-            raider_login = self._tag_val(tags, "msg-param-login") or ""
-            name = self._tag_val(tags, "msg-param-displayName") or "Someone"
-            count = vc or "?"
-
-            if raider_login.lower() == self._channel:
-                # Outgoing raid — the broadcaster is raiding someone else.
-                # This signals the stream is ending; show a prominent banner.
-                return {
-                    **self._empty_msg(
-                        _("Raiding {target} with {count} viewers!").format(
-                            target=name, count=count
-                        )
-                    ),
-                    "outgoing_raid": name,
-                    "raid_count": count,
-                }
-
             if vc and int(vc) < 10:
                 return None
+            name = self._tag_val(tags, "msg-param-displayName") or "Someone"
+            count = vc or "?"
             return self._empty_msg(
                 _("{name} is raiding with {count} viewers!").format(
                     name=name, count=count
