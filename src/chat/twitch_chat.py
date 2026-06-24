@@ -1,6 +1,7 @@
 """Twitch IRC chat client (read-only, anonymous)."""
 
 import enum
+import gettext
 import logging
 import random
 import re
@@ -26,6 +27,8 @@ from .config import (
 )
 
 logger = logging.getLogger("IRCChat")
+
+_ = gettext.gettext
 
 
 class ConnectionState(enum.Enum):
@@ -288,11 +291,13 @@ class TwitchChat:
         if ban_duration is not None:
             minutes = ban_duration // 60
             if minutes == 1:
-                text = f"{target} was timed out (1 minute)"
+                text = _("{target} was timed out (1 minute)").format(target=target)
             else:
-                text = f"{target} was timed out ({minutes} minutes)"
+                text = _("{target} was timed out ({minutes} minutes)").format(
+                    target=target, minutes=minutes
+                )
         else:
-            text = f"{target} was banned"
+            text = _("{target} was banned").format(target=target)
 
         return self._empty_msg(text)
 
@@ -323,16 +328,20 @@ class TwitchChat:
         tier = self._tier_label(self._tag_val(tags, "msg-param-sub-plan"))
 
         if not is_resub:
-            return self._empty_msg(f"{name} subscribed with {tier}!")
+            return self._empty_msg(
+                _("{name} subscribed with {tier}!").format(name=name, tier=tier)
+            )
 
         months = self._tag_val(tags, "msg-param-cumulative-months")
         streak = self._tag_val(tags, "msg-param-streak-months")
         share = self._tag_val(tags, "msg-param-should-share-streak")
 
-        base = f"{name} subscribed for {months or '?'} months"
+        base = _("{name} subscribed for {months} months").format(
+            name=name, months=months or "?"
+        )
         if share == "1" and streak and streak != "0" and streak != months:
-            base += f" ({streak} streak)"
-        return self._empty_msg(f"{base} with {tier}!")
+            base += _(" ({streak} streak)").format(streak=streak)
+        return self._empty_msg(_("{base} with {tier}!").format(base=base, tier=tier))
 
     def _build_subgift_msg(self, tags, is_anon):
         """Build a gift-sub message from USERNOTICE tags."""
@@ -340,10 +349,18 @@ class TwitchChat:
         tier = self._tier_label(self._tag_val(tags, "msg-param-sub-plan"))
 
         if is_anon:
-            return self._empty_msg(f"Anonymous gifted {tier} to {recipient}!")
+            return self._empty_msg(
+                _("Anonymous gifted {tier} to {recipient}!").format(
+                    tier=tier, recipient=recipient
+                )
+            )
 
         gifter = self._tag_val(tags, "display-name") or "Someone"
-        return self._empty_msg(f"{gifter} gifted {tier} to {recipient}!")
+        return self._empty_msg(
+            _("{gifter} gifted {tier} to {recipient}!").format(
+                gifter=gifter, tier=tier, recipient=recipient
+            )
+        )
 
     def _parse_usernotice(self, line):
         """Parse a USERNOTICE line (sub / raid / …), or return None."""
@@ -370,11 +387,30 @@ class TwitchChat:
 
         if msg_id == "raid":
             vc = self._tag_val(tags, "msg-param-viewerCount")
-            if vc and int(vc) < 10:
-                return None
+            raider_login = self._tag_val(tags, "msg-param-login") or ""
             name = self._tag_val(tags, "msg-param-displayName") or "Someone"
             count = vc or "?"
-            return self._empty_msg(f"{name} is raiding with {count} viewers!")
+
+            if raider_login.lower() == self._channel:
+                # Outgoing raid — the broadcaster is raiding someone else.
+                # This signals the stream is ending; show a prominent banner.
+                return {
+                    **self._empty_msg(
+                        _("Raiding {target} with {count} viewers!").format(
+                            target=name, count=count
+                        )
+                    ),
+                    "outgoing_raid": name,
+                    "raid_count": count,
+                }
+
+            if vc and int(vc) < 10:
+                return None
+            return self._empty_msg(
+                _("{name} is raiding with {count} viewers!").format(
+                    name=name, count=count
+                )
+            )
 
         if msg_id in ("bitsbadgetier", "viewermilestone"):
             return None
@@ -383,7 +419,7 @@ class TwitchChat:
             # /announce — body text follows "#channel :"
             body = parts[1].split(" :", 1)[1] if " :" in parts[1] else ""
             name = self._tag_val(tags, "display-name") or "Someone"
-            return self._empty_msg(f"📢 {name}: {body}")
+            return self._empty_msg(_("📢 {name}: {body}").format(name=name, body=body))
 
         sys_msg = self._tag_val(tags, "system-msg")
         if sys_msg:

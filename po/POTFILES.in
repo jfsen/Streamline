@@ -11,6 +11,7 @@ src/rows.py
 src/stream_player.py
 src/twitch.py
 src/chat/chat_window.py
+src/chat/twitch_chat.py
 src/chat/page.py
 src/vod_page.py
 src/window.py

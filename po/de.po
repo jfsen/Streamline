@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: streamline 3.4.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-06-23 19:16+0200\n"
+"POT-Creation-Date: 2026-06-23 22:43+0200\n"
 "PO-Revision-Date: 2026-06-20 12:00+0200\n"
 "Last-Translator: jfsen\n"
 "Language-Team: none\n"
@@ -481,6 +481,66 @@ msgstr "{} Std. {} Min."
 msgid "Chat: {}"
 msgstr "Chat: {}"
 
+#: src/chat/twitch_chat.py:294
+#, python-brace-format
+msgid "{target} was timed out (1 minute)"
+msgstr "{target} wurde für 1 Minute stummgeschaltet"
+
+#: src/chat/twitch_chat.py:296
+#, python-brace-format
+msgid "{target} was timed out ({minutes} minutes)"
+msgstr "{target} wurde für {minutes} Minuten stummgeschaltet"
+
+#: src/chat/twitch_chat.py:300
+#, python-brace-format
+msgid "{target} was banned"
+msgstr "{target} wurde gebannt"
+
+#: src/chat/twitch_chat.py:332
+#, python-brace-format
+msgid "{name} subscribed with {tier}!"
+msgstr "{name} hat mit {tier} abonniert!"
+
+#: src/chat/twitch_chat.py:339
+#, python-brace-format
+msgid "{name} subscribed for {months} months"
+msgstr "{name} hat {months} Monate abonniert"
+
+#: src/chat/twitch_chat.py:343
+#, python-brace-format
+msgid " ({streak} streak)"
+msgstr " ({streak} in Folge)"
+
+#: src/chat/twitch_chat.py:344
+#, python-brace-format
+msgid "{base} with {tier}!"
+msgstr "{base} mit {tier}!"
+
+#: src/chat/twitch_chat.py:353
+#, python-brace-format
+msgid "Anonymous gifted {tier} to {recipient}!"
+msgstr "Anonym hat {tier} an {recipient} verschenkt!"
+
+#: src/chat/twitch_chat.py:360
+#, python-brace-format
+msgid "{gifter} gifted {tier} to {recipient}!"
+msgstr "{gifter} hat {tier} an {recipient} verschenkt!"
+
+#: src/chat/twitch_chat.py:399
+#, python-brace-format
+msgid "Raiding {target} with {count} viewers!"
+msgstr "Raide {target} mit {count} Zuschauern!"
+
+#: src/chat/twitch_chat.py:410
+#, python-brace-format
+msgid "{name} is raiding with {count} viewers!"
+msgstr "{name} raidet mit {count} Zuschauern!"
+
+#: src/chat/twitch_chat.py:422
+#, python-brace-format
+msgid "📢 {name}: {body}"
+msgstr "📢 {name}: {body}"
+
 #: src/chat/page.py:534
 msgid "More messages below"
 msgstr "Weitere Nachrichten unten"
@@ -489,20 +549,25 @@ msgstr "Weitere Nachrichten unten"
 msgid "Reconnect"
 msgstr "Neu verbinden"
 
-#: src/chat/page.py:599
+#: src/chat/page.py:619
 msgid "Detach chat"
 msgstr "Chat ausgliedern"
 
-#: src/chat/page.py:1437
+#: src/chat/page.py:866
+#, python-brace-format
+msgid "📢 Raiding {target} with {count} viewers!"
+msgstr "📢 Raide {target} mit {count} Zuschauern!"
+
+#: src/chat/page.py:1477
 msgid "Connecting to chat…"
 msgstr "Verbinde mit Chat…"
 
-#: src/chat/page.py:1447
+#: src/chat/page.py:1487
 #, python-brace-format
 msgid "Reconnecting… (attempt {})"
 msgstr "Verbinde neu… (Versuch {})"
 
-#: src/chat/page.py:1456
+#: src/chat/page.py:1496
 msgid "Disconnected."
 msgstr "Getrennt."
 
