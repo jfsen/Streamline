@@ -16,7 +16,7 @@ from io import BytesIO
 from pathlib import Path
 
 import requests
-from gi.repository import Adw, Gdk, Gio, GLib, Gtk
+from gi.repository import Adw, Gdk, Gio, GLib, Gtk, Pango
 from PIL import Image
 
 from .config import (
@@ -755,6 +755,7 @@ class ChatPage(Adw.NavigationPage):
             # far cheaper than Gtk.TextView for plain text).
             label = Gtk.Label()
             label.set_wrap(True)
+            label.set_wrap_mode(Pango.WrapMode.WORD_CHAR)
             label.set_xalign(0)
             label.set_selectable(True)
             label.set_halign(Gtk.Align.FILL)
@@ -831,6 +832,7 @@ class ChatPage(Adw.NavigationPage):
             # Pango layout / buffer machinery.
             body_label = Gtk.Label()
             body_label.set_wrap(True)
+            body_label.set_wrap_mode(Pango.WrapMode.WORD_CHAR)
             body_label.set_xalign(0)
             body_label.set_selectable(True)
             body_label.set_halign(Gtk.Align.FILL)
