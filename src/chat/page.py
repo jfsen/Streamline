@@ -720,29 +720,26 @@ class ChatPage(Adw.NavigationPage):
         is_system = msg.get("system", False)
 
         if is_system:
-            # System messages: italic text in a TextView (wraps correctly).
-            text_view = Gtk.TextView()
-            text_view.set_editable(False)
-            text_view.set_cursor_visible(False)
-            text_view.set_wrap_mode(Gtk.WrapMode.WORD)
-            text_view.set_halign(Gtk.Align.FILL)
-            text_view.set_valign(Gtk.Align.FILL)
-            text_view.set_top_margin(2)
-            text_view.set_bottom_margin(2)
-
-            text_view.get_style_context().add_provider(
-                self._tv_css_provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
+            # System messages: italic text in a Label (wraps correctly,
+            # far cheaper than Gtk.TextView for plain text).
+            label = Gtk.Label()
+            label.set_wrap(True)
+            label.set_xalign(0)
+            label.set_selectable(True)
+            label.set_halign(Gtk.Align.FILL)
+            label.set_valign(Gtk.Align.FILL)
+            label.set_margin_top(2)
+            label.set_margin_bottom(2)
+            label.set_markup(
+                f'<span foreground="{theme["text_color"]}" style="italic">'
+                f"{GLib.markup_escape_text(msg['text'])}"
+                f"</span>"
             )
-
-            buffer = text_view.get_buffer()
-            tag = buffer.create_tag(
-                "body", foreground=theme["text_color"], style="italic"
-            )
-            buffer.insert_with_tags(buffer.get_end_iter(), msg["text"], tag)
 
             # Stash for theme-change restyling.
-            text_view._is_system = True
-            card.append(text_view)
+            label._is_system = True
+            label._body_text = msg["text"]
+            card.append(label)
             return card
 
         # ── Identity (badges + username) ────────────────────
@@ -790,8 +787,32 @@ class ChatPage(Adw.NavigationPage):
 
         card.append(identity)
 
-        # ── Body (TextView with inline emote anchors) ─────────
+        # ── Body (Label for text-only, TextView for emote anchors) ─
         segments = msg.get("segments", [{"type": "text", "content": msg["text"]}])
+
+        has_emotes = any(seg["type"] == "emote" for seg in segments)
+
+        if not has_emotes:
+            # Plain text — use a cheap Gtk.Label instead of a heavyweight
+            # Gtk.TextView+TextBuffer.  Most channels are emote-heavy, but
+            # when a message does land without emotes this avoids costly
+            # Pango layout / buffer machinery.
+            body_label = Gtk.Label()
+            body_label.set_wrap(True)
+            body_label.set_xalign(0)
+            body_label.set_selectable(True)
+            body_label.set_halign(Gtk.Align.FILL)
+            body_label.set_valign(Gtk.Align.FILL)
+            body_label.set_margin_top(2)
+            body_label.set_margin_bottom(2)
+            body_label.set_markup(
+                f'<span foreground="{theme["text_color"]}">'
+                f"{GLib.markup_escape_text(msg['text'])}"
+                f"</span>"
+            )
+            body_label._body_text = msg["text"]
+            card.append(body_label)
+            return card
 
         text_view = Gtk.TextView()
         text_view.set_editable(False)
@@ -916,7 +937,9 @@ class ChatPage(Adw.NavigationPage):
             self._cull_in_progress = True
             try:
                 culled_total_height = 0
+                cull_pass = 0
                 while self._item_count > MAX_MESSAGES:
+                    cull_pass += 1
                     culled = 0
                     while culled < CULL_CHUNK:
                         first = self._msg_box.get_first_child()
@@ -937,7 +960,8 @@ class ChatPage(Adw.NavigationPage):
                     if culled == 0:
                         break
 
-                gc.collect()
+                if cull_pass % 10 == 0:
+                    gc.collect()
 
                 if not was_auto and culled_total_height > 0:
                     # Defer restoration until after the layout pass so
@@ -1117,8 +1141,8 @@ class ChatPage(Adw.NavigationPage):
         """Re-style every visible card for the new theme."""
         for card in self._cards:
             identity = card.get_first_child()
-            # System messages have only a TextView, no identity row.
-            if identity is not None and isinstance(identity, Gtk.TextView):
+            # System messages have only a Label/TextView, no identity row.
+            if identity is not None and isinstance(identity, (Gtk.TextView, Gtk.Label)):
                 self._restyle_body(identity)
                 continue
             if identity is not None:
@@ -1150,10 +1174,30 @@ class ChatPage(Adw.NavigationPage):
             f"</span>"
         )
 
-    def _restyle_body(self, text_view: Gtk.TextView) -> None:
-        """Update text colour in the TextView body for the new theme."""
+    def _restyle_body(self, widget: Gtk.Widget) -> None:
+        """Update text colour in the body for the new theme.
+
+        Handles both Gtk.Label (text-only / system messages) and
+        Gtk.TextView (messages containing emotes).
+        """
         theme = CHAT_STYLE["dark"] if self._dark else CHAT_STYLE["light"]
-        tag = text_view.get_buffer().get_tag_table().lookup("body")
+        if isinstance(widget, Gtk.Label):
+            body_text = getattr(widget, "_body_text", "")
+            is_system = getattr(widget, "_is_system", False)
+            if is_system:
+                widget.set_markup(
+                    f'<span foreground="{theme["text_color"]}" style="italic">'
+                    f"{GLib.markup_escape_text(body_text)}"
+                    f"</span>"
+                )
+            else:
+                widget.set_markup(
+                    f'<span foreground="{theme["text_color"]}">'
+                    f"{GLib.markup_escape_text(body_text)}"
+                    f"</span>"
+                )
+            return
+        tag = widget.get_buffer().get_tag_table().lookup("body")
         if tag is not None:
             tag.set_property("foreground", theme["text_color"])
 
