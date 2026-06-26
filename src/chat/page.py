@@ -12,10 +12,12 @@ import logging
 import tempfile as _tempfile
 import threading
 from collections import OrderedDict, deque
+from io import BytesIO
 from pathlib import Path
 
 import requests
 from gi.repository import Adw, Gdk, Gio, GLib, Gtk
+from PIL import Image
 
 from .config import (
     CHAT_STYLE,
@@ -29,6 +31,7 @@ from .twitch_chat import ConnectionState, TwitchChat
 
 _ = gettext.gettext
 logger = logging.getLogger("ChatPage")
+logging.getLogger("PIL").setLevel(logging.WARNING)
 
 # ── Badge SVGs (loaded once at module level) ───────────────
 
@@ -163,12 +166,6 @@ class EmoteTextureCache:
     def _decode(data: bytes) -> Gdk.Texture | list | None:
         """Decode to a static Gdk.Texture, or a list of
         (Gdk.Texture, delay_ms) frames for animated images."""
-        from io import BytesIO
-
-        from PIL import Image
-
-        logging.getLogger("PIL").setLevel(logging.WARNING)
-
         try:
             img = Image.open(BytesIO(data))
         except Exception as exc:
@@ -181,10 +178,16 @@ class EmoteTextureCache:
         if getattr(img, "is_animated", False):
             return _decode_animated_frames(img)
 
-        # Static image — encode as PNG for Gdk.Texture
-        png_buf = BytesIO()
-        img.save(png_buf, format="PNG")
-        return Gdk.Texture.new_from_bytes(GLib.Bytes.new(png_buf.getvalue()))
+        # Static image — upload raw RGBA pixels.
+        img = img.convert("RGBA")
+        w, h = img.size
+        return Gdk.MemoryTexture.new(
+            w,
+            h,
+            Gdk.MemoryFormat.R8G8B8A8,
+            GLib.Bytes.new(img.tobytes()),
+            w * 4,
+        )
 
 
 # ── Animated GIF frame extraction ─────────────────────────────
@@ -195,9 +198,8 @@ def _decode_animated_frames(img) -> list:
 
     Returns a list of (Gdk.Texture, delay_ms).  Frame delays
     below 20 ms are clamped to 50 ms to avoid burning CPU.
+    Each frame is uploaded directly as raw RGBA.
     """
-    from io import BytesIO
-
     frames = []
     try:
         while True:
@@ -206,9 +208,15 @@ def _decode_animated_frames(img) -> list:
                 delay_cs = 100
             delay_ms = max(int(delay_cs), 50)
 
-            png_buf = BytesIO()
-            img.save(png_buf, format="PNG")
-            texture = Gdk.Texture.new_from_bytes(GLib.Bytes.new(png_buf.getvalue()))
+            frame = img.convert("RGBA")
+            w, h = frame.size
+            texture = Gdk.MemoryTexture.new(
+                w,
+                h,
+                Gdk.MemoryFormat.R8G8B8A8,
+                GLib.Bytes.new(frame.tobytes()),
+                w * 4,
+            )
             frames.append((texture, delay_ms))
 
             img.seek(img.tell() + 1)
