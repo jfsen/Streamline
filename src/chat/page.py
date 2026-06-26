@@ -65,8 +65,8 @@ class EmoteTextureCache:
 
     def __init__(self):
         # Cached value is either a Gdk.Texture (static) or a
-        # list of (Gdk.Texture, delay_ms) tuples (animated).
-        self._textures: OrderedDict[str, Gdk.Texture | list] = OrderedDict()
+        # LazyFrames (animated, frames decoded on demand).
+        self._textures: OrderedDict[str, Gdk.Texture | LazyFrames] = OrderedDict()
         self._texture_count = 0  # counts individual Gdk.Texture objects
         self._pending: dict[str, list[tuple[Gtk.Widget, bool]]] = {}
         self._lock = threading.Lock()
@@ -147,6 +147,7 @@ class EmoteTextureCache:
                 if isinstance(decoded, list):
                     self._texture_count += len(decoded)
                 else:
+                    # Gdk.Texture or LazyFrames — both count as one LRU slot.
                     self._texture_count += 1
                 while self._texture_count > _MAX_EMOTE_TEXTURES:
                     _k, old = self._textures.popitem(last=False)
@@ -163,20 +164,19 @@ class EmoteTextureCache:
         return GLib.SOURCE_REMOVE
 
     @staticmethod
-    def _decode(data: bytes) -> Gdk.Texture | list | None:
-        """Decode to a static Gdk.Texture, or a list of
-        (Gdk.Texture, delay_ms) frames for animated images."""
+    def _decode(data: bytes) -> Gdk.Texture | LazyFrames | None:
+        """Decode to a static Gdk.Texture, or a LazyFrames for
+        animated images (frames decoded on demand)."""
         try:
             img = Image.open(BytesIO(data))
         except Exception as exc:
             logger.debug("Emote decode failed: %s", exc)
             return None
 
-        # Animated (GIF / APNG / WebP) — extract all frames.
-        # Falls back to a single static frame if Pillow cannot
-        # iterate the animation on this platform.
+        # Animated (GIF / APNG / WebP) — wrap for lazy frame access.
         if getattr(img, "is_animated", False):
-            return _decode_animated_frames(img)
+            img.close()
+            return LazyFrames(data)
 
         # Static image — upload raw RGBA pixels.
         img = img.convert("RGBA")
@@ -190,42 +190,63 @@ class EmoteTextureCache:
         )
 
 
-# ── Animated GIF frame extraction ─────────────────────────────
+# ── Lazy animated frame extractor ─────────────────────────────
 
 
-def _decode_animated_frames(img) -> list:
-    """Extract every frame from an animated GIF via Pillow.
+class LazyFrames:
+    """Wraps raw animated-image bytes, decoding frames on demand.
 
-    Returns a list of (Gdk.Texture, delay_ms).  Frame delays
-    below 20 ms are clamped to 50 ms to avoid burning CPU.
-    Each frame is uploaded directly as raw RGBA.
+    Only the frames actually displayed are ever decoded and uploaded
+    to the GPU.  A 60-frame emote that scrolls off-screen after
+    3 frames decodes 3 textures instead of 60.
+
+    Not thread-safe — frame access happens on the GTK main thread
+    inside the animation tick.
     """
-    frames = []
-    try:
-        while True:
-            delay_cs = img.info.get("duration", 100)
-            if delay_cs <= 0:
-                delay_cs = 100
-            delay_ms = max(int(delay_cs), 50)
 
-            frame = img.convert("RGBA")
-            w, h = frame.size
-            texture = Gdk.MemoryTexture.new(
-                w,
-                h,
+    def __init__(self, raw_data: bytes):
+        self._frames: dict[int, tuple[Gdk.Texture, int]] = {}
+        self._img = Image.open(BytesIO(raw_data))
+        self._frame_count = getattr(self._img, "n_frames", 1)
+
+    def get_frame(self, idx: int) -> tuple[Gdk.Texture, int]:
+        if idx in self._frames:
+            return self._frames[idx]
+        try:
+            self._img.seek(idx)
+        except Exception as exc:
+            logger.debug("Failed to seek frame %s: %s", idx, exc)
+            # Return a 1×1 transparent placeholder rather than crashing.
+            tex = Gdk.MemoryTexture.new(
+                1,
+                1,
                 Gdk.MemoryFormat.R8G8B8A8,
-                GLib.Bytes.new(frame.tobytes()),
-                w * 4,
+                GLib.Bytes.new(b"\x00\x00\x00\x00"),
+                4,
             )
-            frames.append((texture, delay_ms))
+            self._frames[idx] = (tex, 100)
+            return tex, 100
+        delay_cs = self._img.info.get("duration", 100)
+        delay_ms = max(int(delay_cs), 20) if delay_cs > 0 else 100
+        frame = self._img.convert("RGBA")
+        w, h = frame.size
+        texture = Gdk.MemoryTexture.new(
+            w,
+            h,
+            Gdk.MemoryFormat.R8G8B8A8,
+            GLib.Bytes.new(frame.tobytes()),
+            w * 4,
+        )
+        self._frames[idx] = (texture, delay_ms)
+        return texture, delay_ms
 
-            img.seek(img.tell() + 1)
-    except EOFError:
-        pass
-    except Exception as exc:
-        logger.debug("Failed to extract GIF frame: %s", exc)
+    def __len__(self) -> int:
+        return self._frame_count
 
-    return frames if frames else []
+    def __iter__(self):
+        # Delegate __iter__ so that ``not frames`` and ``len(frames)``
+        # in animation code work on a LazyFrames just like a list.
+        return iter(range(self._frame_count))
 
 
 _EMOTE_CACHE = EmoteTextureCache()
@@ -233,9 +254,11 @@ _EMOTE_CACHE = EmoteTextureCache()
 # ── Module-level helpers (dispatch via widget._page) ──────────
 
 
-def _apply_texture(widget: Gtk.Picture, url: str, data: Gdk.Texture | list) -> bool:
+def _apply_texture(
+    widget: Gtk.Picture, url: str, data: Gdk.Texture | LazyFrames
+) -> bool:
     """Set an emote's texture; *data* is either a static Gdk.Texture
-    or a list of (texture, delay_ms) tuples for animated GIFs.
+    or a LazyFrames for animated images (frames decoded on demand).
 
     Returns immediately if the widget has been removed from the
     tree (e.g. culled while the emote was downloading).
@@ -1404,7 +1427,7 @@ class ChatPage(Adw.NavigationPage):
             info["elapsed"] += self._ANIM_TICK_MS
             frames = info["frames"]
             idx = info["frame_idx"]
-            delay = frames[idx][1]
+            _, delay = frames.get_frame(idx)
 
             if info["elapsed"] < delay:
                 continue
@@ -1414,9 +1437,9 @@ class ChatPage(Adw.NavigationPage):
                 info["elapsed"] -= delay
                 info["frame_idx"] = (info["frame_idx"] + 1) % len(frames)
                 idx = info["frame_idx"]
-                delay = frames[idx][1]
+                _, delay = frames.get_frame(idx)
 
-            texture, _ = frames[idx]
+            texture, _ = frames.get_frame(idx)
             alive = False
             dead_widgets: list[Gtk.Widget] = []
             for widget in info["widgets"]:
@@ -1446,7 +1469,7 @@ class ChatPage(Adw.NavigationPage):
 
         return GLib.SOURCE_CONTINUE
 
-    def _anim_register(self, url: str, widget: Gtk.Picture, frames: list) -> None:
+    def _anim_register(self, url: str, widget: Gtk.Picture, frames: LazyFrames) -> None:
         """Register *widget* for animated *url* on this page."""
         if not frames:
             return
@@ -1461,12 +1484,12 @@ class ChatPage(Adw.NavigationPage):
                 "frame_idx": 0,
                 "elapsed": 0,
             }
-            texture, _ = frames[0]
+            texture, _ = frames.get_frame(0)
             widget.set_paintable(texture)
         else:
             info = self._anim_registry[url]
             info["widgets"].add(widget)
-            texture, _ = frames[info["frame_idx"]]
+            texture, _ = frames.get_frame(info["frame_idx"])
             widget.set_paintable(texture)
 
         # One-shot signal wiring (skip duplicate connections).
