@@ -960,7 +960,7 @@ class ChatPage(Adw.NavigationPage):
                     if culled == 0:
                         break
 
-                if cull_pass % 10 == 0:
+                if cull_pass % 5 == 0:
                     gc.collect()
 
                 if not was_auto and culled_total_height > 0:
