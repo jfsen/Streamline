@@ -818,14 +818,17 @@ class ChatPage(Adw.NavigationPage):
 
         card.append(identity)
 
-        # ── Body (Label for text-only, TextView for emotes) ─
+        # ── Body (Label / FlowBox / TextView, cheapest first) ─
         segments = msg.get("segments", [{"type": "text", "content": msg["text"]}])
 
+        has_text = any(seg["type"] == "text" for seg in segments)
         has_emotes = any(seg["type"] == "emote" for seg in segments)
 
         if not has_emotes:
             # Plain text — use a cheap Gtk.Label instead of a heavyweight
-            # Gtk.TextView+TextBuffer.
+            # Gtk.TextView+TextBuffer.  Most channels are emote-heavy, but
+            # when a message does land without emotes this avoids costly
+            # Pango layout / buffer machinery.
             body_label = Gtk.Label()
             body_label.set_wrap(True)
             body_label.set_xalign(0)
@@ -843,7 +846,39 @@ class ChatPage(Adw.NavigationPage):
             card.append(body_label)
             return card
 
-        # Emote message — Gtk.TextView with child anchors.
+        if has_emotes and not has_text:
+            # Emote-only — use a Gtk.FlowBox.  No text means no
+            # Pango.Layout, no TextBuffer, no child anchors — just
+            # inline-flowed Picture widgets.
+            flow = Gtk.FlowBox()
+            flow.set_halign(Gtk.Align.FILL)
+            flow.set_valign(Gtk.Align.FILL)
+            flow.set_selection_mode(Gtk.SelectionMode.NONE)
+            flow.set_activate_on_single_click(False)
+            flow.set_margin_top(2)
+            flow.set_margin_bottom(2)
+            flow.set_column_spacing(2)
+            flow.set_row_spacing(2)
+            flow.set_min_children_per_line(1)
+            flow.set_max_children_per_line(100)
+
+            for seg in segments:
+                if seg["type"] != "emote":
+                    continue
+                pic = Gtk.Picture()
+                pic.set_size_request(28, 28)
+                pic.set_can_shrink(False)
+                pic.set_content_fit(Gtk.ContentFit.CONTAIN)
+                pic._page = self
+                pic._card = card
+                pic.set_tooltip_text(f"{seg['name']} ({seg['source']})")
+                flow.insert(pic, -1)
+                _EMOTE_CACHE.request(seg["url"], pic)
+
+            card.append(flow)
+            return card
+
+        # Mixed text+emotes — Gtk.TextView with child anchors.
         text_view = Gtk.TextView()
         text_view.set_editable(False)
         text_view.set_cursor_visible(False)
@@ -1207,9 +1242,12 @@ class ChatPage(Adw.NavigationPage):
     def _restyle_body(self, widget: Gtk.Widget) -> None:
         """Update text colour in the body for the new theme.
 
-        Handles Gtk.Label (text-only / system messages) and
+        Handles Gtk.FlowBox (emote-only — no text to recolor),
+        Gtk.Label (text-only / system messages), and
         Gtk.TextView (messages containing emotes).
         """
+        if isinstance(widget, Gtk.FlowBox):
+            return  # emote-only — no text to update
         theme = CHAT_STYLE["dark"] if self._dark else CHAT_STYLE["light"]
         if isinstance(widget, Gtk.Label):
             body_text = getattr(widget, "_body_text", "")
