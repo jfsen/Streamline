@@ -15,11 +15,8 @@ _ = gettext.gettext
 IS_FLATPAK = os.path.exists("/.flatpak-info")
 
 # Base command used to invoke streamlink.
-# Uses flatpak-spawn inside the Flatpak sandbox, streamlink directly otherwise.
-if IS_FLATPAK:
-    STREAMLINK_CMD = ["flatpak-spawn", "--host", "streamlink"]
-else:
-    STREAMLINK_CMD = ["streamlink"]
+# Bundled inside the sandbox for Flatpak, from the system otherwise.
+STREAMLINK_CMD = ["streamlink"]
 
 logger = logging.getLogger("StreamPlayer")
 
@@ -62,10 +59,33 @@ class StreamPlayer:
                 if not quality.endswith("best") and ",best" not in quality:
                     quality += ",best"
 
-            # Set title and final arguments
-            cmd.extend(
-                ["--title", f"Streamline - {url}", "--player", player_cmd, url, quality]
-            )
+            # Set title and player arguments
+            if IS_FLATPAK:
+                # Player runs on the host, so use flatpak-spawn as the
+                # player executable and pass the real player via --player-args
+                cmd.extend(
+                    [
+                        "--title",
+                        f"Streamline - {url}",
+                        "--player",
+                        "flatpak-spawn",
+                        "--player-args",
+                        f"--host {player_cmd}",
+                        url,
+                        quality,
+                    ]
+                )
+            else:
+                cmd.extend(
+                    [
+                        "--title",
+                        f"Streamline - {url}",
+                        "--player",
+                        player_cmd,
+                        url,
+                        quality,
+                    ]
+                )
 
             def start_stream_thread():
                 """Handle stream process and output monitoring."""

@@ -37,9 +37,29 @@ Streamline is a GTK4/libadwaita application that lets you follow your favorite T
 
 ## Installation
 
-### Dependencies
+### Flatpak (recommended)
 
-#### Runtime
+A `.flatpakref` file is attached to each [GitHub release](https://github.com/jfsen/Streamline/releases).
+Download the file and install it:
+
+```bash
+flatpak install ./org.jfsen.Streamline.flatpakref
+```
+
+To build from source instead, use the Flatpak manifest included in the repository:
+
+```bash
+flatpak-builder --user --install --force-clean build-dir org.jfsen.Streamline.json
+```
+
+The Flatpak bundles all Python dependencies including Streamlink — only a
+media player (mpv, VLC, or similar) is needed on the host system.
+
+### Build from source
+
+#### Dependencies
+
+##### Runtime
 
 - Python 3
 - [Streamlink](https://streamlink.github.io/install.html)
@@ -49,13 +69,13 @@ Streamline is a GTK4/libadwaita application that lets you follow your favorite T
 - `python-requests` and `python-pillow`
 - Twitch API credentials (Client ID and Secret)
 
-#### Build
+##### Build
 
 - `meson`
 - `desktop-file-utils`
 - `appstream-glib` (or `appstreamcli`)
 
-#### Install dependencies by distro
+##### Install dependencies by distro
 
 **Arch Linux**
 ```bash
@@ -75,7 +95,7 @@ sudo dnf install meson python3 python3-gobject gtk4 libadwaita \
   python3-requests python3-pillow streamlink mpv desktop-file-utils appstream-glib
 ```
 
-### Build and install (system-wide)
+#### Build and install (system-wide)
 
 ```bash
 git clone https://github.com/jfsen/Streamline.git
@@ -90,25 +110,10 @@ sudo meson install -C builddir
 For a per-user install, use `--prefix=~/.local` instead of `--prefix=/usr` and
 omit `sudo`.
 
-### Uninstall
+#### Uninstall
 
 ```bash
 sudo ninja -C builddir uninstall
-```
-
-### Flatpak
-
-A `.flatpakref` file is attached to each [GitHub release](https://github.com/jfsen/Streamline/releases).
-Download the file and install it:
-
-```bash
-flatpak install ./org.jfsen.Streamline.flatpakref
-```
-
-To build from source instead, use the Flatpak manifest included in the repository:
-
-```bash
-flatpak-builder --user --install --force-clean build-dir org.jfsen.Streamline.json
 ```
 
 ## Usage

@@ -25,15 +25,13 @@
   ],
   "modules": [
     {
-      "name": "python3-requests",
-      "buildsystem": "simple",
-      "build-commands": ["pip3 install requests --prefix=/app"]
-    },
-    {
-      "name": "python3-pillow",
+      "name": "python3-deps",
       "buildsystem": "simple",
       "build-commands": [
-        "pip3 install Pillow --prefix=/app --no-build-isolation"
+        "python3 -m pip install --root=/app --prefix='' --ignore-installed lxml",
+        "python3 -m pip install --root=/app --prefix='' Pillow requests pycryptodome certifi isodate pycountry PySocks trio trio-websocket urllib3 websocket-client streamlink",
+        "python3 -c 'import lxml; print(\"lxml:\", lxml.__version__)'",
+        "python3 -c 'import streamlink; print(\"streamlink:\", streamlink.__version__)'"
       ],
       "build-options": {
         "build-args": ["--share=network"]
