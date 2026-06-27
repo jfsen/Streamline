@@ -31,8 +31,30 @@
     <color type="primary" scheme_preference="dark">#a669c0</color>
   </branding>
 
-  <releases>
-    <release version="3.5.0" date="2026-06-23">
+	  <releases>
+	    <release version="3.6.0" date="2026-06-27">
+	      <description translate="no">
+	        <p>Streamline 3.6 — Flatpak bundling, chat rendering overhaul.</p>
+	        <ul>
+	          <li
+                    >Streamlink and all its dependencies are now bundled inside the Flatpak sandbox — no host streamlink or Python packages needed beyond a media player</li>
+	          <li
+                    >Chat rendering rewritten: Gtk.Label replaces Gtk.TextView for text-only messages, with word-char wrap for cleaner line breaks</li>
+	          <li
+                    >Emote-only messages laid out in a Gtk.FlowBox for tighter emote display</li>
+	          <li
+                    >Animated emotes use lazy-decoding via LazyFrames and direct RGBA pixel upload through Gdk.MemoryTexture — no more PNG encode/decode round-trip</li>
+	          <li
+                    >Periodic garbage collection on chat history culls to reduce memory bloat</li>
+	          <li>Translations added for chat system messages</li>
+	          <li
+                    >Flatpak manifest consolidated into a single python3-deps module with build-time import verification</li>
+	          <li
+                    >README reorganized — Flatpak install instructions now first, source build second</li>
+	        </ul>
+	      </description>
+	    </release>
+	    <release version="3.5.0" date="2026-06-23">
       <description translate="no">
         <p
                 >Streamline 3.5 — performance, pagination, and infrastructure cleanup.</p>
