@@ -32,6 +32,16 @@
   </branding>
 
 	  <releases>
+	    <release version="3.7.0" date="2026-06-27">
+	      <description translate="no">
+	        <p>Streamline 3.7 — credentials simplified.</p>
+	        <ul>
+	          <li
+                    >Twitch API credentials are now set in config.py — no more startup dialog or preferences entries</li>
+	          <li>Suppressed verbose urllib3 debug output</li>
+	        </ul>
+	      </description>
+	    </release>
 	    <release version="3.6.0" date="2026-06-27">
 	      <description translate="no">
 	        <p>Streamline 3.6 — Flatpak bundling, chat rendering overhaul.</p>
