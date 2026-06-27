@@ -18,11 +18,16 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 
 import gettext
+import logging
 import sys
 
 import gi
 
 _ = gettext.gettext
+
+# Suppress noisy third-party loggers (keeps credentials out of console)
+logging.getLogger("urllib3").setLevel(logging.WARNING)
+logging.getLogger("urllib3.connectionpool").setLevel(logging.WARNING)
 
 gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")

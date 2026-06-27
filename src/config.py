@@ -31,6 +31,10 @@ QUALITY_PRESETS = {
 # ── Twitch API ──────────────────────────────────────────────
 # HTTP request timeouts in seconds.
 
+# Set your Twitch API credentials here.
+TWITCH_CLIENT_ID = ""
+TWITCH_CLIENT_SECRET = ""
+
 TWITCH_TOKEN_TIMEOUT = 10
 TWITCH_STREAMS_TIMEOUT = 30
 TWITCH_USERS_TIMEOUT = 10

@@ -27,10 +27,6 @@ class StreamlinePreferences(Adw.PreferencesDialog):
     export_button = Gtk.Template.Child()
     import_button = Gtk.Template.Child()
 
-    # Template children — Account page
-    client_id_row = Gtk.Template.Child()
-    client_secret_row = Gtk.Template.Child()
-
     # Template children — Chat page
     chat_alternating_bg_switch = Gtk.Template.Child()
     chat_disable_emote_animations_switch = Gtk.Template.Child()
@@ -77,8 +73,6 @@ class StreamlinePreferences(Adw.PreferencesDialog):
         for key, row in (
             ("custom-player-path", self.custom_player_row),
             ("custom-quality", self.custom_quality_row),
-            ("twitch-client-id", self.client_id_row),
-            ("twitch-client-secret", self.client_secret_row),
         ):
             settings.bind(key, row, "text", Gio.SettingsBindFlags.DEFAULT)
 

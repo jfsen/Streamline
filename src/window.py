@@ -40,6 +40,8 @@ from .config import (
     MIN_HEIGHT,
     MIN_WIDTH,
     THEME_KEYS,
+    TWITCH_CLIENT_ID,
+    TWITCH_CLIENT_SECRET,
 )
 from .dialogs import StreamlineDialogs
 from .preferences import StreamlinePreferences
@@ -132,7 +134,6 @@ class StreamlineWindow(Adw.ApplicationWindow):
 
         # Initialize API-related attributes
         self.twitch = None
-        self._credentials_prompt_shown = False
         self._startup_complete = False
 
         # Initialize StreamPlayer (lightweight)
@@ -164,22 +165,22 @@ class StreamlineWindow(Adw.ApplicationWindow):
             return GLib.SOURCE_REMOVE
         self._startup_complete = True
 
-        # Check credentials and initialize API
-        if not self.client_id or not self.client_secret:
-            self._prompt_for_credentials()
-        else:
-            self._init_twitch_api()
+        # Initialize API — credentials come from config.py
+        self._init_twitch_api()
 
-        # If neither API nor credentials are available, show streamers as offline
-        if not self.twitch and not self._credentials_prompt_shown:
+        # If API couldn't start, show streamers as offline
+        if not self.twitch:
             self.update_action_rows([], self.all_streamers, {})
 
         return GLib.SOURCE_REMOVE
 
     def _initialize_from_config(self):
-        """Populate window attributes from GSettings."""
-        self.client_id = self.settings.get_string("twitch-client-id")
-        self.client_secret = self.settings.get_string("twitch-client-secret")
+        """Populate window attributes from GSettings.
+
+        Credentials are sourced from config.py only.
+        """
+        self.client_id = TWITCH_CLIENT_ID
+        self.client_secret = TWITCH_CLIENT_SECRET
         self.player_type = self.settings.get_string("player-type")
         self.custom_player_path = self.settings.get_string("custom-player-path")
         self.all_streamers = self.settings.get_strv("streamers")
@@ -207,25 +208,18 @@ class StreamlineWindow(Adw.ApplicationWindow):
         )
 
     def _init_twitch_api(self):
-        """Initialize the Twitch API with current credentials.
+        """Initialize the Twitch API with credentials from config.py.
 
         Shows cached streamer data immediately so the window opens fast,
         then fetches fresh data in a background thread.
         """
+        if not self.client_id or not self.client_secret:
+            return
+
         self.twitch = None
         try:
             self.twitch = TwitchAPI(self.client_id, self.client_secret)
-        except Exception as e:
-            error_msg = str(e)
-            # Show prompt to re-enter credentials on auth failure
-            if (
-                "401" in error_msg
-                or "Unauthorized" in error_msg
-                or "access_token" in error_msg
-            ):
-                self._prompt_for_credentials()
-            else:
-                self.dialogs.show_credentials_dialog(self._handle_credentials)
+        except Exception:
             return
 
         # Show cached data immediately so the window opens fast
@@ -256,7 +250,14 @@ class StreamlineWindow(Adw.ApplicationWindow):
         elif isinstance(error, requests.HTTPError):
             status = error.response.status_code if error.response else None
             if status == 401:
-                GLib.idle_add(self._prompt_for_credentials)
+                GLib.idle_add(
+                    self._show_error_dialog,
+                    _("Authentication Error"),
+                    _(
+                        "API authentication failed (HTTP 401). "
+                        "Check your Twitch Client ID and Client Secret in config.py."
+                    ),
+                )
             elif status == 429:
                 GLib.idle_add(
                     self._show_error_dialog,
@@ -294,23 +295,6 @@ class StreamlineWindow(Adw.ApplicationWindow):
         """Callback from background thread: update UI with fresh stream data."""
         self.update_action_rows(online, offline, info)
         self._start_avatar_downloads(online, offline)
-
-    def _prompt_for_credentials(self):
-        """Show dialog to prompt user for Twitch API credentials."""
-        if self._credentials_prompt_shown:
-            return
-        self._credentials_prompt_shown = True
-        self.dialogs.show_credentials_dialog(self._handle_credentials)
-
-    def _handle_credentials(self, client_id, client_secret):
-        """Handle credentials submitted by user."""
-        self.client_id = client_id
-        self.client_secret = client_secret
-        self.settings.set_string("twitch-client-id", client_id)
-        self.settings.set_string("twitch-client-secret", client_secret)
-        self.save_config()
-        self._credentials_prompt_shown = False
-        self._init_twitch_api()
 
     def on_refresh_button_clicked(self, button):
         """Refresh streamer data in a background thread."""
