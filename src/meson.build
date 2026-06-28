@@ -39,8 +39,13 @@ streamline_sources = [
     'dialogs.py',
     'config.py',
     'rows.py',
-
 ]
+
+# Include local credential overrides when present (gitignored).
+fs = import('fs')
+if fs.is_file('config_credentials.py')
+    streamline_sources += ['config_credentials.py']
+endif
 
 install_data(streamline_sources, install_dir: moduledir)
 

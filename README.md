@@ -100,12 +100,22 @@ sudo dnf install meson python3 python3-gobject gtk4 libadwaita \
 ```bash
 git clone https://github.com/jfsen/Streamline.git
 cd Streamline
+```
+
+To use the Twitch API , create a local credentials file from the template and fill in your Client ID and Secret from the [Twitch Developer Console](https://dev.twitch.tv/console):
+
+```bash
+cp src/config_credentials.example.py src/config_credentials.py
+$EDITOR src/config_credentials.py
+```
+
+Build and install:
+
+```bash
 meson setup builddir --prefix=/usr
 meson compile -C builddir
 sudo meson install -C builddir
 ```
-
-> **Reconfiguring**: if you need to change build options later, re-run `meson setup` with `--wipe` to start fresh.
 
 For a per-user install, use `--prefix=~/.local` instead of `--prefix=/usr` and
 omit `sudo`.
@@ -116,11 +126,7 @@ omit `sudo`.
 sudo ninja -C builddir uninstall
 ```
 
-## Usage
-
-On first launch, Streamline will prompt you for your Twitch API credentials. You can obtain these from the [Twitch Developer Console](https://dev.twitch.tv/console).
-
-### Keyboard shortcuts
+## Keyboard shortcuts
 
 | Shortcut              | Action             |
 | --------------------- | ------------------ |

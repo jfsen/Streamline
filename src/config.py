@@ -31,9 +31,18 @@ QUALITY_PRESETS = {
 # ── Twitch API ──────────────────────────────────────────────
 # HTTP request timeouts in seconds.
 
-# Set your Twitch API credentials here.
 TWITCH_CLIENT_ID = ""
 TWITCH_CLIENT_SECRET = ""
+
+# Override with local credentials if available (not tracked by git).
+# Copy config_credentials.example.py to config_credentials.py and fill in your keys.
+try:
+    from .config_credentials import (  # type: ignore[import-untyped]
+        TWITCH_CLIENT_ID,
+        TWITCH_CLIENT_SECRET,
+    )
+except ImportError:
+    pass
 
 TWITCH_TOKEN_TIMEOUT = 10
 TWITCH_STREAMS_TIMEOUT = 30
