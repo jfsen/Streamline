@@ -30,11 +30,12 @@ import os
 import shutil
 import subprocess
 import sys
+from pathlib import Path
 
 import gi
 
 gi.require_version("Gtk", "4.0")
-from gi.repository import Gio
+from gi.repository import Gio, GLib
 
 from .config import (
     QUALITY_PRESETS,
@@ -42,6 +43,9 @@ from .config import (
     TWITCH_CLIENT_SECRET,
 )
 from .twitch import TwitchAPI
+
+# Cache directory (shared with TwitchAPI._CACHE_DIR).
+_CACHE_DIR = Path(GLib.get_user_cache_dir()) / "Streamline"
 
 # Detects whether the app is running inside a Flatpak sandbox.
 IS_FLATPAK = os.path.exists("/.flatpak-info")
@@ -182,6 +186,42 @@ class CliHandler:
         except Exception:
             return None
 
+    @staticmethod
+    def _patch_streams_cache(username, remove=False):
+        """Add or remove a single username in the streams cache on disk.
+
+        Does not require a TwitchAPI instance — operates on the JSON
+        file directly so lightweight CLI commands stay fast.
+        """
+        cache_path = _CACHE_DIR / "streams.json"
+        try:
+            with open(cache_path) as f:
+                data = json.load(f)
+        except (OSError, json.JSONDecodeError):
+            return
+
+        cache = data.get("data")
+        if not cache:
+            return
+
+        offline = cache.get("offline", [])
+        online = cache.get("online", {})
+
+        if remove:
+            cache["offline"] = [s for s in offline if s != username]
+            if username in online:
+                del online[username]
+        else:
+            if username not in offline and username not in online:
+                offline.append(username)
+                offline.sort(key=str.lower)
+
+        try:
+            with open(cache_path, "w") as f:
+                json.dump(data, f, indent=4)
+        except OSError:
+            pass
+
     # ── play ──────────────────────────────────────────────────
 
     def _handle_play(self, args):
@@ -319,7 +359,6 @@ class CliHandler:
     # ── unfollow ──────────────────────────────────────────────
 
     def _handle_unfollow(self, args):
-        api = self._init_api()
         raw = [u.strip() for u in args.usernames.split(",") if u.strip()]
         if not raw:
             return self._err("No usernames provided.")
@@ -347,9 +386,8 @@ class CliHandler:
 
         # Update the streams cache so removed streamers disappear from
         # `status` immediately instead of only after the 60 s cooldown.
-        if api:
-            for u in removed:
-                api.update_streams_cache(u, add=False)
+        for u in removed:
+            self._patch_streams_cache(u, remove=True)
 
         if removed:
             print(f"Unfollowed: {', '.join(removed)}")
@@ -386,8 +424,8 @@ class CliHandler:
                 "Could not reach the Twitch API. Check your internet connection."
             )
 
-        # Resolve display names for all streamers
-        api.get_users(current)
+        # Display names come from the user cache (persisted to disk and
+        # populated by get_streams above when the cache is stale).
 
         if args.json_output:
             self._print_status_json(
