@@ -34,6 +34,7 @@ gi.require_version("Adw", "1")
 
 from gi.repository import Adw, Gio, Gtk
 
+from .cli import CliHandler
 from .window import StreamlineWindow
 
 
@@ -43,9 +44,10 @@ class StreamlineApplication(Adw.Application):
     def __init__(self, version):
         super().__init__(
             application_id="org.jfsen.Streamline",
-            flags=Gio.ApplicationFlags.FLAGS_NONE,
+            flags=Gio.ApplicationFlags.HANDLES_COMMAND_LINE,
         )
         self._version = version
+        self._cli = CliHandler(version)
 
     def do_startup(self):
         """Called when application is starting up."""
@@ -118,6 +120,28 @@ class StreamlineApplication(Adw.Application):
         win = self.props.active_window
         if isinstance(win, StreamlineWindow):
             win.on_refresh_button_clicked(None)
+
+    def do_command_line(self, command_line):
+        """Handle CLI arguments before activating the GUI."""
+        argv = command_line.get_arguments()
+
+        # Detect the positional shortcut: streamline <username>
+        # Known subcommands and flags should not be treated as usernames.
+        known_commands = {"play", "follow", "unfollow", "status"}
+        if len(argv) >= 2 and not argv[1].startswith("-"):
+            if argv[1] not in known_commands:
+                # Rewrite: streamline shroud → streamline play shroud
+                argv = [argv[0], "play"] + argv[1:]
+
+        result = self._cli.parse_and_handle(argv)
+
+        if result is not None:
+            # CLI handled the request — exit without opening the GUI.
+            return result
+
+        # No CLI command; open the GUI as normal.
+        self.activate()
+        return 0
 
     def create_action(self, name, callback, shortcuts=None):
         """Add an application action.

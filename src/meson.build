@@ -31,6 +31,7 @@ configure_file(
 streamline_sources = [
     '__init__.py',
     'main.py',
+    'cli.py',
     'window.py',
     'preferences.py',
     'twitch.py',
