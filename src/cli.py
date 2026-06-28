@@ -458,9 +458,15 @@ class CliHandler:
 
         if offline:
             print("\033[1m  OFFLINE\033[0m")
-            for u in sorted(offline):
-                display = api.user_cache.get(u, {}).get("name", u)
-                print(f"  {display}")
+            names = [api.user_cache.get(u, {}).get("name", u) for u in sorted(offline)]
+            if names:
+                term_width = shutil.get_terminal_size((80, 24)).columns
+                col_width = max(len(n) for n in names) + 3
+                ncols = max(1, (term_width - 2) // col_width)
+                for i in range(0, len(names), ncols):
+                    row = names[i : i + ncols]
+                    line = "  " + "".join(n.ljust(col_width) for n in row)
+                    print(line.rstrip())
             print()
 
         total = len(online) + len(offline)
