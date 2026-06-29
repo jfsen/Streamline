@@ -1398,9 +1398,9 @@ class ChatPage(Adw.NavigationPage):
             self._anim_unregister_tree(root_box)
             _anim_disconnect_handlers(root_box)
             _clear_text_buffers(root_box)
-            parent = root_box.get_parent()
-            if parent is not None:
-                parent.remove(root_box)
+            # Unparent all children by detaching from the scrolled window.
+            if self._scrolled is not None:
+                self._scrolled.set_child(None)
 
         self._cards.clear()
         self._item_count = 0
