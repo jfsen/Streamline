@@ -335,6 +335,16 @@ def _clear_text_buffers(root: Gtk.Widget) -> None:
         child = child.get_next_sibling()
 
 
+def _unrealize_widget(widget: Gtk.Widget) -> bool:
+    """Unrealize a widget in an idle callback, safe to call on already-
+    destroyed widgets (returns GLib.SOURCE_REMOVE)."""
+    try:
+        widget.unrealize()
+    except Exception:
+        pass
+    return GLib.SOURCE_REMOVE
+
+
 # ── Helpers ──────────────────────────────────────────────────
 
 
@@ -1029,18 +1039,16 @@ class ChatPage(Adw.NavigationPage):
                         first = self._msg_box.get_first_child()
                         if first is None:
                             break
-                        culled_total_height += first.get_allocated_height()
-                        # Walk children while the widget is still in the
-                        # hierarchy — GTK ancestry checks fail after unparent.
+                        if not was_auto:
+                            culled_total_height += first.get_allocated_height()
                         self._anim_unregister_tree(first)
                         _anim_disconnect_handlers(first)
-                        _clear_text_buffers(first)
                         self._msg_box.remove(first)
                         if self._cards and self._cards[0] is first:
                             self._cards.popleft()
                         elif first in self._cards:
                             self._cards.remove(first)
-                        first.unrealize()
+                        GLib.idle_add(_unrealize_widget, first)
                         self._item_count -= 1
                         culled += 1
                     if culled == 0:
