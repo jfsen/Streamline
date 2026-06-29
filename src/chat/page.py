@@ -1023,31 +1023,28 @@ class ChatPage(Adw.NavigationPage):
             self._cull_in_progress = True
             try:
                 culled_total_height = 0
-                cull_pass = 0
                 while self._item_count > MAX_MESSAGES:
-                    cull_pass += 1
                     culled = 0
                     while culled < CULL_CHUNK:
                         first = self._msg_box.get_first_child()
                         if first is None:
                             break
                         culled_total_height += first.get_allocated_height()
+                        # Walk children while the widget is still in the
+                        # hierarchy — GTK ancestry checks fail after unparent.
+                        self._anim_unregister_tree(first)
+                        _anim_disconnect_handlers(first)
+                        _clear_text_buffers(first)
                         self._msg_box.remove(first)
                         if self._cards and self._cards[0] is first:
                             self._cards.popleft()
                         elif first in self._cards:
                             self._cards.remove(first)
-                        self._anim_unregister_tree(first)
-                        _anim_disconnect_handlers(first)
-                        _clear_text_buffers(first)
                         first.unrealize()
                         self._item_count -= 1
                         culled += 1
                     if culled == 0:
                         break
-
-                if cull_pass % 5 == 0:
-                    gc.collect()
 
                 if not was_auto and culled_total_height > 0:
                     # Defer restoration until after the layout pass so
@@ -1393,29 +1390,27 @@ class ChatPage(Adw.NavigationPage):
             if root is not None:
                 root.disconnect(self._toplevel_active_id)
             self._toplevel_active_id = None
-        # Unregister animated emotes and drop all cards.
-        while True:
-            child = self._msg_box.get_first_child()
-            if child is None:
-                break
-            self._anim_unregister_tree(child)
-            # Disconnect the destroy handler so unrealize doesn't
-            # trigger a callback into a now-empty registry.
-            _anim_disconnect_handlers(child)
-            _clear_text_buffers(child)
-            self._msg_box.remove(child)
-            child.unrealize()
+
+        # Clear the entire message tree in one pass instead of
+        # per-child recursive walks (O(n²) → O(n)).
+        root_box = self._msg_box
+        if root_box is not None:
+            self._anim_unregister_tree(root_box)
+            _anim_disconnect_handlers(root_box)
+            _clear_text_buffers(root_box)
+            parent = root_box.get_parent()
+            if parent is not None:
+                parent.remove(root_box)
+
         self._cards.clear()
         self._item_count = 0
         self._next_is_alt = False
-        # Drop held references so the GC can free them.
         self._third_party_emotes = None
         self._card_css_provider = None
         self._tv_css_provider = None
         self._chat = None
         self._scrolled = None
         self._msg_box = None
-        gc.collect()
 
     # ── Animated emote tick (per-page) ───────────────────────
 
