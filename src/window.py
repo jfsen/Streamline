@@ -98,6 +98,9 @@ class StreamlineWindow(Adw.ApplicationWindow):
         self.settings.connect(
             "changed::show-profile-pictures", self._on_row_pref_changed
         )
+        self.settings.connect(
+            "changed::show-stream-thumbnails", self._on_row_pref_changed
+        )
 
         # Stored fetch data so preferences can rebuild rows without a network call
         self._last_online = []
@@ -195,6 +198,9 @@ class StreamlineWindow(Adw.ApplicationWindow):
             "chat-disable-emote-animations"
         )
         self.show_profile_pictures = self.settings.get_boolean("show-profile-pictures")
+        self.show_stream_thumbnails = self.settings.get_boolean(
+            "show-stream-thumbnails"
+        )
         self.chat_highlight_first_msg = self.settings.get_boolean(
             "chat-highlight-first-msg"
         )

@@ -18,10 +18,13 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 
 import gettext
+import threading
 from html import unescape
 from pathlib import Path
+from time import time
 
-from gi.repository import Adw, GLib, Gtk
+import requests
+from gi.repository import Adw, Gdk, GLib, Gtk
 
 from .config import PILL_FADE_MS, PILL_SHOW_MS, ROW_HIGHLIGHT_MS
 
@@ -137,6 +140,105 @@ class StreamerRowManager:
         self._add_row_buttons(row, streamer)
         return row
 
+    def _build_menu_popover(self, streamer):
+        """Build and return a Gtk.Popover with Chat, VODs, and Unfollow actions.
+
+        Extracted so both standard rows and card rows can share the same menu.
+        """
+        popover = Gtk.Popover()
+        popover.add_css_class("streamer-more-popover")
+        popover.set_has_arrow(False)
+
+        listbox = Gtk.ListBox()
+        listbox.set_selection_mode(Gtk.SelectionMode.NONE)
+
+        # ── Chat row (label + detach icon) ──
+        chat_row = Gtk.ListBoxRow()
+        chat_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=0)
+
+        chat_label = Gtk.Label(label=_("Chat"), xalign=0)
+        chat_label.set_margin_start(12)
+        chat_label.set_margin_end(12)
+        chat_label.set_hexpand(True)
+        chat_box.append(chat_label)
+
+        detach_btn = Gtk.Button.new_from_icon_name("window-new-symbolic")
+        detach_btn.add_css_class("flat")
+        detach_btn.add_css_class("detach-button")
+        detach_btn.set_valign(Gtk.Align.CENTER)
+        detach_btn.set_tooltip_text(_("Open in detached window"))
+        detach_btn.connect(
+            "clicked",
+            lambda btn: (
+                popover.popdown(),
+                self.window.show_chat_popup(streamer),
+            ),
+        )
+        chat_box.append(detach_btn)
+
+        chat_row.set_child(chat_box)
+        chat_click = Gtk.GestureClick.new()
+        chat_click.connect(
+            "released",
+            lambda g, n, x, y: (
+                popover.popdown(),
+                self.window.show_chat_page(streamer),
+            ),
+        )
+        chat_row.add_controller(chat_click)
+        listbox.append(chat_row)
+
+        # ── Show VODs ──
+        vods_label = Gtk.Label(label=_("Show VODs"), xalign=0)
+        vods_label.set_margin_start(12)
+        vods_label.set_margin_end(12)
+        vods_label.set_margin_top(4)
+        vods_label.set_margin_bottom(4)
+        vods_row = Gtk.ListBoxRow()
+        vods_row.set_child(vods_label)
+        vods_click = Gtk.GestureClick.new()
+        vods_click.connect(
+            "released",
+            lambda g, n, x, y: (
+                popover.popdown(),
+                self.window.show_vods_page(streamer),
+            ),
+        )
+        vods_row.add_controller(vods_click)
+        listbox.append(vods_row)
+
+        # ── Unfollow ──
+        unfollow_label = Gtk.Label(label=_("Unfollow"), xalign=0)
+        unfollow_label.set_margin_start(12)
+        unfollow_label.set_margin_end(12)
+        unfollow_label.set_margin_top(4)
+        unfollow_label.set_margin_bottom(4)
+        unfollow_row = Gtk.ListBoxRow()
+        unfollow_row.set_child(unfollow_label)
+        unfollow_click = Gtk.GestureClick.new()
+        unfollow_click.connect(
+            "released",
+            lambda g, n, x, y: (
+                popover.popdown(),
+                self.window.unfollow_streamer(streamer),
+            ),
+        )
+        unfollow_row.add_controller(unfollow_click)
+        listbox.append(unfollow_row)
+
+        popover.set_child(listbox)
+
+        # Gray out chat when one is already open for this streamer.
+        def _sync_chat_row(popover):
+            if popover.get_visible():
+                chat_open = streamer in self.window._active_chats
+                chat_label.set_sensitive(not chat_open)
+                detach_btn.set_sensitive(not chat_open)
+
+        popover.connect("notify::visible", lambda p, *_: _sync_chat_row(p))
+
+        return popover
+
     def _add_row_buttons(self, row, streamer):
         """Add buttons and dropdown menu to the row."""
         row.add_css_class("action-row")
@@ -230,101 +332,9 @@ class StreamerRowManager:
         menu_button.set_valign(Gtk.Align.CENTER)
         menu_button.set_tooltip_text(_("More"))
 
-        # Build custom popover (replaces Gio.Menu so we can have a
-        # split Chat row: click the label for in-page, click the
-        # detach icon for a popup window.)
-        popover = Gtk.Popover()
-        popover.add_css_class("streamer-more-popover")
-        popover.set_has_arrow(False)
-
-        listbox = Gtk.ListBox()
-        listbox.set_selection_mode(Gtk.SelectionMode.NONE)
-
-        # ── Chat row (label + detach icon) ──
-        chat_row = Gtk.ListBoxRow()
-        chat_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=0)
-
-        chat_label = Gtk.Label(label=_("Chat"), xalign=0)
-        chat_label.set_margin_start(12)
-        chat_label.set_margin_end(12)
-        chat_label.set_hexpand(True)
-        chat_box.append(chat_label)
-
-        detach_btn = Gtk.Button.new_from_icon_name("window-new-symbolic")
-        detach_btn.add_css_class("flat")
-        detach_btn.add_css_class("detach-button")
-        detach_btn.set_valign(Gtk.Align.CENTER)
-        detach_btn.set_tooltip_text(_("Open in detached window"))
-        detach_btn.connect(
-            "clicked",
-            lambda btn: (
-                popover.popdown(),
-                self.window.show_chat_popup(streamer),
-            ),
-        )
-        chat_box.append(detach_btn)
-
-        chat_row.set_child(chat_box)
-        chat_click = Gtk.GestureClick.new()
-        chat_click.connect(
-            "released",
-            lambda g, n, x, y: (
-                popover.popdown(),
-                self.window.show_chat_page(streamer),
-            ),
-        )
-        chat_row.add_controller(chat_click)
-        listbox.append(chat_row)
-
-        # ── Show VODs ──
-        vods_label = Gtk.Label(label=_("Show VODs"), xalign=0)
-        vods_label.set_margin_start(12)
-        vods_label.set_margin_end(12)
-        vods_label.set_margin_top(4)
-        vods_label.set_margin_bottom(4)
-        vods_row = Gtk.ListBoxRow()
-        vods_row.set_child(vods_label)
-        vods_click = Gtk.GestureClick.new()
-        vods_click.connect(
-            "released",
-            lambda g, n, x, y: (
-                popover.popdown(),
-                self.window.show_vods_page(streamer),
-            ),
-        )
-        vods_row.add_controller(vods_click)
-        listbox.append(vods_row)
-
-        # ── Unfollow ──
-        unfollow_label = Gtk.Label(label=_("Unfollow"), xalign=0)
-        unfollow_label.set_margin_start(12)
-        unfollow_label.set_margin_end(12)
-        unfollow_label.set_margin_top(4)
-        unfollow_label.set_margin_bottom(4)
-        unfollow_row = Gtk.ListBoxRow()
-        unfollow_row.set_child(unfollow_label)
-        unfollow_click = Gtk.GestureClick.new()
-        unfollow_click.connect(
-            "released",
-            lambda g, n, x, y: (
-                popover.popdown(),
-                self.window.unfollow_streamer(streamer),
-            ),
-        )
-        unfollow_row.add_controller(unfollow_click)
-        listbox.append(unfollow_row)
-
-        popover.set_child(listbox)
+        # Use shared menu popover builder
+        popover = self._build_menu_popover(streamer)
         menu_button.set_popover(popover)
-
-        # Gray out chat when one is already open for this streamer.
-        def _sync_chat_row(popover):
-            if popover.get_visible():
-                chat_open = streamer in self.window._active_chats
-                chat_label.set_sensitive(not chat_open)
-                detach_btn.set_sensitive(not chat_open)
-
-        popover.connect("notify::visible", lambda p, *_: _sync_chat_row(p))
 
         row.add_suffix(menu_button)
 
@@ -332,22 +342,328 @@ class StreamerRowManager:
         """Swap a streamer's placeholder icon for its avatar image (called
         from the background downloader via GLib.idle_add)."""
         row = self.streamer_rows.get(streamer)
-        if row is None or not hasattr(row, "_play_button"):
+        if row is None:
             return
-        button = row._play_button
-        overlay = button.get_child()
 
-        # Replace the placeholder with the avatar and add the play-icon overlay
-        pic = Gtk.Image.new_from_file(path)
-        pic.set_pixel_size(48)
-        overlay.set_child(pic)
+        # Standard row: avatar lives on _play_button
+        if hasattr(row, "_play_button"):
+            button = row._play_button
+            overlay = button.get_child()
 
-        if row.is_online:
-            icon = Gtk.Image.new_from_icon_name("media-playback-start-symbolic")
-            icon.add_css_class("avatar-play-icon")
-            overlay.add_overlay(icon)
+            pic = Gtk.Image.new_from_file(path)
+            pic.set_pixel_size(48)
+            overlay.set_child(pic)
 
-        button.set_child(overlay)
+            if row.is_online:
+                icon = Gtk.Image.new_from_icon_name("media-playback-start-symbolic")
+                icon.add_css_class("avatar-play-icon")
+                overlay.add_overlay(icon)
+
+            button.set_child(overlay)
+            return
+
+        # Card row: avatar lives on _avatar_button
+        if hasattr(row, "_avatar_button"):
+            button = row._avatar_button
+            overlay = button.get_child()
+
+            pic = Gtk.Image.new_from_file(path)
+            pic.set_pixel_size(44)
+            overlay.set_child(pic)
+
+            play_icon = Gtk.Image.new_from_icon_name("media-playback-start-symbolic")
+            play_icon.add_css_class("avatar-play-icon")
+            overlay.add_overlay(play_icon)
+
+            button.set_child(overlay)
+            return
+
+    # ── Stream thumbnail helpers ─────────────────────────────
+
+    @staticmethod
+    def _stream_thumbnail_dir():
+        d = Path(GLib.get_user_cache_dir()) / "Streamline" / "thumbnails"
+        d.mkdir(parents=True, exist_ok=True)
+        return d
+
+    @staticmethod
+    def _stream_thumbnail_path(streamer):
+        """Path for a single cached thumbnail per streamer."""
+        return StreamerRowManager._stream_thumbnail_dir() / f"{streamer}.jpg"
+
+    @staticmethod
+    def _thumbnail_is_stale(streamer):
+        """Return True if the cached thumbnail is missing or older than 5 minutes.
+
+        Twitch serves a frame from the last 5 minutes at a stable URL, so the URL
+        itself never changes.  We use the file's modification time to decide when
+        to re-download.
+        """
+        thumb = StreamerRowManager._stream_thumbnail_path(streamer)
+        if not thumb.exists():
+            return True
+        age = time() - thumb.stat().st_mtime
+        return age > 300  # 5 minutes
+
+    def _download_stream_thumbnail(self, url, path, picture):
+        """Download a stream thumbnail to disk and update the picture widget."""
+        try:
+            sized_url = url.replace("{width}", "640").replace("{height}", "360")
+            r = requests.get(sized_url, timeout=10)
+            r.raise_for_status()
+            path.write_bytes(r.content)
+            GLib.idle_add(self._apply_stream_thumbnail, picture, path)
+        except Exception:
+            pass  # Thumbnails are best-effort; failures are silent
+
+    def _apply_stream_thumbnail(self, picture, path):
+        """Replace a placeholder widget with the downloaded thumbnail."""
+        if path.exists():
+            texture = Gdk.Texture.new_from_filename(str(path))
+            if texture:
+                pic = Gtk.Picture.new_for_paintable(texture)
+                pic.set_hexpand(True)
+                pic.set_size_request(-1, 120)
+                pic.set_content_fit(Gtk.ContentFit.COVER)
+                pic.add_css_class("thumbnail")
+                parent = picture.get_parent()
+                if parent and isinstance(parent, Gtk.Box):
+                    prev = None
+                    child = parent.get_first_child()
+                    while child is not None:
+                        if child == picture:
+                            break
+                        prev = child
+                        child = child.get_next_sibling()
+                    parent.remove(picture)
+                    parent.insert_child_after(pic, prev)
+        return GLib.SOURCE_REMOVE
+
+    def _build_stream_card(self, streamer, info):
+        """Build a card-style row for an online streamer with a live
+        preview thumbnail, stream metadata, and action buttons."""
+        # ── Root card (vertical) ────────────────────────────
+        row = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+        row.add_css_class("card")
+
+        # ── Thumbnail ───────────────────────────────────────
+        thumb_url = info.get("thumbnail_url", "")
+        thumb_path = self._stream_thumbnail_path(streamer) if thumb_url else None
+        if thumb_path and not self._thumbnail_is_stale(streamer):
+            picture = Gtk.Picture.new_for_filename(str(thumb_path))
+            picture.set_content_fit(Gtk.ContentFit.COVER)
+        else:
+            picture = Gtk.Box()
+            picture.add_css_class("thumbnail-placeholder")
+            icon = Gtk.Image.new_from_icon_name("camera-video-symbolic")
+            icon.set_pixel_size(48)
+            icon.set_opacity(0.25)
+            icon.set_halign(Gtk.Align.CENTER)
+            icon.set_valign(Gtk.Align.CENTER)
+            icon.set_hexpand(True)
+            icon.set_vexpand(True)
+            picture.append(icon)
+        picture.set_hexpand(True)
+        picture.set_size_request(-1, 120)
+        picture.add_css_class("thumbnail")
+        row.append(picture)
+
+        # Start background download if thumbnail is stale or missing
+        if thumb_url and thumb_path and self._thumbnail_is_stale(streamer):
+            threading.Thread(
+                target=self._download_stream_thumbnail,
+                args=(thumb_url, thumb_path, picture),
+                daemon=True,
+            ).start()
+
+        # ── Text area ───────────────────────────────────────
+        text_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=4)
+        text_box.set_margin_start(10)
+        text_box.set_margin_end(10)
+        text_box.set_margin_top(8)
+        text_box.set_margin_bottom(8)
+
+        # Resolve display name from user cache
+        display_name = None
+        if self.window.twitch is not None:
+            display_name = self.window.twitch.user_cache.get(streamer, {}).get("name")
+        if display_name and any(ord(c) > 127 for c in display_name):
+            name_text = f"{display_name} ({streamer})"
+        else:
+            name_text = display_name or streamer
+
+        show_avatars = getattr(self.window, "show_profile_pictures", True)
+        viewers = info.get("viewers", "N/A")
+        game = info.get("game", _("No category"))
+
+        if show_avatars:
+            # ── Row 1: avatar + name/game block ────────────
+            top_row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+
+            # Avatar / play button (matches standard-row avatar style)
+            avatar_path = None
+            if self.window.twitch is not None:
+                url = self.window.twitch.user_cache.get(streamer, {}).get(
+                    "profile_image_url", ""
+                )
+                if url:
+                    p = Path(self.window.twitch._get_avatars_dir()) / f"{streamer}.jpg"
+                    if p.exists():
+                        avatar_path = str(p)
+
+            avatar_button = Gtk.Button()
+            avatar_button.add_css_class("flat")
+            avatar_button.add_css_class("avatar-play-button")
+            avatar_button.set_valign(Gtk.Align.START)
+            avatar_button.set_tooltip_text(_("Play stream"))
+            avatar_button.set_overflow(Gtk.Overflow.HIDDEN)
+            avatar_button.connect(
+                "clicked",
+                lambda btn: self.window.player.play_content(
+                    f"twitch.tv/{streamer}", is_vod=False
+                ),
+            )
+
+            overlay = Gtk.Overlay()
+            overlay.set_overflow(Gtk.Overflow.HIDDEN)
+            overlay.add_css_class("avatar-overlay")
+
+            if avatar_path:
+                pic = Gtk.Image.new_from_file(avatar_path)
+                pic.set_pixel_size(44)
+                overlay.set_child(pic)
+                play_icon = Gtk.Image.new_from_icon_name(
+                    "media-playback-start-symbolic"
+                )
+                play_icon.add_css_class("avatar-play-icon")
+                overlay.add_overlay(play_icon)
+            else:
+                placeholder = Gtk.Image.new_from_icon_name(
+                    "media-playback-start-symbolic"
+                )
+                placeholder.set_pixel_size(22)
+                overlay.set_child(placeholder)
+
+            avatar_button.set_child(overlay)
+            top_row.append(avatar_button)
+            row._avatar_button = avatar_button
+
+            # Name + game/viewers block
+            text_col = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
+            text_col.set_valign(Gtk.Align.CENTER)
+
+            name_label = Gtk.Label(
+                label=name_text,
+                xalign=0,
+                ellipsize=3,
+                lines=1,
+            )
+            name_label.add_css_class("heading")
+            name_label.set_tooltip_text(name_text)
+            text_col.append(name_label)
+
+            meta_label = Gtk.Label(
+                label=_("{} — {} viewers").format(game, viewers),
+                xalign=0,
+            )
+            meta_label.add_css_class("dim-label")
+            meta_label.add_css_class("caption")
+            text_col.append(meta_label)
+
+            top_row.append(text_col)
+            text_box.append(top_row)
+        else:
+            # No avatars: name + game left-aligned
+            name_label = Gtk.Label(
+                label=name_text,
+                xalign=0,
+                ellipsize=3,
+                lines=1,
+            )
+            name_label.add_css_class("heading")
+            name_label.set_tooltip_text(name_text)
+            text_box.append(name_label)
+
+            meta_label = Gtk.Label(
+                label=_("{} — {} viewers").format(game, viewers),
+                xalign=0,
+            )
+            meta_label.add_css_class("dim-label")
+            meta_label.add_css_class("caption")
+            text_box.append(meta_label)
+
+        # Stream title (full width, below the avatar block)
+        raw_title = info.get("title", _("No title"))
+        title = unescape(raw_title)
+        title_label = Gtk.Label(
+            label=title,
+            xalign=0,
+            wrap=True,
+            wrap_mode=2,  # WORD
+            max_width_chars=40,
+            ellipsize=3,  # END
+            lines=2,
+        )
+        title_label.set_tooltip_text(title)
+        text_box.append(title_label)
+
+        # ── Bottom row: uptime + action buttons ────────────
+        bottom_row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
+        bottom_row.set_margin_top(4)
+
+        started_at = info.get("started_at")
+        if started_at and self.window.twitch is not None:
+            uptime = self.window.twitch.calculate_uptime(started_at)
+        else:
+            uptime = info.get("uptime", "")
+
+        uptime_label = Gtk.Label(
+            label=uptime,
+            xalign=0,
+            hexpand=True,
+        )
+        uptime_label.add_css_class("dim-label")
+        uptime_label.add_css_class("caption")
+        bottom_row.append(uptime_label)
+
+        # Play button (only when PFPs are off; avatar handles it otherwise)
+        if not show_avatars:
+            play_button = Gtk.Button(icon_name="media-playback-start-symbolic")
+            play_button.add_css_class("flat")
+            play_button.set_valign(Gtk.Align.CENTER)
+            play_button.set_tooltip_text(_("Play stream"))
+            play_button.connect(
+                "clicked",
+                lambda btn: self.window.player.play_content(
+                    f"twitch.tv/{streamer}", is_vod=False
+                ),
+            )
+            bottom_row.append(play_button)
+
+        # Browser button
+        browser_button = Gtk.Button(icon_name="web-browser-symbolic")
+        browser_button.add_css_class("flat")
+        browser_button.set_valign(Gtk.Align.CENTER)
+        browser_button.set_tooltip_text(_("Open in browser"))
+        browser_button.connect(
+            "clicked",
+            lambda btn: self.window.open_stream_in_browser(streamer),
+        )
+        bottom_row.append(browser_button)
+
+        # Menu button
+        menu_button = Gtk.MenuButton()
+        menu_button.set_icon_name("view-more-symbolic")
+        menu_button.add_css_class("flat")
+        menu_button.set_valign(Gtk.Align.CENTER)
+        menu_button.set_tooltip_text(_("More"))
+        menu_button.set_popover(self._build_menu_popover(streamer))
+        bottom_row.append(menu_button)
+
+        text_box.append(bottom_row)
+        row.append(text_box)
+
+        return row
 
     def add_new_streamer(self, username):
         """New streamers are added to the offline list."""
@@ -374,6 +690,12 @@ class StreamerRowManager:
             row = self.streamer_rows[username]
             parent = row.get_parent()
             if parent:
+                # Card rows (Gtk.Box) are wrapped in an implicit ListBoxRow
+                # by GTK, so row.get_parent() returns the wrapper, not the
+                # ListBox.  Walk up and remove the wrapper instead.
+                if not isinstance(parent, Gtk.ListBox):
+                    row = parent
+                    parent = parent.get_parent()
                 parent.remove(row)
             # Clean up row reference
             del self.streamer_rows[username]
@@ -391,6 +713,13 @@ class StreamerRowManager:
             new_offline = self._previous_online - current_online
         self._previous_online = current_online
 
+        # Toggle card mode on the online list based on thumbnail preference
+        show_thumbnails = getattr(self.window, "show_stream_thumbnails", False)
+        if show_thumbnails:
+            self.window.online_list.remove_css_class("boxed-list")
+        else:
+            self.window.online_list.add_css_class("boxed-list")
+
         # Clear existing rows
         def clear_list(list_box):
             while row := list_box.get_first_child():
@@ -406,7 +735,11 @@ class StreamerRowManager:
 
         # Add new streamer rows
         for streamer in online_streamers:
-            row = self.create_row(streamer, streamer_info.get(streamer, {}))
+            info = streamer_info.get(streamer, {})
+            if show_thumbnails:
+                row = self._build_stream_card(streamer, info)
+            else:
+                row = self.create_row(streamer, info)
             if streamer in new_online:
                 row.add_css_class("just-went-online")
                 GLib.timeout_add(ROW_HIGHLIGHT_MS, self._clear_highlight, row)

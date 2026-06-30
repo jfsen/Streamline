@@ -396,6 +396,7 @@ class TwitchAPI:
                         "title": stream["title"],
                         "viewers": stream["viewer_count"],
                         "started_at": stream["started_at"],
+                        "thumbnail_url": stream.get("thumbnail_url", ""),
                     }
                     logger.debug(
                         "Live: %s playing %s (%s viewers)",

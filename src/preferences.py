@@ -36,6 +36,7 @@ class StreamlinePreferences(Adw.PreferencesDialog):
     theme_row = Gtk.Template.Child()
     profile_pictures_switch = Gtk.Template.Child()
     vod_thumbnails_switch = Gtk.Template.Child()
+    stream_thumbnails_switch = Gtk.Template.Child()
 
     # Template children — Playback page
     player_row = Gtk.Template.Child()
@@ -105,6 +106,7 @@ class StreamlinePreferences(Adw.PreferencesDialog):
             ),
             ("show-profile-pictures", self.profile_pictures_switch),
             ("show-vod-thumbnails", self.vod_thumbnails_switch),
+            ("show-stream-thumbnails", self.stream_thumbnails_switch),
             ("chat-highlight-first-msg", self.chat_highlight_first_msg_switch),
             ("chat-highlight-mod", self.chat_highlight_mod_switch),
             ("chat-highlight-vip", self.chat_highlight_vip_switch),

@@ -48,6 +48,18 @@
               </object>
             </child>
             <child>
+              <object class="AdwSwitchRow" id="stream_thumbnails_switch">
+                <property
+                                    name="title"
+                                    translatable="yes"
+                                >Stream Thumbnails</property>
+                <property
+                                    name="subtitle"
+                                    translatable="yes"
+                                >Show live preview thumbnails for online streams as cards</property>
+              </object>
+            </child>
+            <child>
               <object class="AdwSwitchRow" id="vod_thumbnails_switch">
                 <property
                                     name="title"

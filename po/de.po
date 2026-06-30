@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: streamline 3.4.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-06-24 22:10+0200\n"
+"POT-Creation-Date: 2026-06-30 22:50+0200\n"
 "PO-Revision-Date: 2026-06-20 12:00+0200\n"
 "Last-Translator: jfsen\n"
 "Language-Team: none\n"
@@ -17,7 +17,7 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
 #: data/org.jfsen.Streamline.desktop.in:2
-#: data/org.jfsen.Streamline.metainfo.xml.in:7 src/window.py:152
+#: data/org.jfsen.Streamline.metainfo.xml.in:7 src/window.py:156
 #: src/window.ui:6
 msgid "Streamline"
 msgstr "Streamline"
@@ -123,7 +123,7 @@ msgstr "Twitch API-Client-Secret zur Authentifizierung"
 msgid "Alternating chat background"
 msgstr "Abwechselnder Chat-Hintergrund"
 
-#: data/org.jfsen.Streamline.gschema.xml:55 src/preferences.ui:219
+#: data/org.jfsen.Streamline.gschema.xml:55 src/preferences.ui:208
 msgid "Show alternating background colors on chat messages"
 msgstr "Abwechselnde Hintergrundfarben in Chat-Nachrichten anzeigen"
 
@@ -195,139 +195,121 @@ msgstr "VOD-Vorschaubilder anzeigen"
 msgid "Display thumbnail previews for VODs as cards instead of a plain list"
 msgstr "Vorschaubilder für VODs als Karten statt als einfache Liste anzeigen"
 
-#: src/dialogs.py:39
+#: data/org.jfsen.Streamline.gschema.xml:107
+#, fuzzy
+msgid "Show stream thumbnails"
+msgstr "Stream-Vorschaubilder anzeigen"
+
+#: data/org.jfsen.Streamline.gschema.xml:109
+msgid "Display live preview thumbnails for online streams as cards"
+msgstr "Live-Vorschaubilder für Online-Streams als Karten anzeigen"
+
+#: src/dialogs.py:58
 msgid "OK"
 msgstr "OK"
 
-#: src/dialogs.py:46
+#: src/dialogs.py:65
 msgid "Unfollow Streamer?"
 msgstr "Streamer entfolgen?"
 
-#: src/dialogs.py:47
+#: src/dialogs.py:66
 #, python-brace-format
 msgid "Are you sure you want to unfollow {}?"
 msgstr "Bist du sicher, dass du {} entfolgen möchtest?"
 
-#: src/dialogs.py:50 src/dialogs.py:70 src/dialogs.py:95 src/dialogs.py:149
+#: src/dialogs.py:69 src/dialogs.py:89 src/dialogs.py:114
 msgid "Cancel"
 msgstr "Abbrechen"
 
 #. ── Unfollow ──
-#: src/dialogs.py:51 src/rows.py:280
+#: src/dialogs.py:70 src/rows.py:211
 msgid "Unfollow"
 msgstr "Entfolgen"
 
-#: src/dialogs.py:65 src/dialogs.py:71 src/window.py:574 src/window.ui:49
+#: src/dialogs.py:84 src/dialogs.py:90 src/window.py:564 src/window.ui:49
 msgid "Follow"
 msgstr "Folgen"
 
-#: src/dialogs.py:66
+#: src/dialogs.py:85
 msgid "Enter the streamer username (separate multiple with commas):"
 msgstr "Gib Streamer-Benutzernamen ein (mehrere mit Kommas trennen):"
 
-#: src/dialogs.py:90 src/window.py:575 src/window.ui:35
+#: src/dialogs.py:109 src/window.py:565 src/window.ui:35
 msgid "Quick Play"
 msgstr "Schnellstart"
 
-#: src/dialogs.py:91
+#: src/dialogs.py:110
 msgid "Open a stream without following:"
 msgstr "Einen Stream öffnen, ohne zu folgen:"
 
-#: src/dialogs.py:96
+#: src/dialogs.py:115
 msgid "Play"
 msgstr "Starten"
 
-#: src/dialogs.py:116
-msgid "API Credentials"
-msgstr "API-Anmeldedaten"
-
-#: src/dialogs.py:118
-msgid ""
-"Enter your Twitch Client ID and Client Secret to enable the app:\n"
-"\n"
-"You can get these at https://dev.twitch.tv/console/apps"
-msgstr ""
-"Gib deine Twitch Client-ID und dein Client-Secret ein, um die App zu "
-"aktivieren:\n"
-"\n"
-"Du erhältst diese unter https://dev.twitch.tv/console/apps"
-
-#: src/dialogs.py:133 src/preferences.ui:182
-msgid "Client ID"
-msgstr "Client-ID"
-
-#: src/dialogs.py:139 src/preferences.ui:190
-msgid "Client Secret"
-msgstr "Client-Secret"
-
-#: src/dialogs.py:150
-msgid "Save"
-msgstr "Speichern"
-
 #. Translators: Replace "translator-credits" with your name/username, and optionally an email or URL.
-#: src/main.py:84
+#: src/main.py:91
 msgid "translator-credits"
 msgstr "jfsen"
 
 #. ── Combo row models (labels only — values live in GSettings) ──
-#: src/preferences.py:51 src/preferences.py:53
+#: src/preferences.py:67 src/preferences.py:69
 msgid "Custom"
 msgstr "Eigen"
 
-#: src/preferences.py:53
+#: src/preferences.py:69
 msgid "High"
 msgstr "Hoch"
 
-#: src/preferences.py:53
+#: src/preferences.py:69
 msgid "Medium"
 msgstr "Mittel"
 
-#: src/preferences.py:53
+#: src/preferences.py:69
 msgid "Low"
 msgstr "Niedrig"
 
-#: src/preferences.py:167
+#: src/preferences.py:182
 #, python-brace-format
 msgid "Streamers list saved to {}"
 msgstr "Streamer-Liste gespeichert unter {}"
 
-#: src/preferences.py:171
+#: src/preferences.py:186
 #, python-brace-format
 msgid "Error saving file: {}"
 msgstr "Fehler beim Speichern der Datei: {}"
 
-#: src/preferences.py:210
+#: src/preferences.py:225
 msgid "No streamer names found in file"
 msgstr "Keine Streamer-Namen in der Datei gefunden"
 
-#: src/preferences.py:226
+#: src/preferences.py:241
 #, python-brace-format
 msgid "Added {} streamer(s) ({} already followed)"
 msgstr "{} Streamer hinzugefügt ({} wird bereits gefolgt)"
 
-#: src/preferences.py:233
+#: src/preferences.py:248
 #, python-brace-format
 msgid "Added {} streamer(s)"
 msgstr "{} Streamer hinzugefügt"
 
-#: src/preferences.py:236
+#: src/preferences.py:251
 msgid "All streamers already followed"
 msgstr "Allen Streamern wird bereits gefolgt"
 
-#: src/preferences.py:240
+#: src/preferences.py:255
 #, python-brace-format
 msgid "Error importing file: {}"
 msgstr "Fehler beim Importieren der Datei: {}"
 
-#: src/rows.py:26
+#: src/rows.py:48
 msgid "Online"
 msgstr "Online"
 
-#: src/rows.py:51
+#: src/rows.py:73
 msgid "Offline"
 msgstr "Offline"
 
-#: src/rows.py:102
+#: src/rows.py:124
 #, python-brace-format
 msgid ""
 "{}\n"
@@ -336,7 +318,7 @@ msgstr ""
 "{}\n"
 "{} Zuschauer"
 
-#: src/rows.py:112
+#: src/rows.py:134
 #, python-brace-format
 msgid ""
 "Title: {}\n"
@@ -345,53 +327,67 @@ msgstr ""
 "Titel: {}\n"
 "Laufzeit: {}"
 
-#: src/rows.py:147 src/rows.py:184
-msgid "Play stream"
-msgstr "Stream starten"
-
-#: src/rows.py:201
-msgid "Open in browser"
-msgstr "Im Browser öffnen"
-
-#: src/rows.py:212
-msgid "More"
-msgstr "Mehr"
-
-#: src/rows.py:228 src/preferences.ui:200
+#: src/rows.py:159 src/preferences.ui:189
 msgid "Chat"
 msgstr "Chat"
 
-#: src/rows.py:238
+#: src/rows.py:169
 msgid "Open in detached window"
 msgstr "In losgelöstem Fenster öffnen"
 
 #. ── Show VODs ──
-#: src/rows.py:261
+#: src/rows.py:192
 msgid "Show VODs"
 msgstr "VODs anzeigen"
 
+#: src/rows.py:268 src/rows.py:305 src/rows.py:518 src/rows.py:634
+msgid "Play stream"
+msgstr "Stream starten"
+
+#: src/rows.py:322 src/rows.py:647
+msgid "Open in browser"
+msgstr "Im Browser öffnen"
+
+#: src/rows.py:333 src/rows.py:659
+msgid "More"
+msgstr "Mehr"
+
+#: src/rows.py:497
+msgid "No category"
+msgstr "Keine Kategorie"
+
+#: src/rows.py:566 src/rows.py:588
+#, python-brace-format
+msgid "{} — {} viewers"
+msgstr "{} — {} Zuschauer"
+
+#. Stream title (full width, below the avatar block)
+#: src/rows.py:596
+msgid "No title"
+msgstr "Kein Titel"
+
 #. Show initial toast message
-#: src/stream_player.py:43
+#: src/stream_player.py:59
 msgid "Connecting..."
 msgstr "Verbinden …"
 
-#: src/stream_player.py:91
+#: src/stream_player.py:130
 msgid "Stream not available"
 msgstr "Stream nicht verfügbar"
 
-#: src/stream_player.py:96
+#: src/stream_player.py:135
 msgid "Waiting for ads to finish..."
 msgstr "Warte auf Ende der Werbung …"
 
-#: src/stream_player.py:109
+#: src/stream_player.py:148
 msgid "Stream playback failed"
 msgstr "Stream-Wiedergabe fehlgeschlagen"
 
-#: src/stream_player.py:122
+#: src/stream_player.py:161
 msgid "Error starting playback"
 msgstr "Fehler beim Starten der Wiedergabe"
 
-#: src/stream_player.py:176
+#: src/stream_player.py:215
 #, python-brace-format
 msgid ""
 "Could not find {path} on your system.\n"
@@ -401,7 +397,7 @@ msgstr ""
 "Überprüfe den Pfad unter Einstellungen → Player → Benutzerdefinierte Player-"
 "Anwendung."
 
-#: src/stream_player.py:181
+#: src/stream_player.py:220
 msgid ""
 "No custom player executable configured.\n"
 "Set the path to your player in Preferences → Player → Custom player "
@@ -411,7 +407,7 @@ msgstr ""
 "Lege den Pfad zu deinem Player unter Einstellungen → Player → "
 "Benutzerdefinierte Player-Anwendung fest."
 
-#: src/stream_player.py:186
+#: src/stream_player.py:225
 #, python-brace-format
 msgid ""
 "Could not find {player} on your system.\n"
@@ -428,188 +424,188 @@ msgstr ""
 "• Ubuntu/Debian: sudo apt install {player}\n"
 "• Fedora: sudo dnf install {player}"
 
-#: src/stream_player.py:192
+#: src/stream_player.py:231
 msgid "Missing Player"
 msgstr "Fehlender Player"
 
-#: src/twitch.py:538
+#: src/twitch.py:558
 msgid "Just now"
 msgstr "Gerade eben"
 
-#: src/twitch.py:540
+#: src/twitch.py:560
 #, python-brace-format
 msgid "{}m ago"
 msgstr "vor {} Min."
 
-#: src/twitch.py:544
+#: src/twitch.py:564
 #, python-brace-format
 msgid "{}h ago"
 msgstr "vor {} Std."
 
-#: src/twitch.py:548
+#: src/twitch.py:568
 #, python-brace-format
 msgid "{}d ago"
 msgstr "vor {} T."
 
-#: src/twitch.py:551
+#: src/twitch.py:571
 #, python-brace-format
 msgid "{}w ago"
 msgstr "vor {} Wo."
 
-#: src/twitch.py:561
+#: src/twitch.py:581
 #, python-brace-format
 msgid "{}h"
 msgstr "{} Std."
 
-#: src/twitch.py:563
+#: src/twitch.py:583
 #, python-brace-format
 msgid "{}m"
 msgstr "{} Min."
 
-#: src/twitch.py:567
+#: src/twitch.py:587
 #, python-brace-format
 msgid "{}s"
 msgstr "{} Sek."
 
-#: src/twitch.py:577
+#: src/twitch.py:597
 #, python-brace-format
 msgid "{}h {}m"
 msgstr "{} Std. {} Min."
 
-#: src/chat/chat_window.py:36 src/chat/page.py:443
+#: src/chat/chat_window.py:55 src/chat/page.py:503
 #, python-brace-format
 msgid "Chat: {}"
 msgstr "Chat: {}"
 
-#: src/chat/twitch_chat.py:294
+#: src/chat/twitch_chat.py:313
 #, python-brace-format
 msgid "{target} was timed out (1 minute)"
 msgstr "{target} wurde für 1 Minute stummgeschaltet"
 
-#: src/chat/twitch_chat.py:296
+#: src/chat/twitch_chat.py:315
 #, python-brace-format
 msgid "{target} was timed out ({minutes} minutes)"
 msgstr "{target} wurde für {minutes} Minuten stummgeschaltet"
 
-#: src/chat/twitch_chat.py:300
+#: src/chat/twitch_chat.py:319
 #, python-brace-format
 msgid "{target} was banned"
 msgstr "{target} wurde gebannt"
 
-#: src/chat/twitch_chat.py:332
+#: src/chat/twitch_chat.py:351
 #, python-brace-format
 msgid "{name} subscribed with {tier}!"
 msgstr "{name} hat mit {tier} abonniert!"
 
-#: src/chat/twitch_chat.py:339
+#: src/chat/twitch_chat.py:358
 #, python-brace-format
 msgid "{name} subscribed for {months} months"
 msgstr "{name} hat {months} Monate abonniert"
 
-#: src/chat/twitch_chat.py:343
+#: src/chat/twitch_chat.py:362
 #, python-brace-format
 msgid " ({streak} streak)"
 msgstr " ({streak} in Folge)"
 
-#: src/chat/twitch_chat.py:344
+#: src/chat/twitch_chat.py:363
 #, python-brace-format
 msgid "{base} with {tier}!"
 msgstr "{base} mit {tier}!"
 
-#: src/chat/twitch_chat.py:353
+#: src/chat/twitch_chat.py:372
 #, python-brace-format
 msgid "Anonymous gifted {tier} to {recipient}!"
 msgstr "Anonym hat {tier} an {recipient} verschenkt!"
 
-#: src/chat/twitch_chat.py:360
+#: src/chat/twitch_chat.py:379
 #, python-brace-format
 msgid "{gifter} gifted {tier} to {recipient}!"
 msgstr "{gifter} hat {tier} an {recipient} verschenkt!"
 
-#: src/chat/twitch_chat.py:395
+#: src/chat/twitch_chat.py:414
 #, python-brace-format
 msgid "{name} is raiding with {count} viewers!"
 msgstr "{name} raidet mit {count} Zuschauern!"
 
-#: src/chat/twitch_chat.py:407
+#: src/chat/twitch_chat.py:426
 #, python-brace-format
 msgid "📢 {name}: {body}"
 msgstr "📢 {name}: {body}"
 
-#: src/chat/page.py:534
+#: src/chat/page.py:594
 msgid "More messages below"
 msgstr "Weitere Nachrichten unten"
 
-#: src/chat/page.py:574
+#: src/chat/page.py:634
 msgid "Reconnect"
 msgstr "Neu verbinden"
 
-#: src/chat/page.py:599
+#: src/chat/page.py:659
 msgid "Detach chat"
 msgstr "Chat ausgliedern"
 
-#: src/chat/page.py:1437
+#: src/chat/page.py:1573
 msgid "Connecting to chat…"
 msgstr "Verbinde mit Chat…"
 
-#: src/chat/page.py:1447
+#: src/chat/page.py:1583
 #, python-brace-format
 msgid "Reconnecting… (attempt {})"
 msgstr "Verbinde neu… (Versuch {})"
 
-#: src/chat/page.py:1456
+#: src/chat/page.py:1592
 msgid "Disconnected."
 msgstr "Getrennt."
 
-#: src/vod_page.py:31
+#: src/vod_page.py:50
 #, python-brace-format
 msgid "{}'s VODs"
 msgstr "VODs von {}"
 
-#: src/vod_page.py:115
+#: src/vod_page.py:134
 msgid "Loading VODs…"
 msgstr "Lade VODs …"
 
-#: src/vod_page.py:143 src/vod_page.py:150
+#: src/vod_page.py:162 src/vod_page.py:169
 msgid "Error Loading VODs"
 msgstr "Fehler beim Laden der VODs"
 
-#: src/vod_page.py:144
+#: src/vod_page.py:163
 msgid "No internet connection. Check your network and try again."
 msgstr ""
 "Keine Internetverbindung. Überprüfe dein Netzwerk und versuche es erneut."
 
-#: src/vod_page.py:184 src/window.py:327
+#: src/vod_page.py:203 src/window.py:317
 #, python-brace-format
 msgid "Please wait {}s before refreshing"
 msgstr "Bitte warte {} s vor dem Aktualisieren"
 
-#: src/vod_page.py:311 src/vod_page.py:458
+#: src/vod_page.py:330 src/vod_page.py:477
 msgid "Play VOD"
 msgstr "VOD abspielen"
 
-#: src/vod_page.py:318 src/vod_page.py:465
+#: src/vod_page.py:337 src/vod_page.py:484
 msgid "Open VOD in browser"
 msgstr "VOD im Browser öffnen"
 
-#: src/vod_page.py:397
+#: src/vod_page.py:416
 msgid "No VODs found"
 msgstr "Keine VODs gefunden"
 
-#: src/vod_page.py:398
+#: src/vod_page.py:417
 msgid "This channel has no recent VODs available"
 msgstr "Dieser Kanal hat keine aktuellen VODs verfügbar"
 
-#: src/vod_page.py:472
+#: src/vod_page.py:491
 msgid "Show more…"
 msgstr "Mehr anzeigen…"
 
-#: src/vod_page.py:506
+#: src/vod_page.py:525
 #, python-brace-format
 msgid "Starting VOD: {}"
 msgstr "Starte VOD: {}"
 
-#: src/vod_page.py:508
+#: src/vod_page.py:527
 msgid "Error playing VOD: player failed to start"
 msgstr "Fehler beim Abspielen des VODs: Player konnte nicht gestartet werden"
 
@@ -623,104 +619,115 @@ msgstr ""
 "Konnte Streamer-Daten nicht abrufen. Bitte überprüfe deine "
 "Internetverbindung."
 
+#: src/window.py:261
+#, fuzzy
+msgid "Authentication Error"
+msgstr "Verbindungsfehler"
+
 #: src/window.py:263
+msgid ""
+"API authentication failed (HTTP 401). Check your Twitch Client ID and Client "
+"Secret in config.py."
+msgstr ""
+
+#: src/window.py:270
 msgid "API Rate Limit"
 msgstr "API-Ratenlimit"
 
-#: src/window.py:265
+#: src/window.py:272
 msgid ""
 "API rate limit reached. Please wait a few minutes before refreshing again."
 msgstr ""
 "API-Ratenlimit erreicht. Bitte warte ein paar Minuten, bevor du erneut "
 "aktualisierst."
 
-#: src/window.py:272 src/window.py:280
+#: src/window.py:279 src/window.py:287
 msgid "API Error"
 msgstr "API-Fehler"
 
-#: src/window.py:273
+#: src/window.py:280
 #, python-brace-format
 msgid "HTTP error {} occurred while fetching streamer data."
 msgstr "HTTP-Fehler {} beim Abrufen der Streamer-Daten."
 
-#: src/window.py:281
+#: src/window.py:288
 #, python-brace-format
 msgid "Failed to fetch streamer data: {}"
 msgstr "Konnte Streamer-Daten nicht abrufen: {}"
 
-#: src/window.py:318
+#: src/window.py:308
 msgid "API not available"
 msgstr "API nicht verfügbar"
 
-#: src/window.py:347
+#: src/window.py:337
 msgid "Stream data refreshed"
 msgstr "Stream-Daten aktualisiert"
 
-#: src/window.py:509
+#: src/window.py:499
 #, python-brace-format
 msgid "Added {}"
 msgstr "{} hinzugefügt"
 
-#: src/window.py:511
+#: src/window.py:501
 #, python-brace-format
 msgid "Added {} streamers"
 msgstr "{} Streamer hinzugefügt"
 
-#: src/window.py:514
+#: src/window.py:504
 #, python-brace-format
 msgid "'{}' is invalid"
 msgstr "'{}' ist ungültig"
 
-#: src/window.py:516
+#: src/window.py:506
 #, python-brace-format
 msgid "{} invalid names"
 msgstr "{} ungültige Namen"
 
-#: src/window.py:519
+#: src/window.py:509
 #, python-brace-format
 msgid "Already following {}"
 msgstr "Folgst {} bereits"
 
-#: src/window.py:521
+#: src/window.py:511
 msgid "Already following"
 msgstr "Bereits gefolgt"
 
-#: src/window.py:535
+#: src/window.py:525
 #, python-brace-format
 msgid "Error: {}"
 msgstr "Fehler: {}"
 
-#: src/window.py:544
+#: src/window.py:534
 msgid "Error Saving Config"
 msgstr "Fehler beim Speichern der Konfiguration"
 
-#: src/window.py:544
+#: src/window.py:534
 msgid "Could not save configuration"
 msgstr "Konnte Konfiguration nicht speichern"
 
 #. Application section
-#: src/window.py:566
+#: src/window.py:556
 msgid "Application"
 msgstr "Anwendung"
 
-#: src/window.py:567 src/preferences.ui:7
+#: src/window.py:557 src/preferences.ui:7
 msgid "Preferences"
 msgstr "Einstellungen"
 
-#: src/window.py:568
+#: src/window.py:558
 msgid "Show Shortcuts"
 msgstr "Tastenkürzel anzeigen"
 
-#: src/window.py:569
+#: src/window.py:559
 msgid "Quit"
 msgstr "Beenden"
 
 #. Stream Management section
-#: src/window.py:573
+#: src/window.py:563
 msgid "Stream Management"
 msgstr "Stream-Verwaltung"
 
-#: src/window.py:577 src/window.py:582 src/window.py:584
+#: src/window.py:567 src/window.py:572 src/window.py:574
 msgid "Refresh Streams"
 msgstr "Streams aktualisieren"
 
@@ -744,7 +751,7 @@ msgstr "_Tastenkürzel"
 msgid "_About Streamline"
 msgstr "_Über Streamline"
 
-#: src/preferences.ui:11 src/preferences.ui:205
+#: src/preferences.ui:11 src/preferences.ui:194
 msgid "General"
 msgstr "Allgemein"
 
@@ -797,100 +804,96 @@ msgid "Show thumbnail previews for VODs"
 msgstr "Vorschaubilder für VODs anzeigen"
 
 #: src/preferences.ui:67
+msgid "Stream Thumbnails"
+msgstr "Stream-Vorschaubilder"
+
+#: src/preferences.ui:71
+msgid "Show live preview thumbnails for online streams as cards"
+msgstr "Live-Vorschaubilder für Online-Streams als Karten anzeigen"
+
+#: src/preferences.ui:79
 msgid "Player"
 msgstr "Player"
 
-#: src/preferences.ui:73
+#: src/preferences.ui:85
 msgid "Media Player"
 msgstr "Mediaplayer"
 
-#: src/preferences.ui:77
+#: src/preferences.ui:89
 msgid "The video player used to watch streams"
 msgstr "Player für Streams und VODs"
 
-#: src/preferences.ui:85
+#: src/preferences.ui:97
 msgid "Custom Player Command"
 msgstr "Benutzerdefinierter Player-Befehl"
 
-#: src/preferences.ui:94
+#: src/preferences.ui:106
 msgid "Quality"
 msgstr "Qualität"
 
-#: src/preferences.ui:100
+#: src/preferences.ui:112
 msgid "Stream Quality"
 msgstr "Stream-Qualität"
 
-#: src/preferences.ui:104
+#: src/preferences.ui:116
 msgid "Higher quality uses more bandwidth"
 msgstr "Höhere Qualität braucht mehr Bandbreite"
 
-#: src/preferences.ui:112
+#: src/preferences.ui:124
 msgid "Custom Quality"
 msgstr "Benutzerdefinierte Qualität"
 
-#: src/preferences.ui:121
+#: src/preferences.ui:133
 msgid "Low Latency Mode"
 msgstr "Niedrige Latenz"
 
-#: src/preferences.ui:125
+#: src/preferences.ui:137
 msgid "Reduces stream delay but may cause buffering on slower connections"
 msgstr ""
 "Reduziert Stream-Verzögerung, kann aber bei langsameren Verbindungen zu "
 "Pufferung führen"
 
-#: src/preferences.ui:133
+#: src/preferences.ui:145
 msgid "Streamers"
 msgstr "Streamer"
 
-#: src/preferences.ui:136
+#: src/preferences.ui:148
 msgid "Export List"
 msgstr "Liste exportieren"
 
-#: src/preferences.ui:140
+#: src/preferences.ui:152
 msgid "Save your followed streamers for backup"
 msgstr "Speichere deine gefolgten Streamer zur Sicherung"
 
-#: src/preferences.ui:154
+#: src/preferences.ui:166
 msgid "Import List"
 msgstr "Liste importieren"
 
-#: src/preferences.ui:158
+#: src/preferences.ui:170
 msgid "Load a backup file to follow streamers"
 msgstr "Lade eine Sicherungsdatei, um Streamern zu folgen"
 
-#: src/preferences.ui:175
-msgid "API credentials"
-msgstr "API-Anmeldedaten"
-
-#: src/preferences.ui:179
-msgid ""
-"Credentials are required to fetch stream data. You can get these at "
-"dev.twitch.tv/console/apps"
-msgstr ""
-"Anmeldedaten sind erforderlich, um Stream-Daten abzurufen. Du erhältst diese "
-"unter dev.twitch.tv/console/apps"
-
-#: src/preferences.ui:209
+#: src/preferences.ui:198
 msgid "Changes apply to newly opened chats"
 msgstr "Änderungen gelten für neu geöffnete Chats"
 
-#: src/preferences.ui:215
+#: src/preferences.ui:204
 msgid "Alternating Background"
 msgstr "Abwechselnder Hintergrund"
 
-#: src/preferences.ui:230
+#: src/preferences.ui:219
 msgid "Disable Emote Animations"
 msgstr "Emote-Animationen deaktivieren"
 
-#: src/preferences.ui:234
+#: src/preferences.ui:223
 msgid "Use static emote images to reduce resource usage"
 msgstr "Statische Emote-Bilder verwenden, um Ressourcen zu schonen"
 
-#: src/preferences.ui:245
+#: src/preferences.ui:234
 msgid "Chat Highlighting"
 msgstr "Chat-Hervorhebung"
 
-#: src/preferences.ui:249
+#: src/preferences.ui:238
 msgid ""
 "Apply tinted backgrounds to certain message types. Changes apply to newly "
 "opened chats"
@@ -898,43 +901,43 @@ msgstr ""
 "Eingefärbte Hintergründe für bestimmte Nachrichtentypen anwenden. Änderungen "
 "gelten für neu geöffnete Chats"
 
-#: src/preferences.ui:255
+#: src/preferences.ui:244
 msgid "First Messages"
 msgstr "Erste Nachrichten"
 
-#: src/preferences.ui:259
+#: src/preferences.ui:248
 msgid "Blue tint for a user's first message in the channel"
 msgstr "Blaue Einfärbung für die erste Nachricht eines Nutzers im Kanal"
 
-#: src/preferences.ui:264
+#: src/preferences.ui:253
 msgid "Moderators"
 msgstr "Moderatoren"
 
-#: src/preferences.ui:268
+#: src/preferences.ui:257
 msgid "Green tint for messages from moderators"
 msgstr "Grüne Einfärbung für Nachrichten von Moderatoren"
 
-#: src/preferences.ui:273
+#: src/preferences.ui:262
 msgid "VIPs"
 msgstr "VIPs"
 
-#: src/preferences.ui:277
+#: src/preferences.ui:266
 msgid "Pink tint for messages from VIPs"
 msgstr "Rosa Einfärbung für Nachrichten von VIPs"
 
-#: src/preferences.ui:282
+#: src/preferences.ui:271
 msgid "Partners"
 msgstr "Partner"
 
-#: src/preferences.ui:286
+#: src/preferences.ui:275
 msgid "Purple tint for messages from Partners"
 msgstr "Violette Einfärbung für Nachrichten von Partnern"
 
-#: src/preferences.ui:294
+#: src/preferences.ui:283
 msgid "Broadcaster"
 msgstr "Broadcaster"
 
-#: src/preferences.ui:298
+#: src/preferences.ui:287
 msgid "Red tint for messages from the broadcaster"
 msgstr "Rote Einfärbung für Nachrichten des Broadcasters"
 
@@ -945,6 +948,41 @@ msgstr "VODs"
 #: src/vod_page.ui:23
 msgid "Refresh VODs"
 msgstr "VODs aktualisieren"
+
+#~ msgid "Unknown"
+#~ msgstr "Unbekannt"
+
+#~ msgid "API Credentials"
+#~ msgstr "API-Anmeldedaten"
+
+#~ msgid ""
+#~ "Enter your Twitch Client ID and Client Secret to enable the app:\n"
+#~ "\n"
+#~ "You can get these at https://dev.twitch.tv/console/apps"
+#~ msgstr ""
+#~ "Gib deine Twitch Client-ID und dein Client-Secret ein, um die App zu "
+#~ "aktivieren:\n"
+#~ "\n"
+#~ "Du erhältst diese unter https://dev.twitch.tv/console/apps"
+
+#~ msgid "Client ID"
+#~ msgstr "Client-ID"
+
+#~ msgid "Client Secret"
+#~ msgstr "Client-Secret"
+
+#~ msgid "Save"
+#~ msgstr "Speichern"
+
+#~ msgid "API credentials"
+#~ msgstr "API-Anmeldedaten"
+
+#~ msgid ""
+#~ "Credentials are required to fetch stream data. You can get these at "
+#~ "dev.twitch.tv/console/apps"
+#~ msgstr ""
+#~ "Anmeldedaten sind erforderlich, um Stream-Daten abzurufen. Du erhältst "
+#~ "diese unter dev.twitch.tv/console/apps"
 
 #, python-brace-format
 #~ msgid "Raiding {target} with {count} viewers!"

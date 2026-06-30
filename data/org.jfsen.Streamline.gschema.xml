@@ -102,5 +102,11 @@
             <description
             >Display thumbnail previews for VODs as cards instead of a plain list</description>
         </key>
+        <key name="show-stream-thumbnails" type="b">
+            <default>false</default>
+            <summary>Show stream thumbnails</summary>
+            <description
+            >Display live preview thumbnails for online streams as cards</description>
+        </key>
 	</schema>
 </schemalist>
