@@ -559,12 +559,13 @@ class StreamerRowManager:
                 lines=1,
             )
             name_label.add_css_class("heading")
-            name_label.set_tooltip_text(name_text)
             text_col.append(name_label)
 
             meta_label = Gtk.Label(
                 label=_("{} — {} viewers").format(game, viewers),
                 xalign=0,
+                wrap=True,
+                wrap_mode=2,  # WORD
             )
             meta_label.add_css_class("dim-label")
             meta_label.add_css_class("caption")
@@ -581,12 +582,13 @@ class StreamerRowManager:
                 lines=1,
             )
             name_label.add_css_class("heading")
-            name_label.set_tooltip_text(name_text)
             text_box.append(name_label)
 
             meta_label = Gtk.Label(
                 label=_("{} — {} viewers").format(game, viewers),
                 xalign=0,
+                wrap=True,
+                wrap_mode=2,  # WORD
             )
             meta_label.add_css_class("dim-label")
             meta_label.add_css_class("caption")
