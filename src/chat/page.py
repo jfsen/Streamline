@@ -529,6 +529,7 @@ class ChatPage(Adw.NavigationPage):
         self._anim_registry: dict[str, dict] = {}
         self._anim_tick_id: int | None = None
         self._toplevel_active_id: int | None = None
+        self._cull_ops = 0
 
         # ── Scroll state ────────────────────────────────────
         # ``_auto_scroll``: True when the viewport is pinned to
@@ -1068,6 +1069,9 @@ class ChatPage(Adw.NavigationPage):
             finally:
                 self._cull_in_progress = False
                 self._suppress_scroll_signal = False
+                self._cull_ops += 1
+                if self._cull_ops % 5 == 0:
+                    gc.collect()
 
         # ── Append new cards ─────────────────────────────────
         for msg_data in batch:
@@ -1419,6 +1423,7 @@ class ChatPage(Adw.NavigationPage):
         self._chat = None
         self._scrolled = None
         self._msg_box = None
+        gc.collect()
 
     # ── Animated emote tick (per-page) ───────────────────────
 
