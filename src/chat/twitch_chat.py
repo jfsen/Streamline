@@ -488,9 +488,6 @@ class TwitchChat:
             GLib.idle_add(self._on_roomstate, state)
             return
 
-        if not line.startswith("PONG") and "PRIVMSG" not in line:
-            logger.debug("Unhandled IRC: %s", line)
-
     def _parse_privmsg(self, line):
         """Parse a PRIVMSG line into a dict, or return None."""
         parts = line.split("PRIVMSG #", 1)
