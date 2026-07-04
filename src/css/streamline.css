@@ -137,7 +137,22 @@ list.streamer-list:not(.boxed-list) > row {
 }
 
 list.streamer-list:not(.boxed-list) > row > .card.just-went-online {
-    animation: went-online-pulse 8s ease-out forwards;
+    animation: went-online-card-pulse 8s ease-out;
+}
+
+@keyframes went-online-card-pulse {
+    0% {
+        background-color: alpha(@success_bg_color, 0.22);
+    }
+    5% {
+        background-color: alpha(@success_bg_color, 0.18);
+    }
+    62% {
+        background-color: alpha(@success_bg_color, 0.18);
+    }
+    100% {
+        background-color: @card_bg_color;
+    }
 }
 
 list.streamer-list:not(.boxed-list) > row > .card {
