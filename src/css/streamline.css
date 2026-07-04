@@ -55,7 +55,7 @@ list.boxed-list.streamer-list > row.offline-row {
 
 /* ── Just-went-online row highlight ── */
 list.boxed-list.streamer-list > row.just-went-online {
-    animation: went-online-pulse 8s ease-out forwards;
+    animation: went-online-pulse 12s ease-out forwards;
 }
 
 @keyframes went-online-pulse {
@@ -65,7 +65,7 @@ list.boxed-list.streamer-list > row.just-went-online {
     5% {
         background-color: alpha(@success_bg_color, 0.18);
     }
-    62% {
+    83% {
         background-color: alpha(@success_bg_color, 0.18);
     }
     100% {
@@ -137,7 +137,7 @@ list.streamer-list:not(.boxed-list) > row {
 }
 
 list.streamer-list:not(.boxed-list) > row > .card.just-went-online {
-    animation: went-online-card-pulse 8s ease-out;
+    animation: went-online-card-pulse 12s ease-out;
 }
 
 @keyframes went-online-card-pulse {
@@ -147,7 +147,7 @@ list.streamer-list:not(.boxed-list) > row > .card.just-went-online {
     5% {
         background-color: alpha(@success_bg_color, 0.18);
     }
-    62% {
+    83% {
         background-color: alpha(@success_bg_color, 0.18);
     }
     100% {

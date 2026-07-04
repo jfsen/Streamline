@@ -78,6 +78,6 @@ VOD_REFRESH_COOLDOWN = 60
 # ── Rows ────────────────────────────────────────────────────
 # Streamer-list row UI timing (milliseconds).
 
-ROW_HIGHLIGHT_MS = 8000  # just-went-online highlight glow
-PILL_SHOW_MS = 5000  # online-change pill display duration
-PILL_FADE_MS = 3000  # pill fade-out animation duration
+ROW_HIGHLIGHT_MS = 12000  # just-went-online highlight glow
+PILL_SHOW_MS = 10000  # online-change pill display duration
+PILL_FADE_MS = 2000  # pill fade-out animation duration
