@@ -535,6 +535,8 @@ class ChatPage(Adw.NavigationPage):
         self._anim_tick_id: int | None = None
         self._toplevel_active_id: int | None = None
         self._cull_ops = 0
+        self._room_state: dict[str, int] = {}
+        self._roomstate_popover: Gtk.Popover | None = None
 
         # ── Scroll state ────────────────────────────────────
         # ``_auto_scroll``: True when the viewport is pinned to
@@ -659,6 +661,14 @@ class ChatPage(Adw.NavigationPage):
         header = Adw.HeaderBar()
         header.set_show_back_button(True)
 
+        info_button = Gtk.Button(
+            icon_name="dialog-information-symbolic",
+            tooltip_text=_("Room state"),
+        )
+        info_button.add_css_class("flat")
+        info_button.connect("clicked", self._on_info_clicked)
+        header.pack_start(info_button)
+
         if enable_detach:
             detach_button = Gtk.Button(
                 icon_name="window-new-symbolic",
@@ -699,6 +709,7 @@ class ChatPage(Adw.NavigationPage):
                 on_message=self._on_message,
                 prefer_static_emotes=self._disable_emote_animations,
                 on_state_change=self._on_irc_state_change,
+                on_roomstate=self._on_roomstate,
             )
             self._chat.start()
 
@@ -1399,6 +1410,7 @@ class ChatPage(Adw.NavigationPage):
         # no idle_add callbacks can fire after we start tearing down.
         if self._chat:
             self._chat._on_state_change = None
+            self._chat._on_roomstate = None
             self._chat.stop()
             self._chat = None
         # Disconnect toplevel-active watcher before clearing widgets,
@@ -1429,6 +1441,9 @@ class ChatPage(Adw.NavigationPage):
         self._chat = None
         self._scrolled = None
         self._msg_box = None
+        if self._roomstate_popover is not None:
+            self._roomstate_popover.popdown()
+            self._roomstate_popover = None
         gc.collect()
 
     # ── Animated emote tick (per-page) ───────────────────────
@@ -1578,6 +1593,111 @@ class ChatPage(Adw.NavigationPage):
     def _on_anim_unmap(widget: Gtk.Picture) -> None:
         """Mark widget paused — tick will skip it."""
         widget._anim_paused = True
+
+    # ── Room state popover ────────────────────────────────────
+
+    def _on_info_clicked(self, button: Gtk.Button) -> None:
+        """Show or hide the room-state popover."""
+        if self._roomstate_popover is not None and self._roomstate_popover.is_visible():
+            self._roomstate_popover.popdown()
+            return
+        self._roomstate_popover = Gtk.Popover()
+        self._roomstate_popover.set_has_arrow(False)
+        self._roomstate_popover.set_parent(button)
+        self._roomstate_popover.set_position(Gtk.PositionType.BOTTOM)
+        self._roomstate_popover.connect("closed", self._on_popover_closed)
+        self._roomstate_popover.set_child(self._build_roomstate_content())
+        self._roomstate_popover.popup()
+
+    def _on_popover_closed(self, popover: Gtk.Popover) -> None:
+        self._roomstate_popover = None
+
+    def _build_roomstate_content(self) -> Gtk.Widget:
+        """Build the popover body showing current room modes."""
+        theme = CHAT_STYLE["dark"] if self._dark else CHAT_STYLE["light"]
+
+        modes = [
+            ("emote-only", _("Emote-only")),
+            ("followers-only", _("Followers-only")),
+            ("slow", _("Slow mode")),
+            ("subs-only", _("Subscribers-only")),
+            ("r9k", _("Unique chat")),
+        ]
+
+        box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=0)
+        box.set_margin_start(8)
+        box.set_margin_end(8)
+        box.set_margin_top(8)
+        box.set_margin_bottom(8)
+        box.set_size_request(220, -1)
+
+        for key, label_text in modes:
+            val = self._room_state.get(key, 0)
+            row = self._make_roomstate_row(key, label_text, val, theme)
+            box.append(row)
+
+        return box
+
+    def _make_roomstate_row(
+        self, key: str, label_text: str, val: int, theme: dict
+    ) -> Gtk.Widget:
+        on = False
+        detail = ""
+
+        if key == "followers-only":
+            on = val >= 0
+            if val > 0:
+                detail = _("{n} min").format(n=val)
+            elif val == 0:
+                detail = _("On")
+            else:
+                detail = _("Off")
+        elif key == "slow":
+            on = val > 0
+            detail = _("{n} s").format(n=val) if on else _("Off")
+        else:
+            on = val == 1
+            detail = _("On") if on else _("Off")
+
+        fg = theme["text_color"]
+        dim = "#888" if self._dark else "#666"
+        indicator_color = "#3cb043" if on else dim
+
+        row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
+        row.set_margin_top(4)
+        row.set_margin_bottom(4)
+
+        indicator = Gtk.Label()
+        indicator.set_markup(
+            f'<span foreground="{indicator_color}" size="large">●</span>'
+        )
+        row.append(indicator)
+
+        name_label = Gtk.Label(label=label_text)
+        name_label.set_halign(Gtk.Align.START)
+        name_label.set_hexpand(True)
+        name_label.set_xalign(0)
+        row.append(name_label)
+
+        detail_label = Gtk.Label()
+        detail_label.set_halign(Gtk.Align.END)
+        detail_label.set_markup(
+            f'<span foreground="{fg if on else dim}">'
+            f"{GLib.markup_escape_text(detail)}"
+            f"</span>"
+        )
+        row.append(detail_label)
+
+        return row
+
+    def _on_roomstate(self, state: dict) -> None:
+        """Called (via GLib.idle_add) when a ROOMSTATE message arrives."""
+        if self._cleaned_up:
+            return
+        self._room_state.update(state)
+        # If the popover is currently open, rebuild its content.
+        if self._roomstate_popover is not None:
+            self._roomstate_popover.set_child(self._build_roomstate_content())
 
     # ── IRC state ───────────────────────────────────────────
 

@@ -101,11 +101,13 @@ class TwitchChat:
         on_message,
         prefer_static_emotes=False,
         on_state_change=None,
+        on_roomstate=None,
     ):
         self._channel = channel.lstrip("#").lower()
         self._on_message = on_message
         self._prefer_static_emotes = prefer_static_emotes
         self._on_state_change = on_state_change
+        self._on_roomstate = on_roomstate
         self._sock = None
         self._socket_lock = threading.Lock()
         self._running = False
@@ -431,6 +433,33 @@ class TwitchChat:
 
         return None
 
+    def _parse_roomstate(self, line):
+        """Parse a ROOMSTATE line, returning a dict of mode=value
+        integers, or None if the line doesn't match.
+
+        Modes: emote-only, followers-only, r9k, slow, subs-only.
+        followers-only: -1 disabled, 0 all followers, >0 minutes.
+        """
+        parts = line.split("ROOMSTATE #", 1)
+        if len(parts) != 2:
+            return None
+
+        tags_part = parts[0]
+        tag_match = _TAG_RE.match(tags_part)
+        if not tag_match:
+            return None
+
+        tags = tag_match.group(1)
+        state = {}
+        for key in ("emote-only", "followers-only", "r9k", "slow", "subs-only"):
+            match = re.search(rf"\b{key}=(-?\d+)", tags)
+            if match:
+                try:
+                    state[key] = int(match.group(1))
+                except ValueError:
+                    pass
+        return state if state else None
+
     def _handle_line(self, line):
         if line.startswith("PING"):
             self._send_raw("PONG", line[5:])
@@ -451,6 +480,12 @@ class TwitchChat:
         if msg:
             logger.debug("USERNOTICE → %r", msg["text"])
             GLib.idle_add(self._on_message, msg)
+            return
+
+        state = self._parse_roomstate(line)
+        if state and self._on_roomstate is not None:
+            logger.debug("ROOMSTATE → %r", state)
+            GLib.idle_add(self._on_roomstate, state)
             return
 
         if not line.startswith("PONG") and "PRIVMSG" not in line:
