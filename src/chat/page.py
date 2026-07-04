@@ -704,6 +704,8 @@ class ChatPage(Adw.NavigationPage):
                 self._third_party_emotes.load()
             except Exception as exc:
                 logger.warning("Emote loading failed for #%s: %s", streamer, exc)
+            if self._cleaned_up:
+                return  # page closed before we finished connecting
             self._chat = TwitchChat(
                 streamer,
                 on_message=self._on_message,
