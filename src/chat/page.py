@@ -284,6 +284,8 @@ def _apply_texture(
     """
     if not widget.get_root():
         return GLib.SOURCE_REMOVE
+    if getattr(widget, "_unrealized", False):
+        return GLib.SOURCE_REMOVE  # C object already destroyed
 
     if isinstance(data, Gdk.Texture):
         widget.set_paintable(data)
@@ -337,11 +339,14 @@ def _clear_text_buffers(root: Gtk.Widget) -> None:
 
 def _unrealize_widget(widget: Gtk.Widget) -> bool:
     """Unrealize a widget in an idle callback, safe to call on already-
-    destroyed widgets (returns GLib.SOURCE_REMOVE)."""
+    destroyed widgets (returns GLib.SOURCE_REMOVE).  Marks the Python
+    wrapper as dead afterward so that no other idle callback tries to
+    call GTK methods on the now-destroyed C object."""
     try:
         widget.unrealize()
     except Exception:
         pass
+    widget._unrealized = True
     return GLib.SOURCE_REMOVE
 
 
@@ -1044,6 +1049,7 @@ class ChatPage(Adw.NavigationPage):
                             culled_total_height += first.get_allocated_height()
                         self._anim_unregister_tree(first)
                         _anim_disconnect_handlers(first)
+                        _clear_text_buffers(first)
                         self._msg_box.remove(first)
                         if self._cards and self._cards[0] is first:
                             self._cards.popleft()
@@ -1475,6 +1481,9 @@ class ChatPage(Adw.NavigationPage):
                 if getattr(widget, "_anim_paused", False):
                     alive = True
                     continue
+                if getattr(widget, "_unrealized", False):
+                    dead_widgets.append(widget)
+                    continue
                 card = getattr(widget, "_card", None)
                 if card is not None:
                     alloc = card.get_allocation()
@@ -1552,6 +1561,8 @@ class ChatPage(Adw.NavigationPage):
 
     def _on_anim_map(self, widget: Gtk.Picture) -> None:
         """Sync widget to current shared frame when becoming visible."""
+        if getattr(widget, "_unrealized", False):
+            return
         if not getattr(widget, "_anim_paused", False):
             return
         widget._anim_paused = False
@@ -1560,7 +1571,7 @@ class ChatPage(Adw.NavigationPage):
             return
         info = self._anim_registry.get(url)
         if info is not None:
-            texture, _ = info["frames"][info["frame_idx"]]
+            texture, _ = info["frames"].get_frame(info["frame_idx"])
             widget.set_paintable(texture)
 
     @staticmethod
