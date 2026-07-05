@@ -744,7 +744,7 @@ class StreamerRowManager:
                 row = self.create_row(streamer, info)
             if streamer in new_online:
                 row.add_css_class("just-went-online")
-                GLib.timeout_add(ROW_HIGHLIGHT_MS, self._clear_highlight, row)
+                GLib.timeout_add(ROW_HIGHLIGHT_MS, self._start_highlight_fade, row)
             self.online_list.append(row)
             self.streamer_rows[streamer] = row
 
@@ -757,9 +757,16 @@ class StreamerRowManager:
         if new_online or new_offline:
             self._show_pill(len(new_online), len(new_offline))
 
+    def _start_highlight_fade(self, row):
+        """Begin fade-out of the just-went-online highlight."""
+        row.add_css_class("highlight-fading")
+        GLib.timeout_add(PILL_FADE_MS, self._clear_highlight, row)
+        return GLib.SOURCE_REMOVE
+
     def _clear_highlight(self, row):
-        """Remove the just-went-online glow from a row."""
+        """Remove all just-went-online classes after fade completes."""
         row.remove_css_class("just-went-online")
+        row.remove_css_class("highlight-fading")
         return GLib.SOURCE_REMOVE
 
     def _show_pill(self, went_online, went_offline):
@@ -785,13 +792,13 @@ class StreamerRowManager:
         self._pill_box.remove_css_class("fading")
         self._pill_box.set_visible(True)
 
-        # Phase 1: show for 3s, then start fading
+        # Phase 1: show static, then start fading
         if self._pill_timeout_id:
             GLib.source_remove(self._pill_timeout_id)
         self._pill_timeout_id = GLib.timeout_add(PILL_SHOW_MS, self._start_pill_fade)
 
     def _start_pill_fade(self):
-        """Begin fade-out, then hide after 1s."""
+        """Begin fade-out."""
         self._pill_box.add_css_class("fading")
         self._pill_timeout_id = GLib.timeout_add(PILL_FADE_MS, self._hide_pill)
         return GLib.SOURCE_REMOVE

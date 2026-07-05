@@ -55,22 +55,12 @@ list.boxed-list.streamer-list > row.offline-row {
 
 /* ── Just-went-online row highlight ── */
 list.boxed-list.streamer-list > row.just-went-online {
-    animation: went-online-pulse 12s ease-out forwards;
+    background-color: alpha(@success_bg_color, 0.18);
+    transition: background-color 2s ease-out;
 }
 
-@keyframes went-online-pulse {
-    0% {
-        background-color: alpha(@success_bg_color, 0.22);
-    }
-    5% {
-        background-color: alpha(@success_bg_color, 0.18);
-    }
-    83% {
-        background-color: alpha(@success_bg_color, 0.18);
-    }
-    100% {
-        background-color: transparent;
-    }
+list.boxed-list.streamer-list > row.just-went-online.highlight-fading {
+    background-color: transparent;
 }
 
 /* ── Custom group headers (title + optional pill) ── */
@@ -137,22 +127,14 @@ list.streamer-list:not(.boxed-list) > row {
 }
 
 list.streamer-list:not(.boxed-list) > row > .card.just-went-online {
-    animation: went-online-card-pulse 12s ease-out;
+    background-color: alpha(@success_bg_color, 0.18);
+    transition: background-color 2s ease-out;
 }
 
-@keyframes went-online-card-pulse {
-    0% {
-        background-color: alpha(@success_bg_color, 0.22);
-    }
-    5% {
-        background-color: alpha(@success_bg_color, 0.18);
-    }
-    83% {
-        background-color: alpha(@success_bg_color, 0.18);
-    }
-    100% {
-        background-color: @card_bg_color;
-    }
+list.streamer-list:not(.boxed-list)
+    > row
+    > .card.just-went-online.highlight-fading {
+    background-color: @card_bg_color;
 }
 
 list.streamer-list:not(.boxed-list) > row > .card {
