@@ -350,6 +350,12 @@ def _unrealize_widget(widget: Gtk.Widget) -> bool:
     return GLib.SOURCE_REMOVE
 
 
+def _gc_collect_idle() -> bool:
+    """Run gc.collect() at idle priority so it doesn't block the UI."""
+    gc.collect()
+    return GLib.SOURCE_REMOVE
+
+
 # ── Helpers ──────────────────────────────────────────────────
 
 
@@ -1090,7 +1096,7 @@ class ChatPage(Adw.NavigationPage):
                 self._suppress_scroll_signal = False
                 self._cull_ops += 1
                 if self._cull_ops % 5 == 0:
-                    gc.collect()
+                    GLib.idle_add(_gc_collect_idle)
 
         # ── Append new cards ─────────────────────────────────
         for msg_data in batch:
@@ -1446,7 +1452,7 @@ class ChatPage(Adw.NavigationPage):
         if self._roomstate_popover is not None:
             self._roomstate_popover.popdown()
             self._roomstate_popover = None
-        gc.collect()
+        GLib.idle_add(_gc_collect_idle)
 
     # ── Animated emote tick (per-page) ───────────────────────
 
