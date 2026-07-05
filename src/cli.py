@@ -246,9 +246,7 @@ class CliHandler:
         if settings["stream_quality"] == "Custom":
             quality = settings["custom_quality"]
         else:
-            quality = QUALITY_PRESETS.get(settings["stream_quality"], "best")
-            if not quality.endswith("best") and ",best" not in quality:
-                quality += ",best"
+            quality = QUALITY_PRESETS[settings["stream_quality"]]
 
         cmd = list(STREAMLINK_CMD)
 

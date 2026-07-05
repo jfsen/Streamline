@@ -73,10 +73,7 @@ class StreamPlayer:
             if self.window.stream_quality == "Custom":
                 quality = self.window.custom_quality
             else:
-                quality = QUALITY_PRESETS.get(self.window.stream_quality, "best")
-                # Always ensure 'best' is available as a final fallback
-                if not quality.endswith("best") and ",best" not in quality:
-                    quality += ",best"
+                quality = QUALITY_PRESETS[self.window.stream_quality]
 
             # Set title and player arguments
             if IS_FLATPAK:
