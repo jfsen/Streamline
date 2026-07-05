@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: org.jfsen.Streamline\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-06-30 22:50+0200\n"
+"POT-Creation-Date: 2026-07-05 17:53+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -328,15 +328,15 @@ msgstr ""
 msgid "Show VODs"
 msgstr ""
 
-#: src/rows.py:268 src/rows.py:305 src/rows.py:518 src/rows.py:634
+#: src/rows.py:268 src/rows.py:305 src/rows.py:518 src/rows.py:636
 msgid "Play stream"
 msgstr ""
 
-#: src/rows.py:322 src/rows.py:647
+#: src/rows.py:322 src/rows.py:649
 msgid "Open in browser"
 msgstr ""
 
-#: src/rows.py:333 src/rows.py:659
+#: src/rows.py:333 src/rows.py:661
 msgid "More"
 msgstr ""
 
@@ -344,13 +344,13 @@ msgstr ""
 msgid "No category"
 msgstr ""
 
-#: src/rows.py:566 src/rows.py:588
+#: src/rows.py:565 src/rows.py:588
 #, python-brace-format
 msgid "{} — {} viewers"
 msgstr ""
 
 #. Stream title (full width, below the avatar block)
-#: src/rows.py:596
+#: src/rows.py:598
 msgid "No title"
 msgstr ""
 
@@ -448,88 +448,130 @@ msgstr ""
 msgid "{}h {}m"
 msgstr ""
 
-#: src/chat/chat_window.py:55 src/chat/page.py:503
+#: src/chat/chat_window.py:55 src/chat/page.py:514
 #, python-brace-format
 msgid "Chat: {}"
 msgstr ""
 
-#: src/chat/twitch_chat.py:313
+#: src/chat/twitch_chat.py:315
 #, python-brace-format
 msgid "{target} was timed out (1 minute)"
 msgstr ""
 
-#: src/chat/twitch_chat.py:315
+#: src/chat/twitch_chat.py:317
 #, python-brace-format
 msgid "{target} was timed out ({minutes} minutes)"
 msgstr ""
 
-#: src/chat/twitch_chat.py:319
+#: src/chat/twitch_chat.py:321
 #, python-brace-format
 msgid "{target} was banned"
 msgstr ""
 
-#: src/chat/twitch_chat.py:351
+#: src/chat/twitch_chat.py:353
 #, python-brace-format
 msgid "{name} subscribed with {tier}!"
 msgstr ""
 
-#: src/chat/twitch_chat.py:358
+#: src/chat/twitch_chat.py:360
 #, python-brace-format
 msgid "{name} subscribed for {months} months"
 msgstr ""
 
-#: src/chat/twitch_chat.py:362
+#: src/chat/twitch_chat.py:364
 #, python-brace-format
 msgid " ({streak} streak)"
 msgstr ""
 
-#: src/chat/twitch_chat.py:363
+#: src/chat/twitch_chat.py:365
 #, python-brace-format
 msgid "{base} with {tier}!"
 msgstr ""
 
-#: src/chat/twitch_chat.py:372
+#: src/chat/twitch_chat.py:374
 #, python-brace-format
 msgid "Anonymous gifted {tier} to {recipient}!"
 msgstr ""
 
-#: src/chat/twitch_chat.py:379
+#: src/chat/twitch_chat.py:381
 #, python-brace-format
 msgid "{gifter} gifted {tier} to {recipient}!"
 msgstr ""
 
-#: src/chat/twitch_chat.py:414
+#: src/chat/twitch_chat.py:416
 #, python-brace-format
 msgid "{name} is raiding with {count} viewers!"
 msgstr ""
 
-#: src/chat/twitch_chat.py:426
+#: src/chat/twitch_chat.py:428
 #, python-brace-format
 msgid "📢 {name}: {body}"
 msgstr ""
 
-#: src/chat/page.py:594
+#: src/chat/page.py:608
 msgid "More messages below"
 msgstr ""
 
-#: src/chat/page.py:634
+#: src/chat/page.py:648
 msgid "Reconnect"
 msgstr ""
 
-#: src/chat/page.py:659
+#: src/chat/page.py:672
+msgid "Room state"
+msgstr ""
+
+#: src/chat/page.py:681
 msgid "Detach chat"
 msgstr ""
 
-#: src/chat/page.py:1573
+#: src/chat/page.py:1628
+msgid "Emote-only"
+msgstr ""
+
+#: src/chat/page.py:1629
+msgid "Followers-only"
+msgstr ""
+
+#: src/chat/page.py:1630
+msgid "Slow mode"
+msgstr ""
+
+#: src/chat/page.py:1631
+msgid "Subscribers-only"
+msgstr ""
+
+#: src/chat/page.py:1632
+msgid "Unique chat"
+msgstr ""
+
+#: src/chat/page.py:1658
+#, python-brace-format
+msgid "{n} min"
+msgstr ""
+
+#: src/chat/page.py:1660 src/chat/page.py:1668
+msgid "On"
+msgstr ""
+
+#: src/chat/page.py:1662 src/chat/page.py:1665 src/chat/page.py:1668
+msgid "Off"
+msgstr ""
+
+#: src/chat/page.py:1665
+#, python-brace-format
+msgid "{n} s"
+msgstr ""
+
+#: src/chat/page.py:1717
 msgid "Connecting to chat…"
 msgstr ""
 
-#: src/chat/page.py:1583
+#: src/chat/page.py:1727
 #, python-brace-format
 msgid "Reconnecting… (attempt {})"
 msgstr ""
 
-#: src/chat/page.py:1592
+#: src/chat/page.py:1736
 msgid "Disconnected."
 msgstr ""
 
@@ -766,19 +808,19 @@ msgid "Show streamer profile pictures on play buttons"
 msgstr ""
 
 #: src/preferences.ui:55
-msgid "VOD Thumbnails"
-msgstr ""
-
-#: src/preferences.ui:59
-msgid "Show thumbnail previews for VODs"
-msgstr ""
-
-#: src/preferences.ui:67
 msgid "Stream Thumbnails"
 msgstr ""
 
-#: src/preferences.ui:71
+#: src/preferences.ui:59
 msgid "Show live preview thumbnails for online streams as cards"
+msgstr ""
+
+#: src/preferences.ui:67
+msgid "VOD Thumbnails"
+msgstr ""
+
+#: src/preferences.ui:71
+msgid "Show thumbnail previews for VODs"
 msgstr ""
 
 #: src/preferences.ui:79
