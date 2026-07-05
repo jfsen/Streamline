@@ -425,6 +425,8 @@ class CliHandler:
 
         # Display names come from the user cache (persisted to disk and
         # populated by get_streams above when the cache is stale).
+        # Sort online alphabetically (the API returns them by viewer count).
+        online_usernames = sorted(online_usernames)
 
         if args.json_output:
             self._print_status_json(
