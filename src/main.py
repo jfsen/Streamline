@@ -19,6 +19,7 @@
 
 import gettext
 import logging
+import os
 import sys
 
 import gi
@@ -125,15 +126,27 @@ class StreamlineApplication(Adw.Application):
         """Handle CLI arguments before activating the GUI."""
         argv = command_line.get_arguments()
 
+        # Enable debug logging when requested via flag or env var.
+        # Strip the flag so argparse never sees it.
+        debug_requested = os.environ.get("STREAMLINE_DEBUG", "") == "1"
+        clean_argv = [argv[0]]
+        for a in argv[1:]:
+            if a in ("--debug", "-d"):
+                debug_requested = True
+            else:
+                clean_argv.append(a)
+        if debug_requested:
+            logging.getLogger().setLevel(logging.DEBUG)
+
         # Detect the positional shortcut: streamline <username>
         # Known subcommands and flags should not be treated as usernames.
         known_commands = {"play", "follow", "unfollow", "status"}
-        if len(argv) >= 2 and not argv[1].startswith("-"):
-            if argv[1] not in known_commands:
+        if len(clean_argv) >= 2 and not clean_argv[1].startswith("-"):
+            if clean_argv[1] not in known_commands:
                 # Rewrite: streamline shroud → streamline play shroud
-                argv = [argv[0], "play"] + argv[1:]
+                clean_argv = [clean_argv[0], "play"] + clean_argv[1:]
 
-        result = self._cli.parse_and_handle(argv)
+        result = self._cli.parse_and_handle(clean_argv)
 
         if result is not None:
             # CLI handled the request — exit without opening the GUI.

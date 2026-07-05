@@ -25,7 +25,6 @@ application can be scripted and used from the terminal.
 
 import argparse
 import json
-import logging
 import os
 import shutil
 import subprocess
@@ -82,10 +81,6 @@ class CliHandler:
         if args.command is None:
             return None
 
-        # Silence debug logging so CLI output is clean.
-        # Errors and warnings are still shown.
-        logging.getLogger().setLevel(logging.WARNING)
-
         return args.func(args)
 
     def _build_parser(self):
@@ -96,6 +91,12 @@ class CliHandler:
         )
         parser.add_argument(
             "-V", "--version", action="version", version=f"streamline {self.version}"
+        )
+        parser.add_argument(
+            "-d",
+            "--debug",
+            action="store_true",
+            help="Enable debug logging (or set STREAMLINE_DEBUG=1)",
         )
 
         sub = parser.add_subparsers(dest="command", title="commands")
