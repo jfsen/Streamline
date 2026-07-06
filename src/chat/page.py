@@ -304,36 +304,41 @@ def _on_anim_destroy(widget: Gtk.Picture) -> None:
         page._anim_unregister(widget)
 
 
-def _anim_disconnect_handlers(root: Gtk.Widget) -> None:
-    """Disconnect animation signal handlers from *root* and all
-    descendants so unrealize during cleanup/culling doesn't trigger
-    callbacks into a torn-down registry."""
-    # Module-level destroy handler — disconnect_by_func works.
+def _teardown_subtree(root: Gtk.Widget, page) -> None:
+    """Single-pass recursive teardown of *root* and all descendants.
+
+    Combines what was previously three separate tree walks:
+
+    1. Unregister animated emote widgets from the page's registry.
+    2. Disconnect animation signal handlers (map/unmap/destroy).
+    3. Clear Gtk.TextView text buffers to free held memory.
+
+    Call this once per card during culling, and once on the root
+    ``_msg_box`` during full cleanup.
+    """
+    # 1 – animation registry
+    page._anim_unregister(root)
+
+    # 2 – disconnect signal handlers
     try:
         root.disconnect_by_func(_on_anim_destroy)
     except TypeError:
         pass
-    # Instance map/unmap handlers — stored as handler IDs.
     for attr in ("_anim_map_id", "_anim_unmap_id"):
         hid = getattr(root, attr, None)
         if hid is not None and root.handler_is_connected(hid):
             root.disconnect(hid)
-    child = root.get_first_child()
-    while child is not None:
-        _anim_disconnect_handlers(child)
-        child = child.get_next_sibling()
 
-
-def _clear_text_buffers(root: Gtk.Widget) -> None:
-    """Clear the TextBuffer of any Gtk.TextView in *root* and its
-    descendants, freeing the held text memory immediately."""
+    # 3 – clear text buffers
     if isinstance(root, Gtk.TextView):
         buf = root.get_buffer()
         if buf is not None:
             buf.set_text("")
+
+    # Recurse — single walk for all three operations
     child = root.get_first_child()
     while child is not None:
-        _clear_text_buffers(child)
+        _teardown_subtree(child, page)
         child = child.get_next_sibling()
 
 
@@ -1066,9 +1071,7 @@ class ChatPage(Adw.NavigationPage):
                             break
                         if not was_auto:
                             culled_total_height += first.get_allocated_height()
-                        self._anim_unregister_tree(first)
-                        _anim_disconnect_handlers(first)
-                        _clear_text_buffers(first)
+                        _teardown_subtree(first, self)
                         self._msg_box.remove(first)
                         if self._cards and self._cards[0] is first:
                             self._cards.popleft()
@@ -1133,8 +1136,9 @@ class ChatPage(Adw.NavigationPage):
             self._msg_box.append(card)
             self._cards.append(card)
 
-        # ── Resize + scroll ──────────────────────────────────
-        GLib.idle_add(self._msg_box.queue_resize)
+        # ── Scroll ──────────────────────────────────────────
+        # The Box is already dirty from remove/append calls;
+        # no need for a separate queue_resize — GTK coalesces it.
 
         if was_auto:
             GLib.timeout_add(16, self._scroll_to_bottom, gen, 0)
@@ -1429,13 +1433,10 @@ class ChatPage(Adw.NavigationPage):
                 root.disconnect(self._toplevel_active_id)
             self._toplevel_active_id = None
 
-        # Clear the entire message tree in one pass instead of
-        # per-child recursive walks (O(n²) → O(n)).
+        # Single-pass teardown of the entire message tree.
         root_box = self._msg_box
         if root_box is not None:
-            self._anim_unregister_tree(root_box)
-            _anim_disconnect_handlers(root_box)
-            _clear_text_buffers(root_box)
+            _teardown_subtree(root_box, self)
             # Unparent all children by detaching from the scrolled window.
             if self._scrolled is not None:
                 self._scrolled.set_child(None)
@@ -1475,7 +1476,14 @@ class ChatPage(Adw.NavigationPage):
 
         Iterates the page's registry once per tick.  Visibility
         checks use cached card allocations (no tree-walking).
+
+        Bails out during culling — card allocations are in flux
+        and the Box layout hasn't settled, so texture updates
+        would flicker.
         """
+        if self._cull_in_progress:
+            return GLib.SOURCE_CONTINUE
+
         adj = self._scrolled.get_vadjustment()
         value = adj.get_value()
         page_size = adj.get_page_size()
@@ -1573,14 +1581,6 @@ class ChatPage(Adw.NavigationPage):
         info["widgets"].discard(widget)
         if not info["widgets"]:
             del self._anim_registry[url]
-
-    def _anim_unregister_tree(self, root: Gtk.Widget) -> None:
-        """Recursively unregister *root* and all descendants."""
-        self._anim_unregister(root)
-        child = root.get_first_child()
-        while child is not None:
-            self._anim_unregister_tree(child)
-            child = child.get_next_sibling()
 
     def _on_anim_map(self, widget: Gtk.Picture) -> None:
         """Sync widget to current shared frame when becoming visible."""
