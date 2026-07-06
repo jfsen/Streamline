@@ -67,6 +67,8 @@ _EMOTES_RE = re.compile(r"emotes=([^;]+)")
 _BADGES_RE = re.compile(r"badges=([^;]+)")
 _BADGE_INFO_RE = re.compile(r"badge-info=([^;]+)")
 _FIRST_MSG_RE = re.compile(r"first-msg=([^;]+)")
+# Single-pass tag parser — replaces per-key regex compilation.
+_TAGS_PARSE_RE = re.compile(r"([^;=\s]+)=([^;]*)")
 
 # Known badge names — only these are rendered from the IRC badges tag.
 # Keys are IRC badge IDs; values are the display name used in tooltips.
@@ -323,10 +325,17 @@ class TwitchChat:
         return self._empty_msg(text)
 
     @staticmethod
-    def _tag_val(tags, key):
-        """Extract a tag value from the tags string, or return None."""
-        m = re.search(rf"{re.escape(key)}=([^;]+)", tags)
-        return m.group(1).replace("\\s", " ") if m else None
+    def _parse_tags(tags_str: str) -> dict[str, str]:
+        """Parse an IRC tags string into a dict.
+
+        Values have ``\\s`` escape sequences replaced with spaces.
+        Called once per USERNOTICE / PRIVMSG instead of compiling
+        a fresh regex for every individual key lookup.
+        """
+        result: dict[str, str] = {}
+        for m in _TAGS_PARSE_RE.finditer(tags_str):
+            result[m.group(1)] = m.group(2).replace("\\s", " ")
+        return result
 
     @staticmethod
     def _tier_label(plan_id):
@@ -343,19 +352,19 @@ class TwitchChat:
             return "Tier 3"
         return "Tier 1"
 
-    def _build_sub_msg(self, tags, is_resub):
-        """Build a subscription message from USERNOTICE tags."""
-        name = self._tag_val(tags, "display-name") or "Someone"
-        tier = self._tier_label(self._tag_val(tags, "msg-param-sub-plan"))
+    def _build_sub_msg(self, tags: dict, is_resub: bool):
+        """Build a subscription message from parsed USERNOTICE tags."""
+        name = tags.get("display-name") or "Someone"
+        tier = self._tier_label(tags.get("msg-param-sub-plan"))
 
         if not is_resub:
             return self._empty_msg(
                 _("{name} subscribed with {tier}!").format(name=name, tier=tier)
             )
 
-        months = self._tag_val(tags, "msg-param-cumulative-months")
-        streak = self._tag_val(tags, "msg-param-streak-months")
-        share = self._tag_val(tags, "msg-param-should-share-streak")
+        months = tags.get("msg-param-cumulative-months")
+        streak = tags.get("msg-param-streak-months")
+        share = tags.get("msg-param-should-share-streak")
 
         base = _("{name} subscribed for {months} months").format(
             name=name, months=months or "?"
@@ -364,10 +373,10 @@ class TwitchChat:
             base += _(" ({streak} streak)").format(streak=streak)
         return self._empty_msg(_("{base} with {tier}!").format(base=base, tier=tier))
 
-    def _build_subgift_msg(self, tags, is_anon):
-        """Build a gift-sub message from USERNOTICE tags."""
-        recipient = self._tag_val(tags, "msg-param-recipient-display-name") or "Someone"
-        tier = self._tier_label(self._tag_val(tags, "msg-param-sub-plan"))
+    def _build_subgift_msg(self, tags: dict, is_anon: bool):
+        """Build a gift-sub message from parsed USERNOTICE tags."""
+        recipient = tags.get("msg-param-recipient-display-name") or "Someone"
+        tier = self._tier_label(tags.get("msg-param-sub-plan"))
 
         if is_anon:
             return self._empty_msg(
@@ -376,7 +385,7 @@ class TwitchChat:
                 )
             )
 
-        gifter = self._tag_val(tags, "display-name") or "Someone"
+        gifter = tags.get("display-name") or "Someone"
         return self._empty_msg(
             _("{gifter} gifted {tier} to {recipient}!").format(
                 gifter=gifter, tier=tier, recipient=recipient
@@ -394,9 +403,9 @@ class TwitchChat:
         tag_match = _TAG_RE.match(tags_part)
         if not tag_match:
             return None
-        tags = tag_match.group(1)
+        tags = self._parse_tags(tag_match.group(1))
 
-        msg_id = self._tag_val(tags, "msg-id")
+        msg_id = tags.get("msg-id")
         if not msg_id:
             return None
 
@@ -407,10 +416,10 @@ class TwitchChat:
             return self._build_subgift_msg(tags, msg_id == "anonsubgift")
 
         if msg_id == "raid":
-            vc = self._tag_val(tags, "msg-param-viewerCount")
+            vc = tags.get("msg-param-viewerCount")
             if vc and int(vc) < 10:
                 return None
-            name = self._tag_val(tags, "msg-param-displayName") or "Someone"
+            name = tags.get("msg-param-displayName") or "Someone"
             count = vc or "?"
             return self._empty_msg(
                 _("{name} is raiding with {count} viewers!").format(
@@ -424,10 +433,10 @@ class TwitchChat:
         if msg_id == "announcement":
             # /announce — body text follows "#channel :"
             body = parts[1].split(" :", 1)[1] if " :" in parts[1] else ""
-            name = self._tag_val(tags, "display-name") or "Someone"
+            name = tags.get("display-name") or "Someone"
             return self._empty_msg(_("📢 {name}: {body}").format(name=name, body=body))
 
-        sys_msg = self._tag_val(tags, "system-msg")
+        sys_msg = tags.get("system-msg")
         if sys_msg:
             return self._empty_msg(sys_msg)
 
