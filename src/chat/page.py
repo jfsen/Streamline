@@ -366,8 +366,12 @@ def _gc_collect_idle() -> bool:
 
 def _clamp_color(hex_color: str, dark: bool) -> Gdk.RGBA:
     """Clamp a username colour so it remains legible on the current
-    background."""
+    background.
 
+    Instead of a full RGB→HSL→RGB round-trip (called once per card),
+    we scale the channel values directly toward white (dark theme) or
+    black (light theme) when the simple HSL lightness is out of range.
+    """
     hex_clean = hex_color.lstrip("#")
     r = int(hex_clean[0:2], 16) / 255.0
     g = int(hex_clean[2:4], 16) / 255.0
@@ -377,45 +381,23 @@ def _clamp_color(hex_color: str, dark: bool) -> Gdk.RGBA:
     min_c = min(r, g, b)
     lightness = (max_c + min_c) / 2.0
 
-    if max_c == min_c:
-        h = 0.0
-        s = 0.0
-    else:
-        d = max_c - min_c
-        s = d / (2.0 - max_c - min_c) if lightness > 0.5 else d / (max_c + min_c)
-        if max_c == r:
-            h = ((g - b) / d + (6.0 if g < b else 0.0)) / 6.0
-        elif max_c == g:
-            h = ((b - r) / d + 2.0) / 6.0
-        else:
-            h = ((r - g) / d + 4.0) / 6.0
-
-    lightness = max(lightness, 0.78) if dark else min(lightness, 0.28)
-
-    if s == 0:
-        rr = gg = bb = lightness
-    else:
-        c = (1.0 - abs(2.0 * lightness - 1.0)) * s
-        x = c * (1.0 - abs((h * 6.0) % 2.0 - 1.0))
-        m = lightness - c / 2.0
-        if h < 1.0 / 6.0:
-            rr, gg, bb = c, x, 0.0
-        elif h < 2.0 / 6.0:
-            rr, gg, bb = x, c, 0.0
-        elif h < 3.0 / 6.0:
-            rr, gg, bb = 0.0, c, x
-        elif h < 4.0 / 6.0:
-            rr, gg, bb = 0.0, x, c
-        elif h < 5.0 / 6.0:
-            rr, gg, bb = x, 0.0, c
-        else:
-            rr, gg, bb = c, 0.0, x
-        rr, gg, bb = rr + m, gg + m, bb + m
+    if dark and lightness < 0.78:
+        # Scale toward white:  new = old + (1-old) * t
+        t = (0.78 - lightness) / (1.0 - lightness) if lightness < 1.0 else 0.0
+        r += (1.0 - r) * t
+        g += (1.0 - g) * t
+        b += (1.0 - b) * t
+    elif not dark and lightness > 0.28:
+        # Scale toward black:  new = old * t
+        t = 0.28 / lightness if lightness > 0.0 else 0.0
+        r *= t
+        g *= t
+        b *= t
 
     rgba = Gdk.RGBA()
-    rgba.red = max(0.0, min(1.0, rr))
-    rgba.green = max(0.0, min(1.0, gg))
-    rgba.blue = max(0.0, min(1.0, bb))
+    rgba.red = max(0.0, min(1.0, r))
+    rgba.green = max(0.0, min(1.0, g))
+    rgba.blue = max(0.0, min(1.0, b))
     rgba.alpha = 1.0
     return rgba
 
