@@ -88,6 +88,11 @@ _BADGE_NAMES = {
     "premium": "Free Subscription Tier",
 }
 
+# IRC-thread batching: dispatch parsed messages to the main thread
+# in bulk instead of one GLib.idle_add per line.
+_IRC_BATCH_SIZE = 20
+_IRC_BATCH_MS = 0.1  # 100 ms
+
 
 class TwitchChat:
     """Connects to Twitch IRC and emits messages via a callback.
@@ -115,6 +120,11 @@ class TwitchChat:
         self._running = False
         self._retry_count = 0
         self._state = ConnectionState.DISCONNECTED
+        # IRC-thread batching: accumulate parsed messages here and
+        # dispatch them to the main thread in bulk instead of one
+        # GLib.idle_add per line.
+        self._irc_batch: list = []
+        self._irc_batch_time = 0.0
         # threading.Event used for interruptible sleep between retries.
         self._wake_event = threading.Event()
 
@@ -207,6 +217,8 @@ class TwitchChat:
 
                 self._retry_count = 0  # reset on success
                 self._set_state(ConnectionState.CONNECTED)
+                self._irc_batch = []
+                self._irc_batch_time = time.monotonic()
 
                 buf = b""
                 last_data = time.monotonic()
@@ -216,13 +228,24 @@ class TwitchChat:
                     try:
                         data = self._sock.recv(4096)
                         if not data:
+                            self._flush_irc_batch()
                             break
                         last_data = time.monotonic()
                         ping_sent_at = None  # any data counts as a response
                         buf += data
                         while b"\r\n" in buf:
                             line, buf = buf.split(b"\r\n", 1)
-                            self._handle_line(line.decode("utf-8"))
+                            parsed = self._handle_line(line.decode("utf-8"))
+                            if parsed is not None:
+                                kind, data = parsed
+                                if kind == "msg":
+                                    self._irc_batch.append(data)
+                                elif kind == "roomstate" and self._on_roomstate is not None:
+                                    GLib.idle_add(self._on_roomstate, data)
+                                now = time.monotonic()
+                                if (len(self._irc_batch) >= _IRC_BATCH_SIZE or
+                                    (now - self._irc_batch_time >= _IRC_BATCH_MS)):
+                                    self._flush_irc_batch()
                     except socket.timeout:
                         now = time.monotonic()
                         idle = now - last_data
@@ -234,9 +257,11 @@ class TwitchChat:
                                 ping_sent_at = now
                         elif (now - ping_sent_at) >= PING_INTERVAL:
                             # PING sent but no response — connection dead.
+                            self._flush_irc_batch()
                             break
                         # Absolute maximum silence.
                         if idle >= PING_TIMEOUT:
+                            self._flush_irc_batch()
                             break
                     except (OSError, UnicodeDecodeError):
                         break
@@ -470,32 +495,47 @@ class TwitchChat:
         return state if state else None
 
     def _handle_line(self, line):
+        """Parse one IRC line, returning (kind, data) or None."""
         if line.startswith("PING"):
             self._send_raw("PONG", line[5:])
-            return
+            return None
 
         msg = self._parse_privmsg(line)
         if msg:
-            GLib.idle_add(self._on_message, msg)
-            return
+            return ("msg", msg)
 
         msg = self._parse_clearchat(line)
         if msg:
-            logger.debug("CLEARCHAT → %r", msg["text"])
-            GLib.idle_add(self._on_message, msg)
-            return
+            return ("msg", msg)
 
         msg = self._parse_usernotice(line)
         if msg:
-            logger.debug("USERNOTICE → %r", msg["text"])
-            GLib.idle_add(self._on_message, msg)
-            return
+            return ("msg", msg)
 
         state = self._parse_roomstate(line)
-        if state and self._on_roomstate is not None:
-            logger.debug("ROOMSTATE → %r", state)
-            GLib.idle_add(self._on_roomstate, state)
+        if state:
+            return ("roomstate", state)
+
+        return None
+
+    def _flush_irc_batch(self):
+        """Dispatch the accumulated IRC batch to the main thread."""
+        if not self._irc_batch or self._on_message is None:
+            self._irc_batch = []
             return
+        batch = self._irc_batch
+        self._irc_batch = []
+        self._irc_batch_time = time.monotonic()
+        GLib.idle_add(self._dispatch_batch, batch)
+
+    def _dispatch_batch(self, batch):
+        """Deliver a batch of messages on the main thread."""
+        cb = self._on_message
+        if cb is None:
+            return GLib.SOURCE_REMOVE
+        for msg in batch:
+            cb(msg)
+        return GLib.SOURCE_REMOVE
 
     def _parse_privmsg(self, line):
         """Parse a PRIVMSG line into a dict, or return None."""
