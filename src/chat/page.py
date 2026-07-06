@@ -103,9 +103,14 @@ class EmoteTextureCache:
             if url in self._textures:
                 texture = self._textures.pop(url)
                 self._textures[url] = texture
-                # Apply cached texture immediately — all operations
-                # in _apply_texture are synchronous and GTK-safe.
-                _apply_texture(widget, url, texture)
+                # Apply cached texture: use the synchronous fast-path
+                # when the widget is already in the tree, otherwise
+                # defer via idle_add (the widget hasn't been parented
+                # yet, e.g. during _build_card).
+                if widget.get_root() is not None:
+                    _apply_texture(widget, url, texture)
+                else:
+                    GLib.idle_add(_apply_texture, widget, url, texture)
                 return
 
             if url in self._pending:
