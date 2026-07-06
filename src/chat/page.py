@@ -1180,15 +1180,20 @@ class ChatPage(Adw.NavigationPage):
         Returns immediately when ``_suppress_scroll_signal`` is True so
         that programmatic ``adj.set_value()`` calls during culling or
         scroll-to-bottom retries don't accidentally toggle state.
+
+        Also returns early when auto-scroll is already active, since
+        the only thing this handler does is re-enable auto-scroll.
+        This saves three C getter calls per scroll event in the
+        common auto-scrolling case.
         """
-        if self._suppress_scroll_signal:
+        if self._suppress_scroll_signal or self._auto_scroll:
             return
 
         at_bottom = (
             adjustment.get_value() + adjustment.get_page_size()
             >= adjustment.get_upper() - 2.0
         )
-        if at_bottom and not self._auto_scroll and not self._cull_in_progress:
+        if at_bottom and not self._cull_in_progress:
             self._auto_scroll = True
             self._more_button.set_visible(False)
 
