@@ -1096,46 +1096,80 @@ class ChatPage(Adw.NavigationPage):
                     GLib.idle_add(_gc_collect_idle)
 
         # ── Append new cards ─────────────────────────────────
-        for msg_data in batch:
-            card = self._build_card(msg_data)
+        # Build up to _BUILD_CHUNK cards per iteration so widget
+        # creation (Gtk.TextView + child anchors + Pictures) doesn't
+        # block the main loop for large batches.
+        _BUILD_CHUNK = 5
 
-            # Alternating background: simple toggle, independent of
-            # culling or global indices.
-            if self._alternating_bg and self._next_is_alt:
-                card.remove_css_class("msg-card")
-                card.add_css_class("msg-card-alt")
-            self._next_is_alt = not self._next_is_alt
+        if len(batch) > _BUILD_CHUNK:
+            chunk = batch[:_BUILD_CHUNK]
+            for msg_data in chunk:
+                self._append_one_card(msg_data)
+            GLib.idle_add(
+                self._continue_flush, batch[_BUILD_CHUNK:], gen, was_auto
+            )
+        else:
+            for msg_data in batch:
+                self._append_one_card(msg_data)
+            # ── Scroll ──────────────────────────────────────────
+            # The Box is already dirty from remove/append calls;
+            # no need for a separate queue_resize — GTK coalesces it.
 
-            # Tint overrides for first message / moderator — applied
-            # on top of whatever base / alternating background is active.
-            # Broadcaster trumps Partner, which trumps VIP, which trumps
-            # mod, which trumps first-msg.
-            # Each is only applied if the corresponding preference is enabled.
-            msg_first = msg_data.get("first_msg", False)
-            msg_mod = msg_data.get("mod", False)
-            msg_vip = msg_data.get("vip", False)
-            msg_partner = msg_data.get("partner", False)
-            msg_bc = msg_data.get("broadcaster", False)
-            if msg_bc and self._highlight_broadcaster:
-                card.add_css_class("msg-card-broadcaster")
-            elif msg_partner and self._highlight_partner:
-                card.add_css_class("msg-card-partner")
-            elif msg_vip and self._highlight_vip:
-                card.add_css_class("msg-card-vip")
-            elif msg_mod and self._highlight_mod:
-                card.add_css_class("msg-card-mod")
-            elif msg_first and self._highlight_first_msg:
-                card.add_css_class("msg-card-first")
+            if was_auto:
+                GLib.timeout_add(16, self._scroll_to_bottom, gen, 0)
 
-            self._msg_box.append(card)
-            self._cards.append(card)
+        return GLib.SOURCE_REMOVE
 
-        # ── Scroll ──────────────────────────────────────────
-        # The Box is already dirty from remove/append calls;
-        # no need for a separate queue_resize — GTK coalesces it.
+    def _append_one_card(self, msg_data: dict) -> None:
+        """Build and append a single message card with styling."""
+        card = self._build_card(msg_data)
 
-        if was_auto:
-            GLib.timeout_add(16, self._scroll_to_bottom, gen, 0)
+        # Alternating background.
+        if self._alternating_bg and self._next_is_alt:
+            card.remove_css_class("msg-card")
+            card.add_css_class("msg-card-alt")
+        self._next_is_alt = not self._next_is_alt
+
+        # Tint overrides — broadcaster > partner > VIP > mod > first-msg.
+        msg_first = msg_data.get("first_msg", False)
+        msg_mod = msg_data.get("mod", False)
+        msg_vip = msg_data.get("vip", False)
+        msg_partner = msg_data.get("partner", False)
+        msg_bc = msg_data.get("broadcaster", False)
+        if msg_bc and self._highlight_broadcaster:
+            card.add_css_class("msg-card-broadcaster")
+        elif msg_partner and self._highlight_partner:
+            card.add_css_class("msg-card-partner")
+        elif msg_vip and self._highlight_vip:
+            card.add_css_class("msg-card-vip")
+        elif msg_mod and self._highlight_mod:
+            card.add_css_class("msg-card-mod")
+        elif msg_first and self._highlight_first_msg:
+            card.add_css_class("msg-card-first")
+
+        self._msg_box.append(card)
+        self._cards.append(card)
+
+    def _continue_flush(
+        self, batch: list, gen: int, was_auto: bool
+    ) -> bool:
+        """Continue appending batch cards across idle iterations."""
+        if self._cleaned_up or gen != self._scroll_gen:
+            return GLib.SOURCE_REMOVE
+
+        _BUILD_CHUNK = 5
+        if len(batch) > _BUILD_CHUNK:
+            chunk = batch[:_BUILD_CHUNK]
+            for msg_data in chunk:
+                self._append_one_card(msg_data)
+            GLib.idle_add(
+                self._continue_flush, batch[_BUILD_CHUNK:], gen, was_auto
+            )
+        else:
+            for msg_data in batch:
+                self._append_one_card(msg_data)
+            if was_auto:
+                GLib.timeout_add(16, self._scroll_to_bottom, gen, 0)
 
         return GLib.SOURCE_REMOVE
 
