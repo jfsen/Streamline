@@ -103,7 +103,9 @@ class EmoteTextureCache:
             if url in self._textures:
                 texture = self._textures.pop(url)
                 self._textures[url] = texture
-                GLib.idle_add(_apply_texture, widget, url, texture)
+                # Apply cached texture immediately — all operations
+                # in _apply_texture are synchronous and GTK-safe.
+                _apply_texture(widget, url, texture)
                 return
 
             if url in self._pending:
@@ -1105,9 +1107,7 @@ class ChatPage(Adw.NavigationPage):
             chunk = batch[:_BUILD_CHUNK]
             for msg_data in chunk:
                 self._append_one_card(msg_data)
-            GLib.idle_add(
-                self._continue_flush, batch[_BUILD_CHUNK:], gen, was_auto
-            )
+            GLib.idle_add(self._continue_flush, batch[_BUILD_CHUNK:], gen, was_auto)
         else:
             for msg_data in batch:
                 self._append_one_card(msg_data)
@@ -1150,9 +1150,7 @@ class ChatPage(Adw.NavigationPage):
         self._msg_box.append(card)
         self._cards.append(card)
 
-    def _continue_flush(
-        self, batch: list, gen: int, was_auto: bool
-    ) -> bool:
+    def _continue_flush(self, batch: list, gen: int, was_auto: bool) -> bool:
         """Continue appending batch cards across idle iterations."""
         if self._cleaned_up or gen != self._scroll_gen:
             return GLib.SOURCE_REMOVE
@@ -1162,9 +1160,7 @@ class ChatPage(Adw.NavigationPage):
             chunk = batch[:_BUILD_CHUNK]
             for msg_data in chunk:
                 self._append_one_card(msg_data)
-            GLib.idle_add(
-                self._continue_flush, batch[_BUILD_CHUNK:], gen, was_auto
-            )
+            GLib.idle_add(self._continue_flush, batch[_BUILD_CHUNK:], gen, was_auto)
         else:
             for msg_data in batch:
                 self._append_one_card(msg_data)
