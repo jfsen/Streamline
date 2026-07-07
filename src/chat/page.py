@@ -976,7 +976,7 @@ class ChatPage(Adw.NavigationPage):
                 pic.set_can_shrink(False)
                 pic.set_content_fit(Gtk.ContentFit.CONTAIN)
                 pic._page_ref = weakref.ref(self)
-                pic._card = card
+                pic._card = weakref.ref(card)
                 pic.set_tooltip_text(f"{seg['name']} ({seg['source']})")
                 flow.insert(pic, -1)
                 _EMOTE_CACHE.request(seg["url"], pic)
@@ -1012,7 +1012,7 @@ class ChatPage(Adw.NavigationPage):
                 pic.set_can_shrink(False)
                 pic.set_content_fit(Gtk.ContentFit.CONTAIN)
                 pic._page_ref = weakref.ref(self)
-                pic._card = card
+                pic._card = weakref.ref(card)
                 tooltip = f"{seg['name']} ({seg['source']})"
                 pic.set_tooltip_text(tooltip)
                 text_view.add_child_at_anchor(pic, anchor)
@@ -1607,7 +1607,8 @@ class ChatPage(Adw.NavigationPage):
                 if getattr(widget, "_unrealized", False):
                     dead_widgets.append(widget)
                     continue
-                card = getattr(widget, "_card", None)
+                card_ref = getattr(widget, "_card", None)
+                card = card_ref() if card_ref is not None else None
                 if card is not None:
                     alloc = card.get_allocation()
                     if not (
