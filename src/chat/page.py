@@ -494,6 +494,27 @@ def _make_badge_tempfile(badge_id: str, svg_data: str) -> Gio.File | None:
     return Gio.File.new_for_path(str(path))
 
 
+# ── Badge texture cache ─────────────────────────────────────
+# Reuse Gdk.Texture objects across cards so that a broadcaster
+# badge that appears on every message doesn't create 500 redundant
+# GPU textures for the same SVG file.
+
+_badge_texture_cache: dict[str, Gdk.Texture] = {}
+
+
+def _get_badge_texture(badge_id: str, svg_data: str) -> Gdk.Texture | None:
+    """Return a cached or newly-created Gdk.Texture for *badge_id*."""
+    cached = _badge_texture_cache.get(badge_id)
+    if cached is not None:
+        return cached
+    gfile = _make_badge_tempfile(badge_id, svg_data)
+    if gfile is None:
+        return None
+    texture = Gdk.Texture.new_from_file(gfile)
+    _badge_texture_cache[badge_id] = texture
+    return texture
+
+
 def _rgba_to_hex(rgba: Gdk.RGBA) -> str:
     r = int(rgba.red * 255)
     g = int(rgba.green * 255)
@@ -849,14 +870,16 @@ class ChatPage(Adw.NavigationPage):
         )
         identity.set_valign(Gtk.Align.START)
 
-        # Badges
+        # Badges — reuse textures across cards via a module-level
+        # cache so repeated badges don't create duplicate GPU textures.
         for display_name, badge_id, tenure in msg.get("badges", []):
-            svg_data: str | None = _BADGE_SVGS.get(badge_id)
+            svg_data = _BADGE_SVGS.get(badge_id)
             if svg_data is None:
                 continue
-            gfile = _make_badge_tempfile(badge_id, svg_data)
-            if gfile is not None:
-                badge = Gtk.Picture.new_for_file(gfile)
+            texture = _get_badge_texture(badge_id, svg_data)
+            if texture is not None:
+                badge = Gtk.Picture.new()
+                badge.set_paintable(texture)
                 badge.set_size_request(int(ns["badge_size"]), int(ns["badge_size"]))
                 badge.set_valign(Gtk.Align.START)
                 tooltip = f"{tenure}-month {display_name}" if tenure else display_name
