@@ -30,6 +30,7 @@ import hashlib
 import logging
 import tempfile as _tempfile
 import threading
+import weakref
 from collections import OrderedDict, deque
 from io import BytesIO
 from pathlib import Path
@@ -164,9 +165,7 @@ class EmoteTextureCache:
         with self._lock:
             urls_to_drop = []
             for url, widgets in list(self._pending.items()):
-                kept = [
-                    (w, r) for w, r in widgets if getattr(w, "_page", None) is not page
-                ]
+                kept = [(w, r) for w, r in widgets if _page_of(w) is not page]
                 if kept:
                     self._pending[url] = kept
                 else:
@@ -297,7 +296,14 @@ class AnimatedFrames:
 
 _EMOTE_CACHE = EmoteTextureCache()
 
-# ── Module-level helpers (dispatch via widget._page) ──────────
+
+def _page_of(widget):
+    """Return the ChatPage a widget belongs to via its weakref."""
+    ref = getattr(widget, "_page_ref", None)
+    return ref() if ref is not None else None
+
+
+# ── Module-level helpers (dispatch via widget._page_ref) ──────
 
 
 def _apply_texture(
@@ -317,7 +323,8 @@ def _apply_texture(
     if isinstance(data, Gdk.Texture):
         widget.set_paintable(data)
     else:
-        page = getattr(widget, "_page", None)
+        page_ref = getattr(widget, "_page_ref", None)
+        page = page_ref() if page_ref is not None else None
         if page is not None:
             page._anim_register(url, widget, data)
     widget.queue_resize()
@@ -326,7 +333,8 @@ def _apply_texture(
 
 def _on_anim_destroy(widget: Gtk.Picture) -> None:
     """Remove widget from its page's animation registry."""
-    page = getattr(widget, "_page", None)
+    page_ref = getattr(widget, "_page_ref", None)
+    page = page_ref() if page_ref is not None else None
     if page is not None:
         page._anim_unregister(widget)
 
@@ -962,7 +970,7 @@ class ChatPage(Adw.NavigationPage):
                 pic.set_size_request(28, 28)
                 pic.set_can_shrink(False)
                 pic.set_content_fit(Gtk.ContentFit.CONTAIN)
-                pic._page = self
+                pic._page_ref = weakref.ref(self)
                 pic._card = card
                 pic.set_tooltip_text(f"{seg['name']} ({seg['source']})")
                 flow.insert(pic, -1)
@@ -998,7 +1006,7 @@ class ChatPage(Adw.NavigationPage):
                 pic.set_size_request(28, 28)
                 pic.set_can_shrink(False)
                 pic.set_content_fit(Gtk.ContentFit.CONTAIN)
-                pic._page = self
+                pic._page_ref = weakref.ref(self)
                 pic._card = card
                 tooltip = f"{seg['name']} ({seg['source']})"
                 pic.set_tooltip_text(tooltip)
