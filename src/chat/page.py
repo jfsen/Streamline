@@ -84,7 +84,7 @@ class EmoteTextureCache:
 
     def __init__(self):
         # Cached value is either a Gdk.Texture (static) or an
-        # AnimatedFrames (animated, frames pre-decoded).
+        # AnimatedFrames (animated, first frame pre-decoded).
         self._textures: OrderedDict[str, Gdk.Texture | AnimatedFrames] = OrderedDict()
         self._texture_count = 0  # counts individual Gdk.Texture objects
         self._pending: dict[str, list[tuple[Gtk.Widget, bool]]] = {}
@@ -165,8 +165,7 @@ class EmoteTextureCache:
             urls_to_drop = []
             for url, widgets in list(self._pending.items()):
                 kept = [
-                    (w, r) for w, r in widgets
-                    if getattr(w, "_page", None) is not page
+                    (w, r) for w, r in widgets if getattr(w, "_page", None) is not page
                 ]
                 if kept:
                     self._pending[url] = kept
@@ -208,7 +207,7 @@ class EmoteTextureCache:
     @staticmethod
     def _decode(data: bytes) -> Gdk.Texture | AnimatedFrames | None:
         """Decode to a static Gdk.Texture, or an AnimatedFrames for
-        animated images (frames pre-decoded)."""
+        animated images (first frame pre-decoded, rest lazy)."""
         try:
             img = Image.open(BytesIO(data))
         except Exception as exc:
@@ -237,64 +236,57 @@ class EmoteTextureCache:
 
 
 class AnimatedFrames:
-    """Eagerly decoded animated emote frames.
+    """Animated emote frames — first frame pre-decoded, rest lazy.
 
-    All frames are decoded to raw RGBA pixel data during initial
-    decode so that the animation tick only has to create
-    Gdk.MemoryTexture objects (a cheap GPU upload) — no PIL
-    seek/convert operations on the main thread.
+    Frame 0 is decoded eagerly during __init__ so the initial
+    display never hits PIL on the main thread.  Subsequent frames
+    are decoded on demand via get_frame() with PIL seek/convert.
 
-    GPU textures are still created lazily in get_frame() so that
-    frames that are never displayed never consume GPU memory.
+    Only frames that are actually displayed consume GPU memory
+    (Gdk.Texture objects).  Decoded textures are retained in a
+    dict; the PIL Image stays open for lazy access to later frames.
     """
 
     def __init__(self, raw_data: bytes):
-        self._rgba_frames: list[tuple[bytes, int, int, int]] = []
-        self._textures: dict[int, Gdk.Texture] = {}
-        self._frame_count = 0
-        self._decode_all(raw_data)
-
-    def _decode_all(self, raw_data: bytes) -> None:
-        img = Image.open(BytesIO(raw_data))
-        try:
-            self._frame_count = getattr(img, "n_frames", 1)
-            for i in range(self._frame_count):
-                try:
-                    img.seek(i)
-                except Exception as exc:
-                    logger.debug("Failed to seek frame %s: %s", i, exc)
-                    break
-                delay_cs = img.info.get("duration", 100)
-                delay_ms = max(int(delay_cs), 20) if delay_cs > 0 else 100
-                frame = img.convert("RGBA")
-                w, h = frame.size
-                self._rgba_frames.append((frame.tobytes(), w, h, delay_ms))
-        finally:
-            img.close()
+        self._textures: dict[int, tuple[Gdk.Texture, int]] = {}
+        self._img = Image.open(BytesIO(raw_data))
+        self._frame_count = getattr(self._img, "n_frames", 1)
+        # Pre-decode frame 0 — always needed for initial display.
+        if self._frame_count > 0:
+            try:
+                self.get_frame(0)
+            except Exception:
+                pass
 
     def get_frame(self, idx: int) -> tuple[Gdk.Texture, int]:
         if idx in self._textures:
-            return self._textures[idx], self._rgba_frames[idx][3]
-        if 0 <= idx < len(self._rgba_frames):
-            rgba_bytes, w, h, delay_ms = self._rgba_frames[idx]
+            return self._textures[idx]
+        try:
+            self._img.seek(idx)
+        except Exception as exc:
+            logger.debug("Failed to seek frame %s: %s", idx, exc)
             tex = Gdk.MemoryTexture.new(
-                w,
-                h,
+                1,
+                1,
                 Gdk.MemoryFormat.R8G8B8A8,
-                GLib.Bytes.new(rgba_bytes),
-                w * 4,
+                GLib.Bytes.new(b"\x00\x00\x00\x00"),
+                4,
             )
-            self._textures[idx] = tex
-            return tex, delay_ms
-        # Fallback: transparent 1x1 placeholder.
-        tex = Gdk.MemoryTexture.new(
-            1,
-            1,
+            self._textures[idx] = (tex, 100)
+            return tex, 100
+        delay_cs = self._img.info.get("duration", 100)
+        delay_ms = max(int(delay_cs), 20) if delay_cs > 0 else 100
+        frame = self._img.convert("RGBA")
+        w, h = frame.size
+        texture = Gdk.MemoryTexture.new(
+            w,
+            h,
             Gdk.MemoryFormat.R8G8B8A8,
-            GLib.Bytes.new(b"\x00\x00\x00\x00"),
-            4,
+            GLib.Bytes.new(frame.tobytes()),
+            w * 4,
         )
-        return tex, 100
+        self._textures[idx] = (texture, delay_ms)
+        return texture, delay_ms
 
     def __len__(self) -> int:
         return self._frame_count
@@ -312,7 +304,7 @@ def _apply_texture(
     widget: Gtk.Picture, url: str, data: Gdk.Texture | AnimatedFrames
 ) -> bool:
     """Set an emote's texture; *data* is either a static Gdk.Texture
-    or an AnimatedFrames for animated images (frames pre-decoded).
+    or an AnimatedFrames for animated images (first frame pre-decoded,
 
     Returns immediately if the widget has been removed from the
     tree (e.g. culled while the emote was downloading).
