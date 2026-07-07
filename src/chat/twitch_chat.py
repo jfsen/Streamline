@@ -152,10 +152,15 @@ class TwitchChat:
         ``on_state_change`` callback — the caller is expected to
         be tearing down the UI and any ``GLib.idle_add`` callback
         would race with widget destruction.
+
+        Does **not** close the socket synchronously — that would
+        risk blocking the caller (the GTK main thread) on a
+        dead connection (e.g. after a suspend/resume cycle).
+        The daemon thread will notice ``_running == False`` and
+        clean itself up when ``recv()`` next returns.
         """
         self._running = False
         self._wake_event.set()  # interrupt any sleep
-        self._close_socket()
         self._state = ConnectionState.DISCONNECTED
 
     def reconnect(self):
@@ -185,8 +190,12 @@ class TwitchChat:
         with self._socket_lock:
             if self._sock is None:
                 return
+            # SHUT_RD only — unblocks any in-progress recv() in the
+            # background thread without performing network I/O (no FIN
+            # handshake).  SHUT_RDWR can block on dead connections
+            # (e.g. after a suspend/resume cycle).
             try:
-                self._sock.shutdown(socket.SHUT_RDWR)
+                self._sock.shutdown(socket.SHUT_RD)
             except OSError:
                 pass
             try:
@@ -240,11 +249,15 @@ class TwitchChat:
                                 kind, data = parsed
                                 if kind == "msg":
                                     self._irc_batch.append(data)
-                                elif kind == "roomstate" and self._on_roomstate is not None:
+                                elif (
+                                    kind == "roomstate"
+                                    and self._on_roomstate is not None
+                                ):
                                     GLib.idle_add(self._on_roomstate, data)
                                 now = time.monotonic()
-                                if (len(self._irc_batch) >= _IRC_BATCH_SIZE or
-                                    (now - self._irc_batch_time >= _IRC_BATCH_MS)):
+                                if len(self._irc_batch) >= _IRC_BATCH_SIZE or (
+                                    now - self._irc_batch_time >= _IRC_BATCH_MS
+                                ):
                                     self._flush_irc_batch()
                     except socket.timeout:
                         now = time.monotonic()
