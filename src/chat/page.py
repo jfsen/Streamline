@@ -159,6 +159,22 @@ class EmoteTextureCache:
 
         GLib.idle_add(self._on_data, url, data)
 
+    def evict_page(self, page) -> None:
+        """Drop pending downloads for widgets belonging to *page*."""
+        with self._lock:
+            urls_to_drop = []
+            for url, widgets in list(self._pending.items()):
+                kept = [
+                    (w, r) for w, r in widgets
+                    if getattr(w, "_page", None) is not page
+                ]
+                if kept:
+                    self._pending[url] = kept
+                else:
+                    urls_to_drop.append(url)
+            for url in urls_to_drop:
+                del self._pending[url]
+
     def _on_data(self, url: str, data: bytes | None) -> bool:
         decoded = None
         if data:
@@ -1478,6 +1494,9 @@ class ChatPage(Adw.NavigationPage):
         self._cards.clear()
         self._item_count = 0
         self._next_is_alt = False
+        # Drop pending emote downloads so the module-level cache
+        # releases all references to this page's Picture widgets.
+        _EMOTE_CACHE.evict_page(self)
         self._third_party_emotes = None
         self._card_css_provider = None
         self._tv_css_provider = None
