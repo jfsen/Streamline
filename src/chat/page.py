@@ -1332,18 +1332,25 @@ class ChatPage(Adw.NavigationPage):
 
     # ── Theme ───────────────────────────────────────────────
 
+    _REBUILD_CHUNK = 20  # cards per idle iteration during theme rebuild
+
     def _on_theme_changed(self, style_manager: Adw.StyleManager, _pspec) -> None:
         self._dark = style_manager.get_dark()
         self._apply_banner_style()
         self._update_card_css()
-        # Rebuild all cards with updated username colours and text colour.
-        self._rebuild_all_cards()
+        # Rebuild cards in chunks so the main window theme
+        # switch isn't blocked by 500 synchronous restyles.
+        self._rebuild_cards_chunked(0)
 
-    def _rebuild_all_cards(self) -> None:
-        """Re-style every visible card for the new theme."""
-        for card in self._cards:
+    def _rebuild_cards_chunked(self, start_idx: int) -> bool:
+        """Re-style cards [start_idx : start_idx+_REBUILD_CHUNK]."""
+        if self._cleaned_up:
+            return GLib.SOURCE_REMOVE
+        cards = list(self._cards)  # snapshot in case cards change
+        end = min(start_idx + self._REBUILD_CHUNK, len(cards))
+        for i in range(start_idx, end):
+            card = cards[i]
             identity = card.get_first_child()
-            # System messages have only a Label/TextView, no identity row.
             if identity is not None and isinstance(identity, (Gtk.TextView, Gtk.Label)):
                 self._restyle_body(identity)
                 continue
@@ -1352,6 +1359,9 @@ class ChatPage(Adw.NavigationPage):
             body = identity.get_next_sibling() if identity else None
             if body is not None:
                 self._restyle_body(body)
+        if end < len(cards):
+            GLib.idle_add(self._rebuild_cards_chunked, end)
+        return GLib.SOURCE_REMOVE
 
     def _restyle_identity(self, identity: Gtk.Box) -> None:
         """Update the username label colour for the current theme."""
