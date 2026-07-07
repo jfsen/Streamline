@@ -1338,17 +1338,18 @@ class ChatPage(Adw.NavigationPage):
         self._dark = style_manager.get_dark()
         self._apply_banner_style()
         self._update_card_css()
-        # Rebuild cards in chunks so the main window theme
-        # switch isn't blocked by 500 synchronous restyles.
-        self._rebuild_cards_chunked(0)
+        # Rebuild newest cards first — they're what the user sees.
+        cards = self._cards
+        if cards:
+            self._rebuild_cards_chunked(len(cards) - 1)
 
-    def _rebuild_cards_chunked(self, start_idx: int) -> bool:
-        """Re-style cards [start_idx : start_idx+_REBUILD_CHUNK]."""
+    def _rebuild_cards_chunked(self, idx: int) -> bool:
+        """Re-style cards from *idx* downward in chunks."""
         if self._cleaned_up:
             return GLib.SOURCE_REMOVE
-        cards = list(self._cards)  # snapshot in case cards change
-        end = min(start_idx + self._REBUILD_CHUNK, len(cards))
-        for i in range(start_idx, end):
+        cards = list(self._cards)
+        end = max(idx - self._REBUILD_CHUNK + 1, 0)
+        for i in range(idx, end - 1, -1):
             card = cards[i]
             identity = card.get_first_child()
             if identity is not None and isinstance(identity, (Gtk.TextView, Gtk.Label)):
@@ -1359,8 +1360,8 @@ class ChatPage(Adw.NavigationPage):
             body = identity.get_next_sibling() if identity else None
             if body is not None:
                 self._restyle_body(body)
-        if end < len(cards):
-            GLib.idle_add(self._rebuild_cards_chunked, end)
+        if end > 0:
+            GLib.idle_add(self._rebuild_cards_chunked, end - 1)
         return GLib.SOURCE_REMOVE
 
     def _restyle_identity(self, identity: Gtk.Box) -> None:
