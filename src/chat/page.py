@@ -184,14 +184,19 @@ class EmoteTextureCache:
             if decoded is not None:
                 self._textures[url] = decoded
                 self._textures.move_to_end(url)
-                if isinstance(decoded, list):
+                if isinstance(decoded, AnimatedFrames):
+                    # Count total frame count as proxy for potential
+                    # GPU memory — a 60-frame emote counts 60x a static.
+                    self._texture_count += max(1, len(decoded))
+                elif isinstance(decoded, list):
                     self._texture_count += len(decoded)
                 else:
-                    # Gdk.Texture or AnimatedFrames — both count as one LRU slot.
                     self._texture_count += 1
                 while self._texture_count > _MAX_EMOTE_TEXTURES:
                     _k, old = self._textures.popitem(last=False)
-                    if isinstance(old, list):
+                    if isinstance(old, AnimatedFrames):
+                        self._texture_count -= max(1, len(old))
+                    elif isinstance(old, list):
                         self._texture_count -= len(old)
                     else:
                         self._texture_count -= 1
