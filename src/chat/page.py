@@ -753,12 +753,9 @@ class ChatPage(Adw.NavigationPage):
         )
 
         def _load_then_connect():
-            try:
-                self._third_party_emotes.load()
-            except Exception as exc:
-                logger.warning("Emote loading failed for #%s: %s", streamer, exc)
+            # Start IRC immediately — don't wait for emotes.
             if self._cleaned_up:
-                return  # page closed before we finished connecting
+                return
             self._chat = TwitchChat(
                 streamer,
                 on_message=self._on_message,
@@ -767,6 +764,13 @@ class ChatPage(Adw.NavigationPage):
                 on_roomstate=self._on_roomstate,
             )
             self._chat.start()
+
+            # Load third-party emotes in parallel with IRC connection.
+            # Messages render fine without them; emotes appear as they arrive.
+            try:
+                self._third_party_emotes.load()
+            except Exception as exc:
+                logger.warning("Emote loading failed for #%s: %s", streamer, exc)
 
         threading.Thread(target=_load_then_connect, daemon=True).start()
 
