@@ -32,6 +32,31 @@
   </branding>
 
 	  <releases>
+	    <release version="4.0.0" date="2026-07-08">
+	      <description translate="no">
+	        <p>Streamline 4.0 — performance, headless CLI, and new features.</p>
+	        <ul>
+	          <li
+                    >Major chat rendering performance overhaul: card construction spread across idle iterations, animated emote lazy-decoding with weighted LRU eviction, badge texture caching, and batched IRC message dispatch</li>
+	          <li
+                    >Memory management: weakref references for ChatPage/card cycles, deferred widget unrealization, and periodic garbage collection after cull operations</li>
+	          <li
+                    >Micro-optimizations: direct RGB color clamping, single-pass IRC tag parsing, merged recursive tree walks, and CSS transitions replacing keyframe animations</li>
+	          <li
+                    >Headless CLI: new subcommands for stream management, and improved output formatting (columnar offline lists, alphabetical online sort)</li>
+	          <li>Stream thumbnails feature</li>
+	          <li
+                    >Room state popover showing live chat modes (sub-only, emote-only, etc.)</li>
+	          <li
+                    >Went-online card pulse animation and extended 12s highlight duration</li>
+	          <li
+                    >Logging overhaul: __name__-based loggers, structured messages, --debug flag and STREAMLINE_DEBUG env var</li>
+	          <li>Video quality presets updated and fallback logic simplified</li>
+	          <li>License headers added to all source files</li>
+	          <li>Updated German translations</li>
+	        </ul>
+	      </description>
+	    </release>
 	    <release version="3.7.0" date="2026-06-27">
 	      <description translate="no">
 	        <p>Streamline 3.7 — credentials simplified.</p>

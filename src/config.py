@@ -19,6 +19,8 @@
 
 """Centralised tunables for the Streamline application."""
 
+import os
+
 # ── Window ──────────────────────────────────────────────────
 # Default geometry of the main window.
 
@@ -62,6 +64,11 @@ try:
     )
 except ImportError:
     pass
+
+# Environment variables take highest priority (useful for Flatpak).
+#   flatpak override --env=TWITCH_CLIENT_ID=xxx --env=TWITCH_CLIENT_SECRET=yyy org.jfsen.Streamline
+TWITCH_CLIENT_ID = os.environ.get("TWITCH_CLIENT_ID", TWITCH_CLIENT_ID)
+TWITCH_CLIENT_SECRET = os.environ.get("TWITCH_CLIENT_SECRET", TWITCH_CLIENT_SECRET)
 
 TWITCH_TOKEN_TIMEOUT = 10
 TWITCH_STREAMS_TIMEOUT = 30
