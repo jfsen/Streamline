@@ -37,7 +37,7 @@ IS_FLATPAK = os.path.exists("/.flatpak-info")
 # Bundled inside the sandbox for Flatpak, from the system otherwise.
 STREAMLINK_CMD = ["streamlink"]
 
-logger = logging.getLogger("StreamPlayer")
+logger = logging.getLogger(__name__)
 
 
 class StreamPlayer:
@@ -134,9 +134,13 @@ class StreamPlayer:
                             )
 
                     if self._current_process.poll() is not None:
-                        logger.debug(
-                            "Process ended (code %s)", self._current_process.returncode
-                        )
+                        if self._current_process.returncode == 0:
+                            logger.info("Stream playback ended normally")
+                        else:
+                            logger.warning(
+                                "Process ended with code %s",
+                                self._current_process.returncode,
+                            )
                         if (
                             self._current_process.returncode != 0
                             and not stream_not_available
@@ -145,16 +149,16 @@ class StreamPlayer:
                                 self.window.show_toast, _("Stream playback failed"), 3
                             )
 
-                except Exception as e:
-                    logger.debug("Error in stream thread: %s", str(e))
+                except Exception:
+                    logger.exception("Error in stream thread")
 
             # Start in background thread
             thread = threading.Thread(target=start_stream_thread, daemon=True)
             thread.start()
             return True
 
-        except Exception as e:
-            logger.debug("Error in play_content: %s", str(e))
+        except Exception:
+            logger.exception("Error in play_content")
             self.window.show_toast(_("Error starting playback"), 3)
             return False
 

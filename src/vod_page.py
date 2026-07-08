@@ -32,7 +32,7 @@ from .config import VOD_CACHE_TTL, VOD_REFRESH_COOLDOWN
 
 _ = gettext.gettext
 
-logger = logging.getLogger("VODPage")
+logger = logging.getLogger(__name__)
 
 
 @Gtk.Template(resource_path="/org/jfsen/Streamline/vod_page.ui")
@@ -125,7 +125,7 @@ class VODPage(Adw.NavigationPage):
             with open(self.get_cache_path(), "w") as f:
                 json.dump(cache_data, f, indent=4)
         except OSError as e:
-            logger.debug("Failed to write VOD cache: %s", e)
+            logger.warning("Failed to write VOD cache: %s", e)
 
     def _show_spinner(self):
         """Show a loading spinner in the list."""
@@ -156,6 +156,7 @@ class VODPage(Adw.NavigationPage):
             self.save_vods_cache(vods)
             GLib.idle_add(self.display_vods, vods, True)
         except requests.ConnectionError:
+            logger.warning("VOD fetch failed for %s: network error", self.streamer)
             self._invalidate_vods_cache()
             GLib.idle_add(
                 self._show_error_row,
@@ -163,6 +164,7 @@ class VODPage(Adw.NavigationPage):
                 _("No internet connection. Check your network and try again."),
             )
         except Exception as e:
+            logger.exception("VOD fetch failed for %s", self.streamer)
             self._invalidate_vods_cache()
             GLib.idle_add(
                 self._show_error_row,
@@ -354,9 +356,9 @@ class VODPage(Adw.NavigationPage):
         except requests.HTTPError as e:
             # 403 is expected for still-processing VODs — suppress the noise
             if e.response is not None and e.response.status_code != 403:
-                logger.debug("Thumbnail download failed: %s", e)
+                logger.warning("Thumbnail download failed: %s", e)
         except Exception as e:
-            logger.debug("Thumbnail download failed: %s", e)
+            logger.warning("Thumbnail download failed: %s", e)
 
     def _apply_thumbnail(self, picture, path):
         """Replace placeholder with the downloaded thumbnail."""

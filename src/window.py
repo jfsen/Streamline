@@ -26,7 +26,7 @@ import gi
 _ = gettext.gettext
 import requests
 
-logger = logging.getLogger("Window")
+logger = logging.getLogger(__name__)
 
 gi.require_version("Adw", "1")
 gi.require_version("Gio", "2.0")
@@ -220,12 +220,15 @@ class StreamlineWindow(Adw.ApplicationWindow):
         then fetches fresh data in a background thread.
         """
         if not self.client_id or not self.client_secret:
+            logger.warning("Twitch API not configured — client ID or secret missing")
             return
 
         self.twitch = None
         try:
             self.twitch = TwitchAPI(self.client_id, self.client_secret)
+            logger.info("Twitch API initialized")
         except Exception:
+            logger.exception("Failed to initialize Twitch API")
             return
 
         # Show cached data immediately so the window opens fast
@@ -295,6 +298,7 @@ class StreamlineWindow(Adw.ApplicationWindow):
             online, offline, info = self.twitch.get_streams(self.all_streamers)
             GLib.idle_add(self._on_streams_fetched, online, offline, info)
         except Exception as e:
+            logger.error("Initial stream fetch failed: %s", e)
             self._show_fetch_error(e)
 
     def _on_streams_fetched(self, online, offline, info):
@@ -340,6 +344,7 @@ class StreamlineWindow(Adw.ApplicationWindow):
 
     def _on_refresh_error(self, error):
         """Callback from background thread: show error and re-enable refresh button."""
+        logger.error("Stream refresh failed: %s", error)
         self.refresh_button.set_sensitive(True)
         # Expire cache cooldown so next manual refresh attempt is not blocked
         if self.twitch is not None:
@@ -484,6 +489,11 @@ class StreamlineWindow(Adw.ApplicationWindow):
 
         # Start background avatar downloads for newly followed streamers
         if new_candidates:
+            logger.info(
+                "Following %d new streamer(s): %s",
+                len(new_candidates),
+                ", ".join(new_candidates),
+            )
             self._start_avatar_downloads([], new_candidates)
 
         if new_candidates:
@@ -529,7 +539,7 @@ class StreamlineWindow(Adw.ApplicationWindow):
         try:
             self.settings.apply()
         except Exception as e:
-            logger.debug("Failed to save settings: %s", e)
+            logger.error("Failed to save settings: %s", e)
             self.dialogs.show_error_dialog(
                 _("Error Saving Config"), _("Could not save configuration")
             )
@@ -597,7 +607,7 @@ class StreamlineWindow(Adw.ApplicationWindow):
 
     def show_vods_page(self, streamer):
         """Show VODs page for the given streamer."""
-        logger.debug("Opening VOD page for %s", streamer)
+        logger.info("Opening VOD page for %s", streamer)
         # Resolve display name from user cache
         display_name = streamer
         if self.twitch is not None:
@@ -620,7 +630,7 @@ class StreamlineWindow(Adw.ApplicationWindow):
             user_data = self.twitch.user_cache.get(streamer, {})
             display_name = user_data.get("name", streamer)
 
-        logger.debug("Opening chat page for %s", streamer)
+        logger.info("Opening chat page for %s", streamer)
         from .chat.page import ChatPage
 
         page = ChatPage(
@@ -656,7 +666,7 @@ class StreamlineWindow(Adw.ApplicationWindow):
             existing.present()
             return
 
-        logger.debug("Opening chat popup for %s", streamer)
+        logger.info("Opening chat popup for %s", streamer)
         from .chat.chat_window import ChatWindow
 
         # Resolve display name from user cache

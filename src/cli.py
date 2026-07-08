@@ -92,13 +92,6 @@ class CliHandler:
         parser.add_argument(
             "-V", "--version", action="version", version=f"streamline {self.version}"
         )
-        parser.add_argument(
-            "-d",
-            "--debug",
-            action="store_true",
-            help="Enable debug logging (or set STREAMLINE_DEBUG=1)",
-        )
-
         sub = parser.add_subparsers(dest="command", title="commands")
 
         # ── play ──

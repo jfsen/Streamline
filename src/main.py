@@ -21,14 +21,20 @@ import gettext
 import logging
 import os
 import sys
+from logging.handlers import RotatingFileHandler
+from pathlib import Path
 
 import gi
+from gi.repository import GLib
 
 _ = gettext.gettext
 
-# Suppress noisy third-party loggers (keeps credentials out of console)
+logger = logging.getLogger(__name__)
+
+# Suppress noisy third-party loggers (keeps credentials out of console).
 logging.getLogger("urllib3").setLevel(logging.WARNING)
 logging.getLogger("urllib3.connectionpool").setLevel(logging.WARNING)
+logging.getLogger("PIL").setLevel(logging.WARNING)
 
 gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
@@ -54,6 +60,7 @@ class StreamlineApplication(Adw.Application):
         """Called when application is starting up."""
         Adw.Application.do_startup(self)
         Adw.init()
+        logger.info("Streamline %s starting", self._version)
 
         # Add actions with accelerators
         self.create_action("quit", lambda *_: self.quit(), ["<primary>q"])
@@ -76,6 +83,12 @@ class StreamlineApplication(Adw.Application):
         if not win:
             win = StreamlineWindow(application=self)
         win.present()
+        logger.info("Main window presented")
+
+    def do_shutdown(self):
+        """Called when the application is shutting down."""
+        logger.info("Streamline shutting down")
+        Adw.Application.do_shutdown(self)
 
     def on_about_action(self, *args):
         """Callback for the app.about action."""
@@ -126,8 +139,9 @@ class StreamlineApplication(Adw.Application):
         """Handle CLI arguments before activating the GUI."""
         argv = command_line.get_arguments()
 
-        # Enable debug logging when requested via flag or env var.
-        # Strip the flag so argparse never sees it.
+        # Detect debug flag from argv or env var (strip it so argparse
+        # never sees it).  When enabled, bump the root logger to DEBUG
+        # and also set up a rotating file log for persistent diagnostics.
         debug_requested = os.environ.get("STREAMLINE_DEBUG", "") == "1"
         clean_argv = [argv[0]]
         for a in argv[1:]:
@@ -137,6 +151,10 @@ class StreamlineApplication(Adw.Application):
                 clean_argv.append(a)
         if debug_requested:
             logging.getLogger().setLevel(logging.DEBUG)
+
+        # Always install a rotating file handler so that every run
+        # leaves a persistent log on disk (capped at ~1 MB).
+        _setup_file_logging(debug_requested)
 
         # Detect the positional shortcut: streamline <username>
         # Known subcommands and flags should not be treated as usernames.
@@ -170,6 +188,33 @@ class StreamlineApplication(Adw.Application):
         self.add_action(action)
         if shortcuts:
             self.set_accels_for_action(f"app.{name}", shortcuts)
+
+
+def _setup_file_logging(debug):
+    """Install a rotating file handler that captures every run to disk.
+
+    The log file lives under the XDG cache directory so it is safe to
+    delete and does not grow unbounded (capped at ~1 MiB with one
+    rotated backup).  The file always receives DEBUG-level messages
+    regardless of the console level, making it useful for post-mortem
+    diagnostics even when the user did not launch the app with --debug.
+    """
+    log_dir = Path(GLib.get_user_cache_dir()) / "Streamline"
+    log_dir.mkdir(parents=True, exist_ok=True)
+    handler = RotatingFileHandler(
+        log_dir / "streamline.log",
+        maxBytes=512 * 1024,  # 512 KiB
+        backupCount=1,
+        encoding="utf-8",
+    )
+    handler.setLevel(logging.DEBUG if debug else logging.INFO)
+    handler.setFormatter(
+        logging.Formatter(
+            "%(asctime)s %(levelname)-7s %(name)s: %(message)s",
+            datefmt="%Y-%m-%d %H:%M:%S",
+        )
+    )
+    logging.getLogger().addHandler(handler)
 
 
 def main(version):

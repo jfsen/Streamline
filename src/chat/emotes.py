@@ -38,7 +38,11 @@ from .config import (
     EMOTE_CACHE_TTL,
 )
 
-logger = logging.getLogger("Emotes")
+logger = logging.getLogger(__name__)
+
+# Global emote endpoints should never 404 — a 404 here means the
+# third-party service itself is down or the API changed.
+_GLOBAL_URLS = {_BTTV_GLOBAL, _SEVENTV_GLOBAL, _FFZ_GLOBAL}
 
 # ── Cache ───────────────────────────────────────────────────
 _CACHE_DIR = Path(GLib.get_user_cache_dir()) / "Streamline" / "emotes"
@@ -96,8 +100,20 @@ def _fetch_json(url):
         r = requests.get(url, timeout=10)
         r.raise_for_status()
         return r.json()
+    except requests.HTTPError as e:
+        if e.response is not None and e.response.status_code == 404:
+            if url in _GLOBAL_URLS:
+                # Global endpoint 404 — the service itself may be down.
+                logger.warning("Global emote endpoint returned 404: %s", url)
+            else:
+                # Channel-specific 404 — streamer simply doesn't use this service.
+                logger.debug("Streamer does not use this emote service: %s", url)
+        else:
+            logger.warning("HTTP error fetching %s: %s", url, e)
+        return None
     except requests.RequestException as e:
-        logger.debug("Failed to fetch %s: %s", url, e)
+        logger.warning("Failed to fetch %s: %s", url, e)
+        return None
         return None
 
 

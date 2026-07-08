@@ -50,8 +50,7 @@ from .emotes import ThirdPartyEmotes
 from .twitch_chat import ConnectionState, TwitchChat
 
 _ = gettext.gettext
-logger = logging.getLogger("ChatPage")
-logging.getLogger("PIL").setLevel(logging.WARNING)
+logger = logging.getLogger(__name__)
 
 # ── Badge SVGs (loaded once at module level) ───────────────
 
@@ -138,7 +137,7 @@ class EmoteTextureCache:
         try:
             data = path.read_bytes()
         except OSError as exc:
-            logger.debug("Failed to read emote from disk %s: %s", path, exc)
+            logger.warning("Failed to read emote from disk %s: %s", path, exc)
             data = None
         if data is not None:
             GLib.idle_add(self._on_data, url, data)
@@ -154,9 +153,9 @@ class EmoteTextureCache:
             try:
                 self._disk_path(url).write_bytes(data)
             except OSError as exc:
-                logger.debug("Failed to write emote to disk %s: %s", url, exc)
+                logger.warning("Failed to write emote to disk %s: %s", url, exc)
         except Exception as exc:
-            logger.debug("Failed to download emote %s: %s", url, exc)
+            logger.warning("Failed to download emote %s: %s", url, exc)
 
         GLib.idle_add(self._on_data, url, data)
 
@@ -178,7 +177,7 @@ class EmoteTextureCache:
         if data:
             decoded = self._decode(data)
             if decoded is None:
-                logger.debug("Failed to decode emote %s", url)
+                logger.warning("Failed to decode emote %s", url)
 
         with self._lock:
             if decoded is not None:
@@ -215,7 +214,7 @@ class EmoteTextureCache:
         try:
             img = Image.open(BytesIO(data))
         except Exception as exc:
-            logger.debug("Emote decode failed: %s", exc)
+            logger.warning("Emote decode failed: %s", exc)
             return None
 
         # Animated (GIF / APNG / WebP) — decode all frames eagerly
@@ -268,7 +267,7 @@ class AnimatedFrames:
         try:
             self._img.seek(idx)
         except Exception as exc:
-            logger.debug("Failed to seek frame %s: %s", idx, exc)
+            logger.warning("Failed to seek frame %s: %s", idx, exc)
             tex = Gdk.MemoryTexture.new(
                 1,
                 1,
@@ -1495,7 +1494,10 @@ class ChatPage(Adw.NavigationPage):
 
     def cleanup(self) -> None:
         """Stop chat and release resources.  Idempotent."""
+        if self._cleaned_up:
+            return
         self._cleaned_up = True
+        logger.info("Closing chat for #%s", self._streamer)
         # Invalidate all pending scroll retries before tearing down.
         self._scroll_gen += 1
         if self._style_manager is not None:
@@ -1809,15 +1811,22 @@ class ChatPage(Adw.NavigationPage):
         if self._cleaned_up:
             return
         if state == ConnectionState.CONNECTING:
+            logger.info("Connecting to chat for #%s", self._streamer)
             self._reconnect_label.set_text(_("Connecting to chat…"))
             self._reconnect_spinner.set_visible(True)
             self._reconnect_spinner.start()
             self._reconnect_button.set_visible(False)
             self._reconnect_revealer.set_reveal_child(True)
         elif state == ConnectionState.CONNECTED:
+            logger.info("Connected to chat for #%s", self._streamer)
             self._reconnect_spinner.stop()
             self._reconnect_revealer.set_reveal_child(False)
         elif state == ConnectionState.RECONNECTING:
+            logger.warning(
+                "Reconnecting to chat for #%s (attempt %d)",
+                self._streamer,
+                retry_count,
+            )
             self._reconnect_label.set_text(
                 _("Reconnecting… (attempt {})").format(retry_count)
             )
@@ -1826,6 +1835,7 @@ class ChatPage(Adw.NavigationPage):
             self._reconnect_button.set_visible(False)
             self._reconnect_revealer.set_reveal_child(True)
         elif state == ConnectionState.DISCONNECTED:
+            logger.warning("Disconnected from chat for #%s", self._streamer)
             self._reconnect_spinner.stop()
             self._reconnect_spinner.set_visible(False)
             self._reconnect_label.set_text(_("Disconnected."))

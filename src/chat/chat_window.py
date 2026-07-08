@@ -30,7 +30,7 @@ gi.require_version("Adw", "1")
 from gi.repository import Adw
 
 _ = gettext.gettext
-logger = logging.getLogger("ChatWindow")
+logger = logging.getLogger(__name__)
 
 
 class ChatWindow(Adw.Window):
@@ -55,6 +55,7 @@ class ChatWindow(Adw.Window):
             title=_("Chat: {}").format(display_name or streamer),
         )
         self.set_default_size(360, 520)
+        logger.info("Creating detached chat window for #%s", streamer)
 
         if transient_for:
             self.set_transient_for(transient_for)
@@ -77,10 +78,12 @@ class ChatWindow(Adw.Window):
             highlight_broadcaster=highlight_broadcaster,
         )
         self.set_content(self._chat_page)
+        self._streamer = streamer
 
         self.connect("close-request", self._on_close_request)
 
     def _on_close_request(self, window):
         """Clean up the chat connection when the window is closed."""
+        logger.info("Detached chat window closed for #%s", self._streamer)
         self._chat_page.cleanup()
         return False  # Allow the window to close normally

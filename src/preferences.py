@@ -25,7 +25,7 @@ from gi.repository import Adw, Gio, Gtk
 from .config import PLAYER_KEYS, QUALITY_KEYS, THEME_KEYS
 
 _ = gettext.gettext
-logger = logging.getLogger("Preferences")
+logger = logging.getLogger(__name__)
 
 
 @Gtk.Template(resource_path="/org/jfsen/Streamline/preferences.ui")
@@ -182,7 +182,7 @@ class StreamlinePreferences(Adw.PreferencesDialog):
                     Adw.Toast.new(_("Streamers list saved to {}").format(file_path))
                 )
             except Exception as e:
-                logger.debug("Error saving file: %s", e)
+                logger.exception("Error saving file")
                 self.add_toast(Adw.Toast.new(_("Error saving file: {}").format(str(e))))
         dialog.destroy()
 
@@ -250,7 +250,7 @@ class StreamlinePreferences(Adw.PreferencesDialog):
                 else:
                     self.add_toast(Adw.Toast.new(_("All streamers already followed")))
             except Exception as e:
-                logger.debug("Error importing file: %s", e)
+                logger.exception("Error importing file")
                 self.add_toast(
                     Adw.Toast.new(_("Error importing file: {}").format(str(e)))
                 )

@@ -45,7 +45,7 @@ from .config import (
     TWITCH_EMOTE_CDN_STATIC,
 )
 
-logger = logging.getLogger("IRCChat")
+logger = logging.getLogger(__name__)
 
 _ = gettext.gettext
 
@@ -216,6 +216,7 @@ class TwitchChat:
         while self._running:
             try:
                 self._sock = socket.create_connection((IRC_HOST, IRC_PORT), timeout=10)
+                logger.info("IRC socket connected to %s:%s", IRC_HOST, IRC_PORT)
                 # Short timeout so we can send proactive PINGs.
                 self._sock.settimeout(PING_CHECK_INTERVAL)
                 self._send_raw("PASS", "justinfan12345")
@@ -278,8 +279,8 @@ class TwitchChat:
                             break
                     except (OSError, UnicodeDecodeError):
                         break
-            except OSError:
-                pass
+            except OSError as e:
+                logger.debug("IRC connection error: %s", e)
             finally:
                 self._close_socket()
 
@@ -288,6 +289,11 @@ class TwitchChat:
 
             self._retry_count += 1
             if self._retry_count > RECONNECT_MAX_ATTEMPTS:
+                logger.warning(
+                    "Giving up on IRC for #%s after %d attempts",
+                    self._channel,
+                    self._retry_count,
+                )
                 self._set_state(ConnectionState.DISCONNECTED)
                 self._running = False
                 break

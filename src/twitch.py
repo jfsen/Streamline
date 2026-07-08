@@ -45,7 +45,7 @@ TWITCH_API_BASE = "https://api.twitch.tv/helix"
 
 _ = gettext.gettext
 
-logger = logging.getLogger("Twitch")
+logger = logging.getLogger(__name__)
 
 
 class TwitchAPI:
@@ -83,10 +83,10 @@ class TwitchAPI:
                 seconds=expires_in
             )
             self._save_token_cache()
-            logger.debug("Access token obtained successfully")
+            logger.info("Access token obtained successfully")
             return self.access_token
         except requests.exceptions.RequestException as e:
-            logger.debug("Failed to get access token: %s", str(e))
+            logger.error("Failed to get access token: %s", str(e))
             raise
 
     def _ensure_access_token(self):
@@ -129,7 +129,7 @@ class TwitchAPI:
                     and e.response.status_code == 401
                     and attempt == 0
                 ):
-                    logger.debug("Token rejected (401), refreshing and retrying...")
+                    logger.info("Token rejected (401), refreshing and retrying...")
                     self._invalidate_token()
                     self._ensure_access_token()
                     headers["Authorization"] = f"Bearer {self.access_token}"
@@ -183,7 +183,7 @@ class TwitchAPI:
                 json.dump(cache_data, f, indent=4)
             tmp_path.rename(self._get_token_cache_path())
         except OSError:
-            logger.debug("Failed to save token cache")
+            logger.warning("Failed to save token cache")
 
     def _get_user_cache_path(self):
         """Get path to user cache file."""
@@ -196,7 +196,7 @@ class TwitchAPI:
                 data = json.load(f)
             # Migrate from old {"ids": {...}, "names": {...}} format
             if "ids" in data and "names" in data:
-                logger.debug("Migrating old user cache format")
+                logger.info("Migrating old user cache format")
                 migrated = {}
                 for login in data["ids"]:
                     migrated[login] = {
@@ -215,7 +215,7 @@ class TwitchAPI:
             with open(self._get_user_cache_path(), "w") as f:
                 json.dump(self.user_cache, f, indent=4)
         except OSError:
-            logger.debug("Failed to save user cache")
+            logger.warning("Failed to save user cache")
 
     def _get_avatars_dir(self):
         """Get the directory for cached avatar images."""
@@ -243,7 +243,7 @@ class TwitchAPI:
             logger.debug("Cached avatar for %s", login)
             return str(path)
         except Exception:
-            logger.debug("Failed to download avatar for %s", login)
+            logger.warning("Failed to download avatar for %s", login)
             return None
 
     def download_avatars_background(self, logins, on_done):
@@ -268,7 +268,7 @@ class TwitchAPI:
                     logger.debug("Cached avatar for %s", login)
                     GLib.idle_add(on_done, login, str(path))
                 except Exception:
-                    logger.debug("Failed to download avatar for %s", login)
+                    logger.warning("Failed to download avatar for %s", login)
 
         threading.Thread(target=_download, daemon=True).start()
 
@@ -308,7 +308,7 @@ class TwitchAPI:
             with open(self._get_streams_cache_path(), "w") as f:
                 json.dump(cache_data, f, indent=4)
         except OSError:
-            logger.debug("Failed to save streams cache")
+            logger.warning("Failed to save streams cache")
 
     def _invalidate_streams_cache(self):
         """Delete streams cache so the next refresh is not blocked by cooldown."""
@@ -360,7 +360,7 @@ class TwitchAPI:
             )
 
         start_time = time()
-        logger.debug("Fetching streams for %s users", len(usernames))
+        logger.info("Fetching streams for %s users", len(usernames))
 
         # Populate profile picture URLs for all streamers before building rows
         self.get_users(usernames)
@@ -416,11 +416,11 @@ class TwitchAPI:
                 self._save_user_cache()
 
             except requests.exceptions.RequestException as e:
-                logger.debug("API request failed: %s", str(e))
+                logger.error("API request failed: %s", str(e))
                 raise
 
         elapsed = time() - start_time
-        logger.debug(
+        logger.info(
             "Completed in %.2fs - %s online, %s offline",
             elapsed,
             len(online_streamers),
@@ -475,7 +475,7 @@ class TwitchAPI:
                     len(batch),
                 )
             except requests.exceptions.RequestException as e:
-                logger.debug("Failed to fetch users batch: %s", str(e))
+                logger.error("Failed to fetch users batch: %s", str(e))
 
         self._save_user_cache()
 
@@ -490,7 +490,7 @@ class TwitchAPI:
         # Try to get user ID from cache
         user_id = self.user_cache.get(username, {}).get("id")
         if not user_id:
-            logger.debug("Unknown user: %s", username)
+            logger.warning("Unknown user: %s", username)
             return []
 
         logger.debug("Using cached user ID for %s: %s", username, user_id)
@@ -524,7 +524,7 @@ class TwitchAPI:
                 )
 
             if filtered:
-                logger.debug(
+                logger.info(
                     "Filtered %s non-public VODs, %s public for %s in %.2fs",
                     filtered,
                     len(formatted_vods),
@@ -532,7 +532,7 @@ class TwitchAPI:
                     time() - start_time,
                 )
             else:
-                logger.debug(
+                logger.info(
                     "Found %s VODs for %s in %.2fs",
                     len(formatted_vods),
                     username,
@@ -541,7 +541,7 @@ class TwitchAPI:
             return formatted_vods
 
         except requests.exceptions.RequestException as e:
-            logger.debug("Failed to fetch VODs: %s", str(e))
+            logger.error("Failed to fetch VODs: %s", str(e))
             raise
 
     def format_date(self, date_str):
