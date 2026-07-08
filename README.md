@@ -55,14 +55,6 @@ flatpak-builder --user --install --force-clean build-dir org.jfsen.Streamline.js
 The Flatpak bundles all Python dependencies including Streamlink — only a
 media player (mpv, VLC, or similar) is needed on the host system.
 
-To use the Twitch API, set your Client ID and Secret from the
-[Twitch Developer Console](https://dev.twitch.tv/console) as environment
-variables:
-
-```bash
-flatpak override --user --env=TWITCH_CLIENT_ID=your_client_id --env=TWITCH_CLIENT_SECRET=your_client_secret org.jfsen.Streamline
-```
-
 ### Build from source
 
 #### Dependencies
