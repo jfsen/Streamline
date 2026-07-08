@@ -274,14 +274,17 @@ class CliHandler:
 
         print(f"Starting stream: {username} ({quality})")
         try:
-            proc = subprocess.run(cmd, start_new_session=True)
-            return proc.returncode
+            subprocess.Popen(
+                cmd,
+                start_new_session=True,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+            )
         except FileNotFoundError:
             return self._err(
                 "Streamlink not found. Please install it:\n  pip install streamlink"
             )
-        except KeyboardInterrupt:
-            return 0
+        return 0
 
     # ── follow ────────────────────────────────────────────────
 
