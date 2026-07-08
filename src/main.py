@@ -154,7 +154,7 @@ class StreamlineApplication(Adw.Application):
 
         # Always install a rotating file handler so that every run
         # leaves a persistent log on disk (capped at ~1 MB).
-        _setup_file_logging(debug_requested)
+        _setup_file_logging()
 
         # Detect the positional shortcut: streamline <username>
         # Known subcommands and flags should not be treated as usernames.
@@ -190,15 +190,25 @@ class StreamlineApplication(Adw.Application):
             self.set_accels_for_action(f"app.{name}", shortcuts)
 
 
-def _setup_file_logging(debug):
+_file_handler_installed = False
+
+
+def _setup_file_logging():
     """Install a rotating file handler that captures every run to disk.
 
-    The log file lives under the XDG cache directory so it is safe to
-    delete and does not grow unbounded (capped at ~1 MiB with one
-    rotated backup).  The file always receives DEBUG-level messages
-    regardless of the console level, making it useful for post-mortem
-    diagnostics even when the user did not launch the app with --debug.
+    The log file lives under the XDG cache directory, is capped at
+    ~1 MiB, and always records at DEBUG level regardless of the
+    console level.  This makes it useful for post-mortem diagnostics
+    even when the user did not launch the app with --debug.
+
+    Idempotent — safe to call multiple times (e.g. from subsequent
+    CLI invocations routed to the same process).
     """
+    global _file_handler_installed
+    if _file_handler_installed:
+        return
+    _file_handler_installed = True
+
     log_dir = Path(GLib.get_user_cache_dir()) / "Streamline"
     log_dir.mkdir(parents=True, exist_ok=True)
     handler = RotatingFileHandler(
@@ -207,7 +217,7 @@ def _setup_file_logging(debug):
         backupCount=1,
         encoding="utf-8",
     )
-    handler.setLevel(logging.DEBUG if debug else logging.INFO)
+    handler.setLevel(logging.DEBUG)
     handler.setFormatter(
         logging.Formatter(
             "%(asctime)s %(levelname)-7s %(name)s: %(message)s",
