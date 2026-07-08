@@ -32,6 +32,15 @@
   </branding>
 
 	  <releases>
+	    <release version="4.0.1" date="2026-07-08">
+	      <description translate="no">
+	        <p>Streamline 4.0.1 — hotfix.</p>
+	        <ul>
+	          <li
+                    >Fix NameError crash when opening chat due to forward-referenced AnimatedFrames annotation</li>
+	        </ul>
+	      </description>
+	    </release>
 	    <release version="4.0.0" date="2026-07-08">
 	      <description translate="no">
 	        <p>Streamline 4.0 — performance, headless CLI, and new features.</p>

@@ -24,6 +24,8 @@ ListView, no row recycling.  This avoids the measurement / resize-timing
 bugs that plague Gtk.TextView inside recycled list rows.
 """
 
+from __future__ import annotations
+
 import gc
 import gettext
 import hashlib
