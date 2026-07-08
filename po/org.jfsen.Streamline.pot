@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-07-08 23:54+0200\n"
+"POT-Creation-Date: 2026-07-09 00:52+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -209,7 +209,7 @@ msgid "Auto-refresh interval"
 msgstr ""
 
 #: data/org.jfsen.Streamline.gschema.xml:121
-msgid "Seconds between automatic stream refreshes (120, 180, 240, or 300)"
+msgid "Seconds between automatic stream refreshes (180, 300, 600, or 900)"
 msgstr ""
 
 #: src/auto_refresh.py:123
@@ -887,19 +887,19 @@ msgid "How often to check for live streams"
 msgstr ""
 
 #: src/preferences.ui:130
-msgid "2 minutes"
-msgstr ""
-
-#: src/preferences.ui:131
 msgid "3 minutes"
 msgstr ""
 
+#: src/preferences.ui:131
+msgid "5 minutes"
+msgstr ""
+
 #: src/preferences.ui:132
-msgid "4 minutes"
+msgid "10 minutes"
 msgstr ""
 
 #: src/preferences.ui:133
-msgid "5 minutes"
+msgid "15 minutes"
 msgstr ""
 
 #: src/preferences.ui:144

@@ -118,7 +118,7 @@
             <default>300</default>
             <summary>Auto-refresh interval</summary>
             <description
-            >Seconds between automatic stream refreshes (120, 180, 240, or 300)</description>
+            >Seconds between automatic stream refreshes (180, 300, 600, or 900)</description>
         </key>
     </schema>
 </schemalist>

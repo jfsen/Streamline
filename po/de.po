@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: streamline 3.4.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-07-08 23:54+0200\n"
+"POT-Creation-Date: 2026-07-09 00:52+0200\n"
 "PO-Revision-Date: 2026-06-20 12:00+0200\n"
 "Last-Translator: jfsen\n"
 "Language-Team: none\n"
@@ -217,8 +217,8 @@ msgid "Auto-refresh interval"
 msgstr "Aktualisierungsintervall"
 
 #: data/org.jfsen.Streamline.gschema.xml:121
-msgid "Seconds between automatic stream refreshes (120, 180, 240, or 300)"
-msgstr "Sekunden zwischen automatischen Aktualisierungen (120, 180, 240 oder 300)"
+msgid "Seconds between automatic stream refreshes (180, 300, 600, or 900)"
+msgstr "Sekunden zwischen automatischen Aktualisierungen (180, 300, 600 oder 900)"
 
 #: src/auto_refresh.py:123
 #, python-brace-format
@@ -907,7 +907,9 @@ msgstr "Automatisch aktualisieren"
 
 #: src/preferences.ui:116
 msgid "Automatically refresh stream data and notify when streamers go live"
-msgstr "Stream-Daten automatisch aktualisieren und benachrichtigen, wenn Streamer live gehen"
+msgstr ""
+"Stream-Daten automatisch aktualisieren und benachrichtigen, wenn Streamer "
+"live gehen"
 
 #: src/preferences.ui:121
 msgid "Interval"
@@ -918,20 +920,20 @@ msgid "How often to check for live streams"
 msgstr "Wie oft auf Live-Streams geprüft werden soll"
 
 #: src/preferences.ui:130
-msgid "2 minutes"
-msgstr "2 Minuten"
-
-#: src/preferences.ui:131
 msgid "3 minutes"
 msgstr "3 Minuten"
 
-#: src/preferences.ui:132
-msgid "4 minutes"
-msgstr "4 Minuten"
-
-#: src/preferences.ui:133
+#: src/preferences.ui:131
 msgid "5 minutes"
 msgstr "5 Minuten"
+
+#: src/preferences.ui:132
+msgid "10 minutes"
+msgstr "10 Minuten"
+
+#: src/preferences.ui:133
+msgid "15 minutes"
+msgstr "15 Minuten"
 
 #: src/preferences.ui:144
 msgid "Quality"
@@ -1054,6 +1056,9 @@ msgstr "VODs"
 #: src/vod_page.ui:23
 msgid "Refresh VODs"
 msgstr "VODs aktualisieren"
+
+#~ msgid "4 minutes"
+#~ msgstr "4 Minuten"
 
 #~ msgid "Unknown"
 #~ msgstr "Unbekannt"

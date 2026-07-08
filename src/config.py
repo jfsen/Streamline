@@ -41,7 +41,7 @@ THEME_KEYS = ["system", "light", "dark"] + _CUSTOM_THEME_FILES
 
 PLAYER_KEYS = ["mpv", "vlc", "custom"]
 QUALITY_KEYS = ["High", "Medium", "Low", "Custom"]
-AUTO_REFRESH_KEYS = [120, 180, 240, 300]  # seconds
+AUTO_REFRESH_KEYS = [180, 300, 600, 900]  # seconds
 QUALITY_PRESETS = {
     "High": "1080p60,1080p,720p60,720p,best",
     "Medium": "720p,720p60,480p,best",

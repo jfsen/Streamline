@@ -127,10 +127,10 @@
                 <property name="model">
                   <object class="GtkStringList">
                     <items>
-                      <item translatable="yes">2 minutes</item>
                       <item translatable="yes">3 minutes</item>
-                      <item translatable="yes">4 minutes</item>
                       <item translatable="yes">5 minutes</item>
+                      <item translatable="yes">10 minutes</item>
+                      <item translatable="yes">15 minutes</item>
                     </items>
                   </object>
                 </property>
