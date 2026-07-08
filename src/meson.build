@@ -31,6 +31,7 @@ configure_file(
 streamline_sources = [
     '__init__.py',
     'main.py',
+    'auto_refresh.py',
     'cli.py',
     'window.py',
     'preferences.py',

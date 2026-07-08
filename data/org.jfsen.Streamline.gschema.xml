@@ -108,5 +108,17 @@
             <description
             >Display live preview thumbnails for online streams as cards</description>
         </key>
-	</schema>
+        <key name="auto-refresh" type="b">
+            <default>false</default>
+            <summary>Auto-refresh</summary>
+            <description
+            >Automatically refresh followed streams at a set interval</description>
+        </key>
+        <key name="auto-refresh-interval" type="i">
+            <default>300</default>
+            <summary>Auto-refresh interval</summary>
+            <description
+            >Seconds between automatic stream refreshes (120, 180, 240, or 300)</description>
+        </key>
+    </schema>
 </schemalist>

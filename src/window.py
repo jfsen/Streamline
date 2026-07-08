@@ -34,6 +34,7 @@ gi.require_version("Gtk", "4.0")
 
 from gi.repository import Adw, Gio, GLib, Gtk
 
+from .auto_refresh import AutoRefresher
 from .config import (
     DEFAULT_HEIGHT,
     DEFAULT_WIDTH,
@@ -104,6 +105,9 @@ class StreamlineWindow(Adw.ApplicationWindow):
 
         # React to streamer list changes from CLI or external tools.
         self.settings.connect("changed::streamers", self._on_streamers_changed)
+
+        # Auto-refresh timer (reacts to its own GSettings keys internally).
+        self._auto_refresher = AutoRefresher(self)
 
         # Stored fetch data so preferences can rebuild rows without a network call
         self._last_online = []
@@ -178,6 +182,9 @@ class StreamlineWindow(Adw.ApplicationWindow):
         if not self.twitch:
             self.update_action_rows([], self.all_streamers, {})
 
+        # Start auto-refresh timer if enabled.
+        self._auto_refresher.start()
+
         return GLib.SOURCE_REMOVE
 
     def _initialize_from_config(self):
@@ -215,6 +222,8 @@ class StreamlineWindow(Adw.ApplicationWindow):
         self.chat_highlight_broadcaster = self.settings.get_boolean(
             "chat-highlight-broadcaster"
         )
+        self.auto_refresh = self.settings.get_boolean("auto-refresh")
+        self.auto_refresh_interval = self.settings.get_int("auto-refresh-interval")
 
     def _init_twitch_api(self):
         """Initialize the Twitch API with credentials from config.py.
@@ -353,6 +362,8 @@ class StreamlineWindow(Adw.ApplicationWindow):
         if self.twitch is not None:
             self.twitch._invalidate_streams_cache()
         self._show_fetch_error(error)
+
+    # ── Row management ───────────────────────────────────────
 
     def update_action_rows(self, online_streamers, offline_streamers, streamer_info):
         """Update the online and offline streamer lists."""
@@ -560,6 +571,7 @@ class StreamlineWindow(Adw.ApplicationWindow):
     def _on_preferences_closed(self, dialog):
         self._preferences = None
         self._initialize_from_config()
+        self._auto_refresher.start()
 
     def show_shortcuts(self, *args):
         """Show keyboard shortcuts dialog."""

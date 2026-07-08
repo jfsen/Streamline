@@ -22,7 +22,7 @@ import logging
 
 from gi.repository import Adw, Gio, Gtk
 
-from .config import PLAYER_KEYS, QUALITY_KEYS, THEME_KEYS
+from .config import AUTO_REFRESH_KEYS, PLAYER_KEYS, QUALITY_KEYS, THEME_KEYS
 
 _ = gettext.gettext
 logger = logging.getLogger(__name__)
@@ -57,6 +57,10 @@ class StreamlinePreferences(Adw.PreferencesDialog):
     chat_highlight_vip_switch = Gtk.Template.Child()
     chat_highlight_partner_switch = Gtk.Template.Child()
     chat_highlight_broadcaster_switch = Gtk.Template.Child()
+
+    # Template children — Refresh
+    auto_refresh_switch = Gtk.Template.Child()
+    auto_refresh_interval_row = Gtk.Template.Child()
 
     def __init__(self, parent, **kwargs):
         super().__init__(**kwargs)
@@ -118,9 +122,28 @@ class StreamlinePreferences(Adw.PreferencesDialog):
         ):
             settings.bind(key, row, "active", Gio.SettingsBindFlags.DEFAULT)
 
-        # ── Conditional visibility (custom-path / custom-quality) ──
+        # ── Auto-refresh: switch binding + interval combo (int ↔ index) ──
+        settings.bind(
+            "auto-refresh",
+            self.auto_refresh_switch,
+            "active",
+            Gio.SettingsBindFlags.DEFAULT,
+        )
+        self.auto_refresh_interval_row.connect(
+            "notify::selected",
+            self._on_interval_changed,
+            settings,
+        )
+        try:
+            idx = AUTO_REFRESH_KEYS.index(settings.get_int("auto-refresh-interval"))
+        except ValueError:
+            idx = len(AUTO_REFRESH_KEYS) - 1  # default to last (5 min)
+        self.auto_refresh_interval_row.set_selected(idx)
+
+        # ── Conditional visibility (custom-path / custom-quality / interval) ──
         settings.connect("changed::player-type", self._sync_visibility)
         settings.connect("changed::stream-quality", self._sync_visibility)
+        settings.connect("changed::auto-refresh", self._sync_visibility)
         self._sync_visibility(settings, None)
 
         # ── Export / Import (non-settings functionality) ──
@@ -136,6 +159,13 @@ class StreamlinePreferences(Adw.PreferencesDialog):
         if 0 <= idx < len(keys):
             settings.set_string(key, keys[idx])
 
+    @staticmethod
+    def _on_interval_changed(row, _pspec, settings):
+        """Widget → GSettings: write interval combo selection (int seconds)."""
+        idx = row.get_selected()
+        if 0 <= idx < len(AUTO_REFRESH_KEYS):
+            settings.set_int("auto-refresh-interval", AUTO_REFRESH_KEYS[idx])
+
     def _sync_visibility(self, settings, _key):
         self.custom_player_row.set_visible(
             settings.get_string("player-type") == "custom"
@@ -143,6 +173,7 @@ class StreamlinePreferences(Adw.PreferencesDialog):
         self.custom_quality_row.set_visible(
             settings.get_string("stream-quality") == "Custom"
         )
+        self.auto_refresh_interval_row.set_visible(settings.get_boolean("auto-refresh"))
 
     # ── Export streamers ─────────────────────────────────────
 

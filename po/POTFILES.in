@@ -3,6 +3,7 @@
 data/org.jfsen.Streamline.desktop.in
 data/org.jfsen.Streamline.metainfo.xml.in
 data/org.jfsen.Streamline.gschema.xml
+src/auto_refresh.py
 src/config.py
 src/dialogs.py
 src/main.py

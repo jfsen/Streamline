@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: streamline 3.4.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-07-05 17:53+0200\n"
+"POT-Creation-Date: 2026-07-08 23:54+0200\n"
 "PO-Revision-Date: 2026-06-20 12:00+0200\n"
 "Last-Translator: jfsen\n"
 "Language-Team: none\n"
@@ -17,7 +17,7 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
 #: data/org.jfsen.Streamline.desktop.in:2
-#: data/org.jfsen.Streamline.metainfo.xml.in:7 src/window.py:156
+#: data/org.jfsen.Streamline.metainfo.xml.in:7 src/window.py:163
 #: src/window.ui:6
 msgid "Streamline"
 msgstr "Streamline"
@@ -123,7 +123,7 @@ msgstr "Twitch API-Client-Secret zur Authentifizierung"
 msgid "Alternating chat background"
 msgstr "Abwechselnder Chat-Hintergrund"
 
-#: data/org.jfsen.Streamline.gschema.xml:55 src/preferences.ui:208
+#: data/org.jfsen.Streamline.gschema.xml:55 src/preferences.ui:246
 msgid "Show alternating background colors on chat messages"
 msgstr "Abwechselnde Hintergrundfarben in Chat-Nachrichten anzeigen"
 
@@ -203,6 +203,38 @@ msgstr "Stream-Vorschaubilder anzeigen"
 msgid "Display live preview thumbnails for online streams as cards"
 msgstr "Live-Vorschaubilder für Online-Streams als Karten anzeigen"
 
+#: data/org.jfsen.Streamline.gschema.xml:113
+#, fuzzy
+msgid "Auto-refresh"
+msgstr "Automatisch aktualisieren"
+
+#: data/org.jfsen.Streamline.gschema.xml:115
+msgid "Automatically refresh followed streams at a set interval"
+msgstr "Gefolgte Streams in festgelegten Abständen automatisch aktualisieren"
+
+#: data/org.jfsen.Streamline.gschema.xml:119
+msgid "Auto-refresh interval"
+msgstr "Aktualisierungsintervall"
+
+#: data/org.jfsen.Streamline.gschema.xml:121
+msgid "Seconds between automatic stream refreshes (120, 180, 240, or 300)"
+msgstr "Sekunden zwischen automatischen Aktualisierungen (120, 180, 240 oder 300)"
+
+#: src/auto_refresh.py:123
+#, python-brace-format
+msgid "{} is now live"
+msgstr "{} ist jetzt live"
+
+#: src/auto_refresh.py:124
+#, python-brace-format
+msgid "Playing {}"
+msgstr "Spielt {}"
+
+#: src/auto_refresh.py:127
+#, python-brace-format
+msgid "{} streamers are now live"
+msgstr "{} Streamer sind jetzt live"
+
 #: src/dialogs.py:58
 msgid "OK"
 msgstr "OK"
@@ -225,7 +257,7 @@ msgstr "Abbrechen"
 msgid "Unfollow"
 msgstr "Entfolgen"
 
-#: src/dialogs.py:84 src/dialogs.py:90 src/window.py:564 src/window.ui:49
+#: src/dialogs.py:84 src/dialogs.py:90 src/window.py:589 src/window.ui:49
 msgid "Follow"
 msgstr "Folgen"
 
@@ -233,7 +265,7 @@ msgstr "Folgen"
 msgid "Enter the streamer username (separate multiple with commas):"
 msgstr "Gib Streamer-Benutzernamen ein (mehrere mit Kommas trennen):"
 
-#: src/dialogs.py:109 src/window.py:565 src/window.ui:35
+#: src/dialogs.py:109 src/window.py:590 src/window.ui:35
 msgid "Quick Play"
 msgstr "Schnellstart"
 
@@ -246,56 +278,56 @@ msgid "Play"
 msgstr "Starten"
 
 #. Translators: Replace "translator-credits" with your name/username, and optionally an email or URL.
-#: src/main.py:91
+#: src/main.py:105
 msgid "translator-credits"
 msgstr "jfsen"
 
 #. ── Combo row models (labels only — values live in GSettings) ──
-#: src/preferences.py:67 src/preferences.py:69
+#: src/preferences.py:71 src/preferences.py:73
 msgid "Custom"
 msgstr "Eigen"
 
-#: src/preferences.py:69
+#: src/preferences.py:73
 msgid "High"
 msgstr "Hoch"
 
-#: src/preferences.py:69
+#: src/preferences.py:73
 msgid "Medium"
 msgstr "Mittel"
 
-#: src/preferences.py:69
+#: src/preferences.py:73
 msgid "Low"
 msgstr "Niedrig"
 
-#: src/preferences.py:182
+#: src/preferences.py:213
 #, python-brace-format
 msgid "Streamers list saved to {}"
 msgstr "Streamer-Liste gespeichert unter {}"
 
-#: src/preferences.py:186
+#: src/preferences.py:217
 #, python-brace-format
 msgid "Error saving file: {}"
 msgstr "Fehler beim Speichern der Datei: {}"
 
-#: src/preferences.py:225
+#: src/preferences.py:256
 msgid "No streamer names found in file"
 msgstr "Keine Streamer-Namen in der Datei gefunden"
 
-#: src/preferences.py:241
+#: src/preferences.py:272
 #, python-brace-format
 msgid "Added {} streamer(s) ({} already followed)"
 msgstr "{} Streamer hinzugefügt ({} wird bereits gefolgt)"
 
-#: src/preferences.py:248
+#: src/preferences.py:279
 #, python-brace-format
 msgid "Added {} streamer(s)"
 msgstr "{} Streamer hinzugefügt"
 
-#: src/preferences.py:251
+#: src/preferences.py:282
 msgid "All streamers already followed"
 msgstr "Allen Streamern wird bereits gefolgt"
 
-#: src/preferences.py:255
+#: src/preferences.py:286
 #, python-brace-format
 msgid "Error importing file: {}"
 msgstr "Fehler beim Importieren der Datei: {}"
@@ -326,7 +358,7 @@ msgstr ""
 "Titel: {}\n"
 "Laufzeit: {}"
 
-#: src/rows.py:159 src/preferences.ui:189
+#: src/rows.py:159 src/preferences.ui:227
 msgid "Chat"
 msgstr "Chat"
 
@@ -370,23 +402,23 @@ msgstr "Kein Titel"
 msgid "Connecting..."
 msgstr "Verbinden …"
 
-#: src/stream_player.py:130
+#: src/stream_player.py:127
 msgid "Stream not available"
 msgstr "Stream nicht verfügbar"
 
-#: src/stream_player.py:135
+#: src/stream_player.py:132
 msgid "Waiting for ads to finish..."
 msgstr "Warte auf Ende der Werbung …"
 
-#: src/stream_player.py:148
+#: src/stream_player.py:149
 msgid "Stream playback failed"
 msgstr "Stream-Wiedergabe fehlgeschlagen"
 
-#: src/stream_player.py:161
+#: src/stream_player.py:162
 msgid "Error starting playback"
 msgstr "Fehler beim Starten der Wiedergabe"
 
-#: src/stream_player.py:215
+#: src/stream_player.py:216
 #, python-brace-format
 msgid ""
 "Could not find {path} on your system.\n"
@@ -396,7 +428,7 @@ msgstr ""
 "Überprüfe den Pfad unter Einstellungen → Player → Benutzerdefinierte Player-"
 "Anwendung."
 
-#: src/stream_player.py:220
+#: src/stream_player.py:221
 msgid ""
 "No custom player executable configured.\n"
 "Set the path to your player in Preferences → Player → Custom player "
@@ -406,7 +438,7 @@ msgstr ""
 "Lege den Pfad zu deinem Player unter Einstellungen → Player → "
 "Benutzerdefinierte Player-Anwendung fest."
 
-#: src/stream_player.py:225
+#: src/stream_player.py:226
 #, python-brace-format
 msgid ""
 "Could not find {player} on your system.\n"
@@ -423,7 +455,7 @@ msgstr ""
 "• Ubuntu/Debian: sudo apt install {player}\n"
 "• Fedora: sudo dnf install {player}"
 
-#: src/stream_player.py:231
+#: src/stream_player.py:232
 msgid "Missing Player"
 msgstr "Fehlender Player"
 
@@ -471,130 +503,130 @@ msgstr "{} Sek."
 msgid "{}h {}m"
 msgstr "{} Std. {} Min."
 
-#: src/chat/chat_window.py:55 src/chat/page.py:514
+#: src/chat/chat_window.py:55 src/chat/page.py:563
 #, python-brace-format
 msgid "Chat: {}"
 msgstr "Chat: {}"
 
-#: src/chat/twitch_chat.py:315
+#: src/chat/twitch_chat.py:361
 #, python-brace-format
 msgid "{target} was timed out (1 minute)"
 msgstr "{target} wurde für 1 Minute stummgeschaltet"
 
-#: src/chat/twitch_chat.py:317
+#: src/chat/twitch_chat.py:363
 #, python-brace-format
 msgid "{target} was timed out ({minutes} minutes)"
 msgstr "{target} wurde für {minutes} Minuten stummgeschaltet"
 
-#: src/chat/twitch_chat.py:321
+#: src/chat/twitch_chat.py:367
 #, python-brace-format
 msgid "{target} was banned"
 msgstr "{target} wurde gebannt"
 
-#: src/chat/twitch_chat.py:353
+#: src/chat/twitch_chat.py:406
 #, python-brace-format
 msgid "{name} subscribed with {tier}!"
 msgstr "{name} hat mit {tier} abonniert!"
 
-#: src/chat/twitch_chat.py:360
+#: src/chat/twitch_chat.py:413
 #, python-brace-format
 msgid "{name} subscribed for {months} months"
 msgstr "{name} hat {months} Monate abonniert"
 
-#: src/chat/twitch_chat.py:364
+#: src/chat/twitch_chat.py:417
 #, python-brace-format
 msgid " ({streak} streak)"
 msgstr " ({streak} in Folge)"
 
-#: src/chat/twitch_chat.py:365
+#: src/chat/twitch_chat.py:418
 #, python-brace-format
 msgid "{base} with {tier}!"
 msgstr "{base} mit {tier}!"
 
-#: src/chat/twitch_chat.py:374
+#: src/chat/twitch_chat.py:427
 #, python-brace-format
 msgid "Anonymous gifted {tier} to {recipient}!"
 msgstr "Anonym hat {tier} an {recipient} verschenkt!"
 
-#: src/chat/twitch_chat.py:381
+#: src/chat/twitch_chat.py:434
 #, python-brace-format
 msgid "{gifter} gifted {tier} to {recipient}!"
 msgstr "{gifter} hat {tier} an {recipient} verschenkt!"
 
-#: src/chat/twitch_chat.py:416
+#: src/chat/twitch_chat.py:469
 #, python-brace-format
 msgid "{name} is raiding with {count} viewers!"
 msgstr "{name} raidet mit {count} Zuschauern!"
 
-#: src/chat/twitch_chat.py:428
+#: src/chat/twitch_chat.py:481
 #, python-brace-format
 msgid "📢 {name}: {body}"
 msgstr "📢 {name}: {body}"
 
-#: src/chat/page.py:608
+#: src/chat/page.py:657
 msgid "More messages below"
 msgstr "Weitere Nachrichten unten"
 
-#: src/chat/page.py:648
+#: src/chat/page.py:697
 msgid "Reconnect"
 msgstr "Neu verbinden"
 
-#: src/chat/page.py:672
+#: src/chat/page.py:721
 msgid "Room state"
 msgstr "Raumstatus"
 
-#: src/chat/page.py:681
+#: src/chat/page.py:730
 msgid "Detach chat"
 msgstr "Chat ausgliedern"
 
-#: src/chat/page.py:1628
+#: src/chat/page.py:1731
 msgid "Emote-only"
 msgstr "Nur Emotes"
 
-#: src/chat/page.py:1629
+#: src/chat/page.py:1732
 msgid "Followers-only"
 msgstr "Nur Follower"
 
-#: src/chat/page.py:1630
+#: src/chat/page.py:1733
 msgid "Slow mode"
 msgstr "Langsamer Modus"
 
-#: src/chat/page.py:1631
+#: src/chat/page.py:1734
 msgid "Subscribers-only"
 msgstr "Nur Abonnenten"
 
-#: src/chat/page.py:1632
+#: src/chat/page.py:1735
 msgid "Unique chat"
 msgstr "Unique-Chat"
 
-#: src/chat/page.py:1658
+#: src/chat/page.py:1761
 #, python-brace-format
 msgid "{n} min"
 msgstr "{n} Min."
 
-#: src/chat/page.py:1660 src/chat/page.py:1668
+#: src/chat/page.py:1763 src/chat/page.py:1771
 msgid "On"
 msgstr "An"
 
-#: src/chat/page.py:1662 src/chat/page.py:1665 src/chat/page.py:1668
+#: src/chat/page.py:1765 src/chat/page.py:1768 src/chat/page.py:1771
 msgid "Off"
 msgstr "Aus"
 
-#: src/chat/page.py:1665
+#: src/chat/page.py:1768
 #, python-brace-format
 msgid "{n} s"
 msgstr "{n} s"
 
-#: src/chat/page.py:1717
+#: src/chat/page.py:1821
 msgid "Connecting to chat…"
 msgstr "Verbinde mit Chat…"
 
-#: src/chat/page.py:1727
+#: src/chat/page.py:1837
 #, python-brace-format
 msgid "Reconnecting… (attempt {})"
 msgstr "Verbinde neu… (Versuch {})"
 
-#: src/chat/page.py:1736
+#: src/chat/page.py:1847
 msgid "Disconnected."
 msgstr "Getrennt."
 
@@ -607,173 +639,173 @@ msgstr "VODs von {}"
 msgid "Loading VODs…"
 msgstr "Lade VODs …"
 
-#: src/vod_page.py:162 src/vod_page.py:169
+#: src/vod_page.py:163 src/vod_page.py:171
 msgid "Error Loading VODs"
 msgstr "Fehler beim Laden der VODs"
 
-#: src/vod_page.py:163
+#: src/vod_page.py:164
 msgid "No internet connection. Check your network and try again."
 msgstr ""
 "Keine Internetverbindung. Überprüfe dein Netzwerk und versuche es erneut."
 
-#: src/vod_page.py:203 src/window.py:317
+#: src/vod_page.py:205 src/window.py:333
 #, python-brace-format
 msgid "Please wait {}s before refreshing"
 msgstr "Bitte warte {} s vor dem Aktualisieren"
 
-#: src/vod_page.py:330 src/vod_page.py:477
+#: src/vod_page.py:332 src/vod_page.py:479
 msgid "Play VOD"
 msgstr "VOD abspielen"
 
-#: src/vod_page.py:337 src/vod_page.py:484
+#: src/vod_page.py:339 src/vod_page.py:486
 msgid "Open VOD in browser"
 msgstr "VOD im Browser öffnen"
 
-#: src/vod_page.py:416
+#: src/vod_page.py:418
 msgid "No VODs found"
 msgstr "Keine VODs gefunden"
 
-#: src/vod_page.py:417
+#: src/vod_page.py:419
 msgid "This channel has no recent VODs available"
 msgstr "Dieser Kanal hat keine aktuellen VODs verfügbar"
 
-#: src/vod_page.py:491
+#: src/vod_page.py:493
 msgid "Show more…"
 msgstr "Mehr anzeigen…"
 
-#: src/vod_page.py:525
+#: src/vod_page.py:527
 #, python-brace-format
 msgid "Starting VOD: {}"
 msgstr "Starte VOD: {}"
 
-#: src/vod_page.py:527
+#: src/vod_page.py:529
 msgid "Error playing VOD: player failed to start"
 msgstr "Fehler beim Abspielen des VODs: Player konnte nicht gestartet werden"
 
-#: src/window.py:250
+#: src/window.py:265
 msgid "Connection Error"
 msgstr "Verbindungsfehler"
 
-#: src/window.py:252
+#: src/window.py:267
 msgid "Could not fetch streamer data. Please check your internet connection."
 msgstr ""
 "Konnte Streamer-Daten nicht abrufen. Bitte überprüfe deine "
 "Internetverbindung."
 
-#: src/window.py:261
+#: src/window.py:276
 msgid "Authentication Error"
 msgstr "Authentifizierungsfehler"
 
-#: src/window.py:263
+#: src/window.py:278
 msgid ""
 "API authentication failed (HTTP 401). Check your Twitch Client ID and Client "
 "Secret in config.py."
 msgstr ""
-"API-Authentifizierung fehlgeschlagen (HTTP 401). Überprüfe deine Twitch Client ID und "
-"Client Secret in config.py."
+"API-Authentifizierung fehlgeschlagen (HTTP 401). Überprüfe deine Twitch "
+"Client ID und Client Secret in config.py."
 
-#: src/window.py:270
+#: src/window.py:285
 msgid "API Rate Limit"
 msgstr "API-Ratenlimit"
 
-#: src/window.py:272
+#: src/window.py:287
 msgid ""
 "API rate limit reached. Please wait a few minutes before refreshing again."
 msgstr ""
 "API-Ratenlimit erreicht. Bitte warte ein paar Minuten, bevor du erneut "
 "aktualisierst."
 
-#: src/window.py:279 src/window.py:287
+#: src/window.py:294 src/window.py:302
 msgid "API Error"
 msgstr "API-Fehler"
 
-#: src/window.py:280
+#: src/window.py:295
 #, python-brace-format
 msgid "HTTP error {} occurred while fetching streamer data."
 msgstr "HTTP-Fehler {} beim Abrufen der Streamer-Daten."
 
-#: src/window.py:288
+#: src/window.py:303
 #, python-brace-format
 msgid "Failed to fetch streamer data: {}"
 msgstr "Konnte Streamer-Daten nicht abrufen: {}"
 
-#: src/window.py:308
+#: src/window.py:324
 msgid "API not available"
 msgstr "API nicht verfügbar"
 
-#: src/window.py:337
+#: src/window.py:353
 msgid "Stream data refreshed"
 msgstr "Stream-Daten aktualisiert"
 
-#: src/window.py:499
+#: src/window.py:523
 #, python-brace-format
 msgid "Added {}"
 msgstr "{} hinzugefügt"
 
-#: src/window.py:501
+#: src/window.py:525
 #, python-brace-format
 msgid "Added {} streamers"
 msgstr "{} Streamer hinzugefügt"
 
-#: src/window.py:504
+#: src/window.py:528
 #, python-brace-format
 msgid "'{}' is invalid"
 msgstr "'{}' ist ungültig"
 
-#: src/window.py:506
+#: src/window.py:530
 #, python-brace-format
 msgid "{} invalid names"
 msgstr "{} ungültige Namen"
 
-#: src/window.py:509
+#: src/window.py:533
 #, python-brace-format
 msgid "Already following {}"
 msgstr "Folgst {} bereits"
 
-#: src/window.py:511
+#: src/window.py:535
 msgid "Already following"
 msgstr "Bereits gefolgt"
 
-#: src/window.py:525
+#: src/window.py:549
 #, python-brace-format
 msgid "Error: {}"
 msgstr "Fehler: {}"
 
-#: src/window.py:534
+#: src/window.py:558
 msgid "Error Saving Config"
 msgstr "Fehler beim Speichern der Konfiguration"
 
-#: src/window.py:534
+#: src/window.py:558
 msgid "Could not save configuration"
 msgstr "Konnte Konfiguration nicht speichern"
 
 #. Application section
-#: src/window.py:556
+#: src/window.py:581
 msgid "Application"
 msgstr "Anwendung"
 
-#: src/window.py:557 src/preferences.ui:7
+#: src/window.py:582 src/preferences.ui:7
 msgid "Preferences"
 msgstr "Einstellungen"
 
-#: src/window.py:558
+#: src/window.py:583
 msgid "Show Shortcuts"
 msgstr "Tastenkürzel anzeigen"
 
-#: src/window.py:559
+#: src/window.py:584
 msgid "Quit"
 msgstr "Beenden"
 
 #. Stream Management section
-#: src/window.py:563
+#: src/window.py:588
 msgid "Stream Management"
 msgstr "Stream-Verwaltung"
 
-#: src/window.py:567 src/window.py:572 src/window.py:574
+#: src/window.py:592 src/window.py:597 src/window.py:599
 msgid "Refresh Streams"
 msgstr "Streams aktualisieren"
 
-#: src/window.ui:24
+#: src/window.ui:24 src/preferences.ui:106
 msgid "Refresh"
 msgstr "Aktualisieren"
 
@@ -793,7 +825,7 @@ msgstr "_Tastenkürzel"
 msgid "_About Streamline"
 msgstr "_Über Streamline"
 
-#: src/preferences.ui:11 src/preferences.ui:194
+#: src/preferences.ui:11 src/preferences.ui:232
 msgid "General"
 msgstr "Allgemein"
 
@@ -869,73 +901,105 @@ msgstr "Player für Streams und VODs"
 msgid "Custom Player Command"
 msgstr "Benutzerdefinierter Player-Befehl"
 
-#: src/preferences.ui:106
+#: src/preferences.ui:112
+msgid "Auto-Refresh"
+msgstr "Automatisch aktualisieren"
+
+#: src/preferences.ui:116
+msgid "Automatically refresh stream data and notify when streamers go live"
+msgstr "Stream-Daten automatisch aktualisieren und benachrichtigen, wenn Streamer live gehen"
+
+#: src/preferences.ui:121
+msgid "Interval"
+msgstr "Intervall"
+
+#: src/preferences.ui:125
+msgid "How often to check for live streams"
+msgstr "Wie oft auf Live-Streams geprüft werden soll"
+
+#: src/preferences.ui:130
+msgid "2 minutes"
+msgstr "2 Minuten"
+
+#: src/preferences.ui:131
+msgid "3 minutes"
+msgstr "3 Minuten"
+
+#: src/preferences.ui:132
+msgid "4 minutes"
+msgstr "4 Minuten"
+
+#: src/preferences.ui:133
+msgid "5 minutes"
+msgstr "5 Minuten"
+
+#: src/preferences.ui:144
 msgid "Quality"
 msgstr "Qualität"
 
-#: src/preferences.ui:112
+#: src/preferences.ui:150
 msgid "Stream Quality"
 msgstr "Stream-Qualität"
 
-#: src/preferences.ui:116
+#: src/preferences.ui:154
 msgid "Higher quality uses more bandwidth"
 msgstr "Höhere Qualität braucht mehr Bandbreite"
 
-#: src/preferences.ui:124
+#: src/preferences.ui:162
 msgid "Custom Quality"
 msgstr "Benutzerdefinierte Qualität"
 
-#: src/preferences.ui:133
+#: src/preferences.ui:171
 msgid "Low Latency Mode"
 msgstr "Niedrige Latenz"
 
-#: src/preferences.ui:137
+#: src/preferences.ui:175
 msgid "Reduces stream delay but may cause buffering on slower connections"
 msgstr ""
 "Reduziert Stream-Verzögerung, kann aber bei langsameren Verbindungen zu "
 "Pufferung führen"
 
-#: src/preferences.ui:145
+#: src/preferences.ui:183
 msgid "Streamers"
 msgstr "Streamer"
 
-#: src/preferences.ui:148
+#: src/preferences.ui:186
 msgid "Export List"
 msgstr "Liste exportieren"
 
-#: src/preferences.ui:152
+#: src/preferences.ui:190
 msgid "Save your followed streamers for backup"
 msgstr "Speichere deine gefolgten Streamer zur Sicherung"
 
-#: src/preferences.ui:166
+#: src/preferences.ui:204
 msgid "Import List"
 msgstr "Liste importieren"
 
-#: src/preferences.ui:170
+#: src/preferences.ui:208
 msgid "Load a backup file to follow streamers"
 msgstr "Lade eine Sicherungsdatei, um Streamern zu folgen"
 
-#: src/preferences.ui:198
+#: src/preferences.ui:236
 msgid "Changes apply to newly opened chats"
 msgstr "Änderungen gelten für neu geöffnete Chats"
 
-#: src/preferences.ui:204
+#: src/preferences.ui:242
 msgid "Alternating Background"
 msgstr "Abwechselnder Hintergrund"
 
-#: src/preferences.ui:219
+#: src/preferences.ui:257
 msgid "Disable Emote Animations"
 msgstr "Emote-Animationen deaktivieren"
 
-#: src/preferences.ui:223
+#: src/preferences.ui:261
 msgid "Use static emote images to reduce resource usage"
 msgstr "Statische Emote-Bilder verwenden, um Ressourcen zu schonen"
 
-#: src/preferences.ui:234
+#: src/preferences.ui:272
 msgid "Chat Highlighting"
 msgstr "Chat-Hervorhebung"
 
-#: src/preferences.ui:238
+#: src/preferences.ui:276
 msgid ""
 "Apply tinted backgrounds to certain message types. Changes apply to newly "
 "opened chats"
@@ -943,43 +1007,43 @@ msgstr ""
 "Eingefärbte Hintergründe für bestimmte Nachrichtentypen anwenden. Änderungen "
 "gelten für neu geöffnete Chats"
 
-#: src/preferences.ui:244
+#: src/preferences.ui:282
 msgid "First Messages"
 msgstr "Erste Nachrichten"
 
-#: src/preferences.ui:248
+#: src/preferences.ui:286
 msgid "Blue tint for a user's first message in the channel"
 msgstr "Blaue Einfärbung für die erste Nachricht eines Nutzers im Kanal"
 
-#: src/preferences.ui:253
+#: src/preferences.ui:291
 msgid "Moderators"
 msgstr "Moderatoren"
 
-#: src/preferences.ui:257
+#: src/preferences.ui:295
 msgid "Green tint for messages from moderators"
 msgstr "Grüne Einfärbung für Nachrichten von Moderatoren"
 
-#: src/preferences.ui:262
+#: src/preferences.ui:300
 msgid "VIPs"
 msgstr "VIPs"
 
-#: src/preferences.ui:266
+#: src/preferences.ui:304
 msgid "Pink tint for messages from VIPs"
 msgstr "Rosa Einfärbung für Nachrichten von VIPs"
 
-#: src/preferences.ui:271
+#: src/preferences.ui:309
 msgid "Partners"
 msgstr "Partner"
 
-#: src/preferences.ui:275
+#: src/preferences.ui:313
 msgid "Purple tint for messages from Partners"
 msgstr "Violette Einfärbung für Nachrichten von Partnern"
 
-#: src/preferences.ui:283
+#: src/preferences.ui:321
 msgid "Broadcaster"
 msgstr "Broadcaster"
 
-#: src/preferences.ui:287
+#: src/preferences.ui:325
 msgid "Red tint for messages from the broadcaster"
 msgstr "Rote Einfärbung für Nachrichten des Broadcasters"
 
