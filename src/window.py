@@ -102,6 +102,9 @@ class StreamlineWindow(Adw.ApplicationWindow):
             "changed::show-stream-thumbnails", self._on_row_pref_changed
         )
 
+        # React to streamer list changes from CLI or external tools.
+        self.settings.connect("changed::streamers", self._on_streamers_changed)
+
         # Stored fetch data so preferences can rebuild rows without a network call
         self._last_online = []
         self._last_offline = []
@@ -596,6 +599,28 @@ class StreamlineWindow(Adw.ApplicationWindow):
         """Update streams cache without modifying timestamp."""
         if self.twitch:
             self.twitch.update_streams_cache(username, add)
+
+    def _on_streamers_changed(self, settings, key):
+        """Sync the UI when the streamer list changes externally (e.g. CLI)."""
+        new_list = list(settings.get_strv(key))
+        old_set = {s.lower() for s in self.all_streamers}
+        new_set = {s.lower() for s in new_list}
+
+        added = [s for s in new_list if s.lower() not in old_set]
+        removed = [s for s in self.all_streamers if s.lower() not in new_set]
+
+        if not added and not removed:
+            return
+
+        for name in removed:
+            self.remove_streamer_row(name)
+            logger.info("Removed streamer (external): %s", name)
+        for name in added:
+            self.add_offline_streamer(name)
+            logger.info("Added streamer (external): %s", name)
+
+        self.all_streamers = new_list
+        self._start_avatar_downloads([], added)
 
     def add_offline_streamer(self, username):
         """Add new offline streamer row."""

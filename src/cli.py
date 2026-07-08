@@ -180,42 +180,6 @@ class CliHandler:
         except Exception:
             return None
 
-    @staticmethod
-    def _patch_streams_cache(username, remove=False):
-        """Add or remove a single username in the streams cache on disk.
-
-        Does not require a TwitchAPI instance — operates on the JSON
-        file directly so lightweight CLI commands stay fast.
-        """
-        cache_path = _CACHE_DIR / "streams.json"
-        try:
-            with open(cache_path) as f:
-                data = json.load(f)
-        except (OSError, json.JSONDecodeError):
-            return
-
-        cache = data.get("data")
-        if not cache:
-            return
-
-        offline = cache.get("offline", [])
-        online = cache.get("online", {})
-
-        if remove:
-            cache["offline"] = [s for s in offline if s != username]
-            if username in online:
-                del online[username]
-        else:
-            if username not in offline and username not in online:
-                offline.append(username)
-                offline.sort(key=str.lower)
-
-        try:
-            with open(cache_path, "w") as f:
-                json.dump(data, f, indent=4)
-        except OSError:
-            pass
-
     # ── play ──────────────────────────────────────────────────
 
     def _handle_play(self, args):
@@ -378,11 +342,6 @@ class CliHandler:
                 not_followed.append(u)
 
         self.settings.set_strv("streamers", remaining)
-
-        # Update the streams cache so removed streamers disappear from
-        # `status` immediately instead of only after the 60 s cooldown.
-        for u in removed:
-            self._patch_streams_cache(u, remove=True)
 
         if removed:
             print(f"Unfollowed: {', '.join(removed)}")
