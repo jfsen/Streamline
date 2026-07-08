@@ -32,6 +32,14 @@
   </branding>
 
 	  <releases>
+	    <release version="4.0.2" date="2026-07-08">
+	      <description translate="no">
+	        <p>Streamline 4.0.2 — icon fix.</p>
+	        <ul>
+	          <li>Revert to app icon with play button</li>
+	        </ul>
+	      </description>
+	    </release>
 	    <release version="4.0.1" date="2026-07-08">
 	      <description translate="no">
 	        <p>Streamline 4.0.1 — hotfix.</p>
