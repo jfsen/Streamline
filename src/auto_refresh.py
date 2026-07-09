@@ -132,6 +132,8 @@ class AutoRefresher:
             notification.set_body(body)
 
         # Include the streamer's avatar as the notification icon.
+        # Use BytesIcon (raw bytes) instead of FileIcon so the
+        # XDG desktop portal can render it even inside Flatpak.
         if len(streamers) == 1:
             avatar_path = (
                 Path(GLib.get_user_cache_dir())
@@ -140,7 +142,7 @@ class AutoRefresher:
                 / f"{streamers[0]}.jpg"
             )
             if avatar_path.exists():
-                icon = Gio.FileIcon.new(Gio.File.new_for_path(str(avatar_path)))
+                icon = Gio.BytesIcon.new(GLib.Bytes.new(avatar_path.read_bytes()))
                 notification.set_icon(icon)
 
         self._window.get_application().send_notification(None, notification)

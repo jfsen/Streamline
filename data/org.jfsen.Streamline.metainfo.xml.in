@@ -32,6 +32,15 @@
   </branding>
 
 	  <releases>
+	    <release version="4.1.1" date="2026-07-08">
+	      <description translate="no">
+	        <p>Streamline 4.1.1 — notification icon fix.</p>
+	        <ul>
+	          <li
+                    >Fix profile pictures not appearing in auto-refresh notifications under Flatpak</li>
+	        </ul>
+	      </description>
+	    </release>
 	    <release version="4.1.0" date="2026-07-08">
 	      <description translate="no">
 	        <p>Streamline 4.1 — auto-refresh.</p>
