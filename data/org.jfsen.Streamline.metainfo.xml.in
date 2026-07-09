@@ -32,6 +32,15 @@
   </branding>
 
 	  <releases>
+	    <release version="4.1.0" date="2026-07-08">
+	      <description translate="no">
+	        <p>Streamline 4.1 — auto-refresh.</p>
+	        <ul>
+	          <li
+                    >Auto-refresh with desktop notification support when followed streamers come online</li>
+	        </ul>
+	      </description>
+	    </release>
 	    <release version="4.0.2" date="2026-07-08">
 	      <description translate="no">
 	        <p>Streamline 4.0.2 — icon fix.</p>
