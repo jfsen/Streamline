@@ -17,6 +17,8 @@
 #
 # SPDX-License-Identifier: GPL-3.0-or-later
 
+"""Main window — streamer list, navigation, chat, and VOD pages."""
+
 import gettext
 import logging
 import threading
@@ -58,6 +60,8 @@ APP_ID = "org.jfsen.Streamline"
 
 @Gtk.Template(resource_path="/org/jfsen/Streamline/window.ui")
 class StreamlineWindow(Adw.ApplicationWindow):
+    """Main application window — streamer list, navigation, chat, and VODs."""
+
     __gtype_name__ = "StreamlineWindow"
 
     preferences_page = Gtk.Template.Child()

@@ -85,6 +85,7 @@ class EmoteTextureCache:
         return _EMOTE_IMAGE_DIR / self._url_hash(url)
 
     def request(self, url: str, widget: Gtk.Widget) -> None:
+        """Ensure *widget* displays the emote at *url*, downloading if needed."""
         with self._lock:
             if url in self._textures:
                 texture = self._textures.pop(url)
@@ -248,6 +249,7 @@ class AnimatedFrames:
                 logger.debug("Failed to pre-decode frame 0 for animated emote")
 
     def get_frame(self, idx: int) -> tuple[Gdk.Texture, int]:
+        """Return (texture, duration_ms) for frame *idx*, decoding lazily."""
         if idx in self._textures:
             return self._textures[idx]
         try:

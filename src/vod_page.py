@@ -17,6 +17,8 @@
 #
 # SPDX-License-Identifier: GPL-3.0-or-later
 
+"""VOD browser page — cached loading, thumbnail previews, playback."""
+
 import gettext
 import hashlib
 import json
@@ -37,6 +39,8 @@ logger = logging.getLogger(__name__)
 
 @Gtk.Template(resource_path="/org/jfsen/Streamline/vod_page.ui")
 class VODPage(Adw.NavigationPage):
+    """Displays a streamer's recent VODs with thumbnails and inline playback."""
+
     __gtype_name__ = "VODPage"
 
     VODS_PER_PAGE = 10

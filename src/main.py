@@ -31,7 +31,7 @@ _ = gettext.gettext
 
 logger = logging.getLogger(__name__)
 
-# Suppress noisy third-party loggers (keeps credentials out of console).
+# Suppress noisy third-party loggers.
 logging.getLogger("urllib3").setLevel(logging.WARNING)
 logging.getLogger("urllib3.connectionpool").setLevel(logging.WARNING)
 logging.getLogger("PIL").setLevel(logging.WARNING)

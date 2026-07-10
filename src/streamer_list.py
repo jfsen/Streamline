@@ -17,6 +17,8 @@
 #
 # SPDX-License-Identifier: GPL-3.0-or-later
 
+"""Streamer list management — row creation, avatar/thumbnail downloads, pill badges."""
+
 import gettext
 import threading
 from html import unescape
@@ -32,6 +34,12 @@ _ = gettext.gettext
 
 
 class StreamerRowManager:
+    """Manages the online and offline streamer ListBox widgets.
+
+    Creates, updates, and removes rows; handles avatar and thumbnail
+    downloads; manages pill badges for online/offline transitions.
+    """
+
     _CSS_LOADED = False  # class-level flag — only load once ever
 
     def __init__(self, window):

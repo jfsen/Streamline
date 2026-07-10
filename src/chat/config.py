@@ -108,7 +108,7 @@ FALLBACK_USER_COLOR = "#9147ff"  # Twitch purple
 # Runtime behaviour tunables — message limits, flush batching,
 # and process lifetime.
 #
-# Consumers:  page.py,  emotes.py  (CACHE_TTL)
+# Consumers:  page.py,  third_party_emotes.py  (CACHE_TTL)
 
 # Messages beyond this count trigger culling from the DOM.
 MAX_MESSAGES = 500
@@ -127,7 +127,7 @@ FLUSH_MS = 250
 # Per-service, per-scope cache lifetimes in seconds.
 # ``global`` covers site-wide emotes; ``channel`` covers
 # emotes specific to a streamer.
-# Consumer:  emotes.py  (_load_cache)
+# Consumer:  third_party_emotes.py  (_load_cache)
 
 EMOTE_CACHE_TTL = {
     "bttv": {"global": 86400, "channel": 3600},
@@ -138,7 +138,7 @@ EMOTE_CACHE_TTL = {
 # ── IRC ─────────────────────────────────────────────────────
 #
 # Twitch IRC connection parameters.
-# Consumer:  twitch_chat.py
+# Consumer:  irc_client.py
 
 IRC_HOST = "irc.chat.twitch.tv"
 IRC_PORT = 6667
@@ -148,7 +148,7 @@ IRC_PORT = 6667
 # Exponential-backoff reconnection with jitter.  After
 # ``RECONNECT_MAX_ATTEMPTS`` consecutive failures the client
 # gives up and transitions to DISCONNECTED.
-# Consumer:  twitch_chat.py
+# Consumer:  irc_client.py
 
 RECONNECT_BASE_DELAY = 1.0  # seconds – initial delay
 RECONNECT_MAX_DELAY = 60.0  # seconds – cap
@@ -171,7 +171,7 @@ PING_TIMEOUT = 180  # seconds – absolute maximum silence
 #
 # URL templates for Twitch-hosted emotes.  ``{id}`` is replaced
 # with the emote ID at render time.
-# Consumer:  twitch_chat.py
+# Consumer:  irc_client.py
 
 # Default: animated (GIF / APNG), dark-background variant.
 TWITCH_EMOTE_CDN = "https://static-cdn.jtvnw.net/emoticons/v2/{id}/default/dark/1.0"
@@ -187,7 +187,7 @@ TWITCH_EMOTE_CDN_STATIC = (
 # Third-party CDN API URLs.  ``{user_id}`` placeholders are
 # filled with the Twitch user ID of the streamer whose channel
 # emotes are being fetched.
-# Consumer:  emotes.py
+# Consumer:  third_party_emotes.py
 
 _BTTV_GLOBAL = "https://api.betterttv.net/3/cached/emotes/global"
 _BTTV_CHANNEL = "https://api.betterttv.net/3/cached/users/twitch/{user_id}"

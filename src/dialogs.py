@@ -27,6 +27,8 @@ logger = logging.getLogger(__name__)
 
 
 class StreamlineDialogs:
+    """Factory for the application's modal dialogs — error, follow, unfollow, quick play."""
+
     def __init__(self, parent_window):
         self.parent = parent_window
 

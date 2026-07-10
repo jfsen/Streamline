@@ -1,4 +1,5 @@
-# twitch.py
+# api.py
+# api.py
 #
 # Copyright 2025 jfsen
 #
@@ -16,6 +17,8 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #
 # SPDX-License-Identifier: GPL-3.0-or-later
+
+"""Twitch Helix API client with OAuth and disk-persisted caching."""
 
 import gettext
 import json
@@ -49,6 +52,12 @@ logger = logging.getLogger(__name__)
 
 
 class TwitchAPI:
+    """Twitch Helix API client with disk-persisted caching.
+
+    Handles OAuth token lifecycle, user/stream/VOD lookups, and
+    lazy disk caches for avatars, streams, and user metadata.
+    """
+
     # Single cache directory, computed once per process
     _CACHE_DIR = Path(GLib.get_user_cache_dir()) / "Streamline"
 

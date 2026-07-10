@@ -1,4 +1,4 @@
-# stream_player.py
+# player.py
 #
 # Copyright 2025 jfsen
 #
@@ -16,6 +16,8 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #
 # SPDX-License-Identifier: GPL-3.0-or-later
+
+"""Launches streams and VODs in an external player via streamlink."""
 
 import gettext
 import logging
@@ -41,6 +43,8 @@ logger = logging.getLogger(__name__)
 
 
 class StreamPlayer:
+    """Launches streams and VODs in an external media player via streamlink."""
+
     def __init__(self, window):
         self.window = window
         self._executable_cache = {}

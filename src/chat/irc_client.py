@@ -1,4 +1,4 @@
-# twitch_chat.py
+# irc_client.py
 #
 # Copyright 2025 jfsen
 #

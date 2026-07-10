@@ -1,4 +1,4 @@
-# emotes.py
+# third_party_emotes.py
 #
 # Copyright 2025 jfsen
 #
