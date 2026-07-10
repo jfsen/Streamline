@@ -73,7 +73,11 @@ def _load_cache(source, identifier, prefer_static=False):
             return None
         logger.debug("Cache hit: %s/%s (%s emotes)", source, identifier, len(emotes))
         return emotes
-    except (json.JSONDecodeError, KeyError, OSError):
+    except (json.JSONDecodeError, KeyError) as e:
+        logger.debug("Corrupt emote cache %s/%s: %s", source, identifier, e)
+        return None
+    except OSError as e:
+        logger.debug("Failed to read emote cache %s/%s: %s", source, identifier, e)
         return None
 
 
@@ -89,6 +93,7 @@ def _save_cache(source, identifier, emotes, prefer_static=False):
                 indent=2,
             )
     except OSError:
+        logger.debug("Failed to save emote cache %s/%s", source, identifier)
         pass
 
 

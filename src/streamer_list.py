@@ -1,4 +1,4 @@
-# rows.py
+# streamer_list.py
 #
 # Copyright 2025 jfsen
 #

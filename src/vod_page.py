@@ -526,6 +526,7 @@ class VODPage(Adw.NavigationPage):
             self.player.play_content(vod["url"], is_vod=True)
             self.show_toast(_("Starting VOD: {}").format(vod["title"]))
         except Exception:
+            logger.debug("VOD playback failed for %s", vod.get("url", "?"))
             self.show_toast(_("Error playing VOD: player failed to start"), 4)
 
     def open_in_browser(self, vod):

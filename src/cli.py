@@ -25,6 +25,7 @@ application can be scripted and used from the terminal.
 
 import argparse
 import json
+import logging
 import os
 import shutil
 import subprocess
@@ -42,6 +43,8 @@ from .config import (
     TWITCH_CLIENT_ID,
     TWITCH_CLIENT_SECRET,
 )
+
+logger = logging.getLogger(__name__)
 
 # Cache directory (shared with TwitchAPI._CACHE_DIR).
 _CACHE_DIR = Path(GLib.get_user_cache_dir()) / "Streamline"
@@ -178,6 +181,7 @@ class CliHandler:
         try:
             return TwitchAPI(TWITCH_CLIENT_ID, TWITCH_CLIENT_SECRET)
         except Exception:
+            logger.debug("CLI API init failed — credentials may be missing")
             return None
 
     # ── play ──────────────────────────────────────────────────

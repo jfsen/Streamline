@@ -194,6 +194,7 @@ class StreamPlayer:
             else:
                 self._executable_cache.pop(name, None)
         except subprocess.SubprocessError:
+            logger.debug("flatpak-spawn which failed for %s", name)
             self._executable_cache.pop(name, None)
 
         return None

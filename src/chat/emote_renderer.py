@@ -245,7 +245,7 @@ class AnimatedFrames:
             try:
                 self.get_frame(0)
             except Exception:
-                pass
+                logger.debug("Failed to pre-decode frame 0 for animated emote")
 
     def get_frame(self, idx: int) -> tuple[Gdk.Texture, int]:
         if idx in self._textures:
@@ -488,6 +488,7 @@ def _make_badge_tempfile(badge_id: str, svg_data: str) -> Gio.File | None:
         try:
             path.write_text(svg_data)
         except OSError:
+            logger.debug("Failed to write badge tempfile: %s", badge_id)
             return None
     return Gio.File.new_for_path(str(path))
 

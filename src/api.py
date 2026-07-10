@@ -167,8 +167,12 @@ class TwitchAPI:
                     self.access_token = cache_data["access_token"]
                     self.token_expires_at = expires_at
                     logger.debug("Loaded valid token from cache")
-        except (json.JSONDecodeError, KeyError, OSError, FileNotFoundError):
-            pass
+        except FileNotFoundError:
+            pass  # No cache yet — first run.
+        except (json.JSONDecodeError, KeyError) as e:
+            logger.debug("Corrupt token cache: %s", e)
+        except OSError as e:
+            logger.debug("Failed to read token cache: %s", e)
 
     def _save_token_cache(self):
         """Save access token to cache with expiration (atomic write)."""
@@ -205,8 +209,13 @@ class TwitchAPI:
                     }
                 return migrated
             return data
-        except (json.JSONDecodeError, OSError, FileNotFoundError):
-            return {}
+        except FileNotFoundError:
+            pass  # No cache yet.
+        except (json.JSONDecodeError, KeyError) as e:
+            logger.debug("Corrupt user cache: %s", e)
+        except OSError as e:
+            logger.debug("Failed to read user cache: %s", e)
+        return {}
 
     def _save_user_cache(self):
         """Save user data to cache file."""
@@ -294,8 +303,13 @@ class TwitchAPI:
             )
 
             return cache_data["data"], int(seconds_until_refresh)
-        except (json.JSONDecodeError, KeyError, OSError, FileNotFoundError):
-            return None, 0
+        except FileNotFoundError:
+            pass  # No cache yet.
+        except (json.JSONDecodeError, KeyError) as e:
+            logger.debug("Corrupt streams cache: %s", e)
+        except OSError as e:
+            logger.debug("Failed to read streams cache: %s", e)
+        return None, 0
 
     def _save_streams_cache(self, data):
         """Save streams data to cache with timestamp."""
@@ -342,8 +356,12 @@ class TwitchAPI:
                 with open(self._get_streams_cache_path(), "w") as f:
                     json.dump(cache_data, f, indent=4)
 
-        except (OSError, json.JSONDecodeError):
-            pass  # Silently fail if cache update fails
+        except FileNotFoundError:
+            pass  # No cache yet — nothing to update.
+        except json.JSONDecodeError as e:
+            logger.debug("Corrupt streams cache, skipping update: %s", e)
+        except OSError as e:
+            logger.debug("Failed to update streams cache: %s", e)
 
     def get_streams(self, usernames):
         """Get stream information for multiple users."""

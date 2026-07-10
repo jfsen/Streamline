@@ -18,10 +18,12 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 
 import gettext
+import logging
 
 from gi.repository import Adw, Gtk
 
 _ = gettext.gettext
+logger = logging.getLogger(__name__)
 
 
 class StreamlineDialogs:
@@ -52,6 +54,7 @@ class StreamlineDialogs:
 
     def show_error_dialog(self, heading, message):
         """Show error dialog with the given heading and message."""
+        logger.warning("Showing error dialog: %s — %s", heading, message)
         dialog = Adw.MessageDialog(
             transient_for=self.parent, heading=heading, body=message
         )

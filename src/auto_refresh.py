@@ -142,8 +142,11 @@ class AutoRefresher:
                 / f"{streamers[0]}.jpg"
             )
             if avatar_path.exists():
-                icon = Gio.BytesIcon.new(GLib.Bytes.new(avatar_path.read_bytes()))
-                notification.set_icon(icon)
+                try:
+                    icon = Gio.BytesIcon.new(GLib.Bytes.new(avatar_path.read_bytes()))
+                    notification.set_icon(icon)
+                except OSError:
+                    pass  # race: file deleted between exists() and read
         else:
             # Multiple streamers — show the app icon explicitly since
             # notification daemons don't always infer it from the sender.

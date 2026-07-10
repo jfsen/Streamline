@@ -438,6 +438,7 @@ class StreamlineWindow(Adw.ApplicationWindow):
             try:
                 self.twitch.get_users(new_candidates)
             except Exception:
+                logger.debug("API validation skipped — API call failed")
                 # If API call fails, skip validation and add all candidates
                 pass
             else:
@@ -500,6 +501,7 @@ class StreamlineWindow(Adw.ApplicationWindow):
         try:
             self.player.play_content(f"twitch.tv/{username}", is_vod=False)
         except Exception as e:
+            logger.debug("Quick play failed for %s: %s", username, e)
             self.show_toast(_("Error: {}").format(str(e)), 4)
 
     def save_config(self):
