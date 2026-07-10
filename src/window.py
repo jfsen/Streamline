@@ -375,11 +375,14 @@ class StreamlineWindow(Adw.ApplicationWindow):
     def _on_row_pref_changed(self, settings, key):
         """Live-rebuild rows when a preference affecting row rendering changes."""
         self._initialize_from_config()
-        if self._last_online or self._last_offline:
-            self.row_manager.update_rows(
-                self._last_online, self._last_offline, self._last_info
-            )
-            self._start_avatar_downloads(self._last_online, self._last_offline)
+        # Derive current lists from self.all_streamers so that any
+        # streamers added or removed since the last refresh (via GUI
+        # dialog, CLI, or import) are included in the rebuild.
+        online = [s for s in self.all_streamers if s in self._last_online]
+        offline = [s for s in self.all_streamers if s not in self._last_online]
+        if online or offline:
+            self.row_manager.update_rows(online, offline, self._last_info)
+            self._start_avatar_downloads(online, offline)
 
     def _start_avatar_downloads(self, online, offline):
         """Kick off background avatar downloads for streamers that don't have
