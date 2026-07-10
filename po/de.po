@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: streamline 3.4.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-07-09 00:52+0200\n"
+"POT-Creation-Date: 2026-07-10 22:34+0200\n"
 "PO-Revision-Date: 2026-06-20 12:00+0200\n"
 "Last-Translator: jfsen\n"
 "Language-Team: none\n"
@@ -17,7 +17,7 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
 #: data/org.jfsen.Streamline.desktop.in:2
-#: data/org.jfsen.Streamline.metainfo.xml.in:7 src/window.py:163
+#: data/org.jfsen.Streamline.metainfo.xml.in:7 src/window.py:149
 #: src/window.ui:6
 msgid "Streamline"
 msgstr "Streamline"
@@ -204,7 +204,6 @@ msgid "Display live preview thumbnails for online streams as cards"
 msgstr "Live-Vorschaubilder für Online-Streams als Karten anzeigen"
 
 #: data/org.jfsen.Streamline.gschema.xml:113
-#, fuzzy
 msgid "Auto-refresh"
 msgstr "Automatisch aktualisieren"
 
@@ -218,7 +217,8 @@ msgstr "Aktualisierungsintervall"
 
 #: data/org.jfsen.Streamline.gschema.xml:121
 msgid "Seconds between automatic stream refreshes (180, 300, 600, or 900)"
-msgstr "Sekunden zwischen automatischen Aktualisierungen (180, 300, 600 oder 900)"
+msgstr ""
+"Sekunden zwischen automatischen Aktualisierungen (180, 300, 600 oder 900)"
 
 #: src/auto_refresh.py:123
 #, python-brace-format
@@ -257,7 +257,7 @@ msgstr "Abbrechen"
 msgid "Unfollow"
 msgstr "Entfolgen"
 
-#: src/dialogs.py:84 src/dialogs.py:90 src/window.py:589 src/window.ui:49
+#: src/dialogs.py:84 src/dialogs.py:90 src/window.py:543 src/window.ui:49
 msgid "Follow"
 msgstr "Folgen"
 
@@ -265,7 +265,7 @@ msgstr "Folgen"
 msgid "Enter the streamer username (separate multiple with commas):"
 msgstr "Gib Streamer-Benutzernamen ein (mehrere mit Kommas trennen):"
 
-#: src/dialogs.py:109 src/window.py:590 src/window.ui:35
+#: src/dialogs.py:109 src/window.py:544 src/window.ui:35
 msgid "Quick Play"
 msgstr "Schnellstart"
 
@@ -503,130 +503,130 @@ msgstr "{} Sek."
 msgid "{}h {}m"
 msgstr "{} Std. {} Min."
 
-#: src/chat/chat_window.py:55 src/chat/page.py:563
+#: src/chat/chat_window.py:55 src/chat/page.py:77
 #, python-brace-format
 msgid "Chat: {}"
 msgstr "Chat: {}"
 
-#: src/chat/twitch_chat.py:361
+#: src/chat/irc_client.py:361
 #, python-brace-format
 msgid "{target} was timed out (1 minute)"
 msgstr "{target} wurde für 1 Minute stummgeschaltet"
 
-#: src/chat/twitch_chat.py:363
+#: src/chat/irc_client.py:363
 #, python-brace-format
 msgid "{target} was timed out ({minutes} minutes)"
 msgstr "{target} wurde für {minutes} Minuten stummgeschaltet"
 
-#: src/chat/twitch_chat.py:367
+#: src/chat/irc_client.py:367
 #, python-brace-format
 msgid "{target} was banned"
 msgstr "{target} wurde gebannt"
 
-#: src/chat/twitch_chat.py:406
+#: src/chat/irc_client.py:406
 #, python-brace-format
 msgid "{name} subscribed with {tier}!"
 msgstr "{name} hat mit {tier} abonniert!"
 
-#: src/chat/twitch_chat.py:413
+#: src/chat/irc_client.py:413
 #, python-brace-format
 msgid "{name} subscribed for {months} months"
 msgstr "{name} hat {months} Monate abonniert"
 
-#: src/chat/twitch_chat.py:417
+#: src/chat/irc_client.py:417
 #, python-brace-format
 msgid " ({streak} streak)"
 msgstr " ({streak} in Folge)"
 
-#: src/chat/twitch_chat.py:418
+#: src/chat/irc_client.py:418
 #, python-brace-format
 msgid "{base} with {tier}!"
 msgstr "{base} mit {tier}!"
 
-#: src/chat/twitch_chat.py:427
+#: src/chat/irc_client.py:427
 #, python-brace-format
 msgid "Anonymous gifted {tier} to {recipient}!"
 msgstr "Anonym hat {tier} an {recipient} verschenkt!"
 
-#: src/chat/twitch_chat.py:434
+#: src/chat/irc_client.py:434
 #, python-brace-format
 msgid "{gifter} gifted {tier} to {recipient}!"
 msgstr "{gifter} hat {tier} an {recipient} verschenkt!"
 
-#: src/chat/twitch_chat.py:469
+#: src/chat/irc_client.py:469
 #, python-brace-format
 msgid "{name} is raiding with {count} viewers!"
 msgstr "{name} raidet mit {count} Zuschauern!"
 
-#: src/chat/twitch_chat.py:481
+#: src/chat/irc_client.py:481
 #, python-brace-format
 msgid "📢 {name}: {body}"
 msgstr "📢 {name}: {body}"
 
-#: src/chat/page.py:657
+#: src/chat/page.py:177
 msgid "More messages below"
 msgstr "Weitere Nachrichten unten"
 
-#: src/chat/page.py:697
+#: src/chat/page.py:217
 msgid "Reconnect"
 msgstr "Neu verbinden"
 
-#: src/chat/page.py:721
+#: src/chat/page.py:241
 msgid "Room state"
 msgstr "Raumstatus"
 
-#: src/chat/page.py:730
+#: src/chat/page.py:250
 msgid "Detach chat"
 msgstr "Chat ausgliedern"
 
-#: src/chat/page.py:1731
+#: src/chat/page.py:873
 msgid "Emote-only"
 msgstr "Nur Emotes"
 
-#: src/chat/page.py:1732
+#: src/chat/page.py:874
 msgid "Followers-only"
 msgstr "Nur Follower"
 
-#: src/chat/page.py:1733
+#: src/chat/page.py:875
 msgid "Slow mode"
 msgstr "Langsamer Modus"
 
-#: src/chat/page.py:1734
+#: src/chat/page.py:876
 msgid "Subscribers-only"
 msgstr "Nur Abonnenten"
 
-#: src/chat/page.py:1735
+#: src/chat/page.py:877
 msgid "Unique chat"
 msgstr "Unique-Chat"
 
-#: src/chat/page.py:1761
+#: src/chat/page.py:903
 #, python-brace-format
 msgid "{n} min"
 msgstr "{n} Min."
 
-#: src/chat/page.py:1763 src/chat/page.py:1771
+#: src/chat/page.py:905 src/chat/page.py:913
 msgid "On"
 msgstr "An"
 
-#: src/chat/page.py:1765 src/chat/page.py:1768 src/chat/page.py:1771
+#: src/chat/page.py:907 src/chat/page.py:910 src/chat/page.py:913
 msgid "Off"
 msgstr "Aus"
 
-#: src/chat/page.py:1768
+#: src/chat/page.py:910
 #, python-brace-format
 msgid "{n} s"
 msgstr "{n} s"
 
-#: src/chat/page.py:1821
+#: src/chat/page.py:963
 msgid "Connecting to chat…"
 msgstr "Verbinde mit Chat…"
 
-#: src/chat/page.py:1837
+#: src/chat/page.py:979
 #, python-brace-format
 msgid "Reconnecting… (attempt {})"
 msgstr "Verbinde neu… (Versuch {})"
 
-#: src/chat/page.py:1847
+#: src/chat/page.py:989
 msgid "Disconnected."
 msgstr "Getrennt."
 
@@ -648,7 +648,7 @@ msgid "No internet connection. Check your network and try again."
 msgstr ""
 "Keine Internetverbindung. Überprüfe dein Netzwerk und versuche es erneut."
 
-#: src/vod_page.py:205 src/window.py:333
+#: src/vod_page.py:205 src/window.py:319
 #, python-brace-format
 msgid "Please wait {}s before refreshing"
 msgstr "Bitte warte {} s vor dem Aktualisieren"
@@ -682,21 +682,21 @@ msgstr "Starte VOD: {}"
 msgid "Error playing VOD: player failed to start"
 msgstr "Fehler beim Abspielen des VODs: Player konnte nicht gestartet werden"
 
-#: src/window.py:265
+#: src/window.py:251
 msgid "Connection Error"
 msgstr "Verbindungsfehler"
 
-#: src/window.py:267
+#: src/window.py:253
 msgid "Could not fetch streamer data. Please check your internet connection."
 msgstr ""
 "Konnte Streamer-Daten nicht abrufen. Bitte überprüfe deine "
 "Internetverbindung."
 
-#: src/window.py:276
+#: src/window.py:262
 msgid "Authentication Error"
 msgstr "Authentifizierungsfehler"
 
-#: src/window.py:278
+#: src/window.py:264
 msgid ""
 "API authentication failed (HTTP 401). Check your Twitch Client ID and Client "
 "Secret in config.py."
@@ -704,104 +704,104 @@ msgstr ""
 "API-Authentifizierung fehlgeschlagen (HTTP 401). Überprüfe deine Twitch "
 "Client ID und Client Secret in config.py."
 
-#: src/window.py:285
+#: src/window.py:271
 msgid "API Rate Limit"
 msgstr "API-Ratenlimit"
 
-#: src/window.py:287
+#: src/window.py:273
 msgid ""
 "API rate limit reached. Please wait a few minutes before refreshing again."
 msgstr ""
 "API-Ratenlimit erreicht. Bitte warte ein paar Minuten, bevor du erneut "
 "aktualisierst."
 
-#: src/window.py:294 src/window.py:302
+#: src/window.py:280 src/window.py:288
 msgid "API Error"
 msgstr "API-Fehler"
 
-#: src/window.py:295
+#: src/window.py:281
 #, python-brace-format
 msgid "HTTP error {} occurred while fetching streamer data."
 msgstr "HTTP-Fehler {} beim Abrufen der Streamer-Daten."
 
-#: src/window.py:303
+#: src/window.py:289
 #, python-brace-format
 msgid "Failed to fetch streamer data: {}"
 msgstr "Konnte Streamer-Daten nicht abrufen: {}"
 
-#: src/window.py:324
+#: src/window.py:310
 msgid "API not available"
 msgstr "API nicht verfügbar"
 
-#: src/window.py:353
+#: src/window.py:339
 msgid "Stream data refreshed"
 msgstr "Stream-Daten aktualisiert"
 
-#: src/window.py:523
+#: src/window.py:477
 #, python-brace-format
 msgid "Added {}"
 msgstr "{} hinzugefügt"
 
-#: src/window.py:525
+#: src/window.py:479
 #, python-brace-format
 msgid "Added {} streamers"
 msgstr "{} Streamer hinzugefügt"
 
-#: src/window.py:528
+#: src/window.py:482
 #, python-brace-format
 msgid "'{}' is invalid"
 msgstr "'{}' ist ungültig"
 
-#: src/window.py:530
+#: src/window.py:484
 #, python-brace-format
 msgid "{} invalid names"
 msgstr "{} ungültige Namen"
 
-#: src/window.py:533
+#: src/window.py:487
 #, python-brace-format
 msgid "Already following {}"
 msgstr "Folgst {} bereits"
 
-#: src/window.py:535
+#: src/window.py:489
 msgid "Already following"
 msgstr "Bereits gefolgt"
 
-#: src/window.py:549
+#: src/window.py:503
 #, python-brace-format
 msgid "Error: {}"
 msgstr "Fehler: {}"
 
-#: src/window.py:558
+#: src/window.py:512
 msgid "Error Saving Config"
 msgstr "Fehler beim Speichern der Konfiguration"
 
-#: src/window.py:558
+#: src/window.py:512
 msgid "Could not save configuration"
 msgstr "Konnte Konfiguration nicht speichern"
 
 #. Application section
-#: src/window.py:581
+#: src/window.py:535
 msgid "Application"
 msgstr "Anwendung"
 
-#: src/window.py:582 src/preferences.ui:7
+#: src/window.py:536 src/preferences.ui:7
 msgid "Preferences"
 msgstr "Einstellungen"
 
-#: src/window.py:583
+#: src/window.py:537
 msgid "Show Shortcuts"
 msgstr "Tastenkürzel anzeigen"
 
-#: src/window.py:584
+#: src/window.py:538
 msgid "Quit"
 msgstr "Beenden"
 
 #. Stream Management section
-#: src/window.py:588
+#: src/window.py:542
 msgid "Stream Management"
 msgstr "Stream-Verwaltung"
 
-#: src/window.py:592 src/window.py:597 src/window.py:599
+#: src/window.py:546 src/window.py:551 src/window.py:553
 msgid "Refresh Streams"
 msgstr "Streams aktualisieren"
 

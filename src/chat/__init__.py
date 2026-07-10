@@ -7,6 +7,6 @@ from .config import (
     IRC_PORT,
     TWITCH_EMOTE_CDN,
 )
-from .emotes import ThirdPartyEmotes
+from .irc_client import ConnectionState, TwitchChat
 from .page import ChatPage
-from .twitch_chat import ConnectionState, TwitchChat
+from .third_party_emotes import ThirdPartyEmotes
