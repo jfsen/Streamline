@@ -51,34 +51,40 @@ QUALITY_PRESETS = {
 }
 
 # ── Twitch API ──────────────────────────────────────────────
-# Credentials — set via environment variables (works everywhere:
-# source builds, Flatpak, development) or via a local config file.
-# Environment variables take precedence.
+# Credentials — provide them via environment variables, a local
+# config file, or by editing the defaults directly.
 #
-# Env vars:
-#   STREAMLINE_TWITCH_CLIENT_ID
-#   STREAMLINE_TWITCH_CLIENT_SECRET
+# Priority (first wins):
+#   1. Hardcoded values below
+#   2. STREAMLINE_TWITCH_CLIENT_ID / STREAMLINE_TWITCH_CLIENT_SECRET env vars
+#   3. credentials.py file (source builds — copy from credentials.example.py)
 #
-# Config file (source builds only):
-#   Copy credentials.example.py to credentials.py
-#   and fill in your keys.  This file is gitignored.
+# If nothing is set the API is simply skipped and cached data
+# is still shown.
 
-TWITCH_CLIENT_ID = os.environ.get("STREAMLINE_TWITCH_CLIENT_ID", "")
-TWITCH_CLIENT_SECRET = os.environ.get("STREAMLINE_TWITCH_CLIENT_SECRET", "")
+TWITCH_CLIENT_ID = ""
+TWITCH_CLIENT_SECRET = ""
 
+# 1. Environment variables (works for Flatpak, CI, Builder run config).
+if not TWITCH_CLIENT_ID:
+    TWITCH_CLIENT_ID = os.environ.get("STREAMLINE_TWITCH_CLIENT_ID", "")
+if not TWITCH_CLIENT_SECRET:
+    TWITCH_CLIENT_SECRET = os.environ.get("STREAMLINE_TWITCH_CLIENT_SECRET", "")
+
+# 2. Local config file (source builds).
 if not TWITCH_CLIENT_ID or not TWITCH_CLIENT_SECRET:
     try:
         from .credentials import (  # type: ignore[import-untyped]
-            TWITCH_CLIENT_ID as _cid,
+            TWITCH_CLIENT_ID as _fid,
         )
         from .credentials import (
-            TWITCH_CLIENT_SECRET as _csec,
+            TWITCH_CLIENT_SECRET as _fsec,
         )
 
         if not TWITCH_CLIENT_ID:
-            TWITCH_CLIENT_ID = _cid
+            TWITCH_CLIENT_ID = _fid
         if not TWITCH_CLIENT_SECRET:
-            TWITCH_CLIENT_SECRET = _csec
+            TWITCH_CLIENT_SECRET = _fsec
     except ImportError:
         pass
 

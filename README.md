@@ -110,17 +110,17 @@ sudo dnf install meson python3 python3-gobject gtk4 libadwaita \
 Get a **Client ID** and **Client Secret** from the
 [Twitch Developer Console](https://dev.twitch.tv/console/apps).
 
-You can provide them either as environment variables (recommended) or via a
-local config file:
+For source builds, create a local config file (it is gitignored):
 
 ```bash
-# Option A: environment variables
-export STREAMLINE_TWITCH_CLIENT_ID=your_client_id
-export STREAMLINE_TWITCH_CLIENT_SECRET=your_client_secret
-
-# Option B: local file (source builds only)
 cp src/credentials.example.py src/credentials.py
 $EDITOR src/credentials.py
+```
+
+You can also use environment variables instead:
+```bash
+export STREAMLINE_TWITCH_CLIENT_ID=your_client_id
+export STREAMLINE_TWITCH_CLIENT_SECRET=your_client_secret
 ```
 
 #### Build and install (system-wide)
