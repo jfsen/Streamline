@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-07-10 22:34+0200\n"
+"POT-Creation-Date: 2026-07-10 23:24+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -212,6 +212,50 @@ msgstr ""
 msgid "Seconds between automatic stream refreshes (180, 300, 600, or 900)"
 msgstr ""
 
+#: src/api.py:558
+msgid "Just now"
+msgstr ""
+
+#: src/api.py:560
+#, python-brace-format
+msgid "{}m ago"
+msgstr ""
+
+#: src/api.py:564
+#, python-brace-format
+msgid "{}h ago"
+msgstr ""
+
+#: src/api.py:568
+#, python-brace-format
+msgid "{}d ago"
+msgstr ""
+
+#: src/api.py:571
+#, python-brace-format
+msgid "{}w ago"
+msgstr ""
+
+#: src/api.py:581
+#, python-brace-format
+msgid "{}h"
+msgstr ""
+
+#: src/api.py:583
+#, python-brace-format
+msgid "{}m"
+msgstr ""
+
+#: src/api.py:587
+#, python-brace-format
+msgid "{}s"
+msgstr ""
+
+#: src/api.py:597
+#, python-brace-format
+msgid "{}h {}m"
+msgstr ""
+
 #: src/auto_refresh.py:123
 #, python-brace-format
 msgid "{} is now live"
@@ -245,7 +289,7 @@ msgid "Cancel"
 msgstr ""
 
 #. ── Unfollow ──
-#: src/dialogs.py:70 src/rows.py:211
+#: src/dialogs.py:70 src/streamer_list.py:211
 msgid "Unfollow"
 msgstr ""
 
@@ -272,6 +316,56 @@ msgstr ""
 #. Translators: Replace "translator-credits" with your name/username, and optionally an email or URL.
 #: src/main.py:105
 msgid "translator-credits"
+msgstr ""
+
+#. Show initial toast message
+#: src/player.py:59
+msgid "Connecting..."
+msgstr ""
+
+#: src/player.py:127
+msgid "Stream not available"
+msgstr ""
+
+#: src/player.py:132
+msgid "Waiting for ads to finish..."
+msgstr ""
+
+#: src/player.py:149
+msgid "Stream playback failed"
+msgstr ""
+
+#: src/player.py:162
+msgid "Error starting playback"
+msgstr ""
+
+#: src/player.py:216
+#, python-brace-format
+msgid ""
+"Could not find {path} on your system.\n"
+"Check the path in Preferences → Player → Custom player executable."
+msgstr ""
+
+#: src/player.py:221
+msgid ""
+"No custom player executable configured.\n"
+"Set the path to your player in Preferences → Player → Custom player "
+"executable."
+msgstr ""
+
+#: src/player.py:226
+#, python-brace-format
+msgid ""
+"Could not find {player} on your system.\n"
+"Please install it using your distribution's package manager:\n"
+"\n"
+"• Arch: sudo pacman -S {player}\n"
+"• Ubuntu/Debian: sudo apt install {player}\n"
+"• Fedora: sudo dnf install {player}"
+msgstr ""
+
+#: src/player.py:232
+msgid "Missing Player"
 msgstr ""
 
 #. ── Combo row models (labels only — values live in GSettings) ──
@@ -324,286 +418,66 @@ msgstr ""
 msgid "Error importing file: {}"
 msgstr ""
 
-#: src/rows.py:48
+#: src/streamer_list.py:48
 msgid "Online"
 msgstr ""
 
-#: src/rows.py:73
+#: src/streamer_list.py:73
 msgid "Offline"
 msgstr ""
 
-#: src/rows.py:124
+#: src/streamer_list.py:124
 #, python-brace-format
 msgid ""
 "{}\n"
 "{} viewers"
 msgstr ""
 
-#: src/rows.py:134
+#: src/streamer_list.py:134
 #, python-brace-format
 msgid ""
 "Title: {}\n"
 "Uptime: {}"
 msgstr ""
 
-#: src/rows.py:159 src/preferences.ui:227
+#: src/streamer_list.py:159 src/preferences.ui:227
 msgid "Chat"
 msgstr ""
 
-#: src/rows.py:169
+#: src/streamer_list.py:169
 msgid "Open in detached window"
 msgstr ""
 
 #. ── Show VODs ──
-#: src/rows.py:192
+#: src/streamer_list.py:192
 msgid "Show VODs"
 msgstr ""
 
-#: src/rows.py:268 src/rows.py:305 src/rows.py:518 src/rows.py:636
+#: src/streamer_list.py:268 src/streamer_list.py:305 src/streamer_list.py:518
+#: src/streamer_list.py:636
 msgid "Play stream"
 msgstr ""
 
-#: src/rows.py:322 src/rows.py:649
+#: src/streamer_list.py:322 src/streamer_list.py:649
 msgid "Open in browser"
 msgstr ""
 
-#: src/rows.py:333 src/rows.py:661
+#: src/streamer_list.py:333 src/streamer_list.py:661
 msgid "More"
 msgstr ""
 
-#: src/rows.py:497
+#: src/streamer_list.py:497
 msgid "No category"
 msgstr ""
 
-#: src/rows.py:565 src/rows.py:588
+#: src/streamer_list.py:565 src/streamer_list.py:588
 #, python-brace-format
 msgid "{} — {} viewers"
 msgstr ""
 
 #. Stream title (full width, below the avatar block)
-#: src/rows.py:598
+#: src/streamer_list.py:598
 msgid "No title"
-msgstr ""
-
-#. Show initial toast message
-#: src/stream_player.py:59
-msgid "Connecting..."
-msgstr ""
-
-#: src/stream_player.py:127
-msgid "Stream not available"
-msgstr ""
-
-#: src/stream_player.py:132
-msgid "Waiting for ads to finish..."
-msgstr ""
-
-#: src/stream_player.py:149
-msgid "Stream playback failed"
-msgstr ""
-
-#: src/stream_player.py:162
-msgid "Error starting playback"
-msgstr ""
-
-#: src/stream_player.py:216
-#, python-brace-format
-msgid ""
-"Could not find {path} on your system.\n"
-"Check the path in Preferences → Player → Custom player executable."
-msgstr ""
-
-#: src/stream_player.py:221
-msgid ""
-"No custom player executable configured.\n"
-"Set the path to your player in Preferences → Player → Custom player "
-"executable."
-msgstr ""
-
-#: src/stream_player.py:226
-#, python-brace-format
-msgid ""
-"Could not find {player} on your system.\n"
-"Please install it using your distribution's package manager:\n"
-"\n"
-"• Arch: sudo pacman -S {player}\n"
-"• Ubuntu/Debian: sudo apt install {player}\n"
-"• Fedora: sudo dnf install {player}"
-msgstr ""
-
-#: src/stream_player.py:232
-msgid "Missing Player"
-msgstr ""
-
-#: src/twitch.py:558
-msgid "Just now"
-msgstr ""
-
-#: src/twitch.py:560
-#, python-brace-format
-msgid "{}m ago"
-msgstr ""
-
-#: src/twitch.py:564
-#, python-brace-format
-msgid "{}h ago"
-msgstr ""
-
-#: src/twitch.py:568
-#, python-brace-format
-msgid "{}d ago"
-msgstr ""
-
-#: src/twitch.py:571
-#, python-brace-format
-msgid "{}w ago"
-msgstr ""
-
-#: src/twitch.py:581
-#, python-brace-format
-msgid "{}h"
-msgstr ""
-
-#: src/twitch.py:583
-#, python-brace-format
-msgid "{}m"
-msgstr ""
-
-#: src/twitch.py:587
-#, python-brace-format
-msgid "{}s"
-msgstr ""
-
-#: src/twitch.py:597
-#, python-brace-format
-msgid "{}h {}m"
-msgstr ""
-
-#: src/chat/chat_window.py:55 src/chat/page.py:77
-#, python-brace-format
-msgid "Chat: {}"
-msgstr ""
-
-#: src/chat/irc_client.py:361
-#, python-brace-format
-msgid "{target} was timed out (1 minute)"
-msgstr ""
-
-#: src/chat/irc_client.py:363
-#, python-brace-format
-msgid "{target} was timed out ({minutes} minutes)"
-msgstr ""
-
-#: src/chat/irc_client.py:367
-#, python-brace-format
-msgid "{target} was banned"
-msgstr ""
-
-#: src/chat/irc_client.py:406
-#, python-brace-format
-msgid "{name} subscribed with {tier}!"
-msgstr ""
-
-#: src/chat/irc_client.py:413
-#, python-brace-format
-msgid "{name} subscribed for {months} months"
-msgstr ""
-
-#: src/chat/irc_client.py:417
-#, python-brace-format
-msgid " ({streak} streak)"
-msgstr ""
-
-#: src/chat/irc_client.py:418
-#, python-brace-format
-msgid "{base} with {tier}!"
-msgstr ""
-
-#: src/chat/irc_client.py:427
-#, python-brace-format
-msgid "Anonymous gifted {tier} to {recipient}!"
-msgstr ""
-
-#: src/chat/irc_client.py:434
-#, python-brace-format
-msgid "{gifter} gifted {tier} to {recipient}!"
-msgstr ""
-
-#: src/chat/irc_client.py:469
-#, python-brace-format
-msgid "{name} is raiding with {count} viewers!"
-msgstr ""
-
-#: src/chat/irc_client.py:481
-#, python-brace-format
-msgid "📢 {name}: {body}"
-msgstr ""
-
-#: src/chat/page.py:177
-msgid "More messages below"
-msgstr ""
-
-#: src/chat/page.py:217
-msgid "Reconnect"
-msgstr ""
-
-#: src/chat/page.py:241
-msgid "Room state"
-msgstr ""
-
-#: src/chat/page.py:250
-msgid "Detach chat"
-msgstr ""
-
-#: src/chat/page.py:873
-msgid "Emote-only"
-msgstr ""
-
-#: src/chat/page.py:874
-msgid "Followers-only"
-msgstr ""
-
-#: src/chat/page.py:875
-msgid "Slow mode"
-msgstr ""
-
-#: src/chat/page.py:876
-msgid "Subscribers-only"
-msgstr ""
-
-#: src/chat/page.py:877
-msgid "Unique chat"
-msgstr ""
-
-#: src/chat/page.py:903
-#, python-brace-format
-msgid "{n} min"
-msgstr ""
-
-#: src/chat/page.py:905 src/chat/page.py:913
-msgid "On"
-msgstr ""
-
-#: src/chat/page.py:907 src/chat/page.py:910 src/chat/page.py:913
-msgid "Off"
-msgstr ""
-
-#: src/chat/page.py:910
-#, python-brace-format
-msgid "{n} s"
-msgstr ""
-
-#: src/chat/page.py:963
-msgid "Connecting to chat…"
-msgstr ""
-
-#: src/chat/page.py:979
-#, python-brace-format
-msgid "Reconnecting… (attempt {})"
-msgstr ""
-
-#: src/chat/page.py:989
-msgid "Disconnected."
 msgstr ""
 
 #: src/vod_page.py:50
@@ -1010,6 +884,133 @@ msgstr ""
 
 #: src/preferences.ui:325
 msgid "Red tint for messages from the broadcaster"
+msgstr ""
+
+#: src/chat/chat_window.py:55 src/chat/page.py:70
+#, python-brace-format
+msgid "Chat: {}"
+msgstr ""
+
+#: src/chat/irc_client.py:361
+#, python-brace-format
+msgid "{target} was timed out (1 minute)"
+msgstr ""
+
+#: src/chat/irc_client.py:363
+#, python-brace-format
+msgid "{target} was timed out ({minutes} minutes)"
+msgstr ""
+
+#: src/chat/irc_client.py:367
+#, python-brace-format
+msgid "{target} was banned"
+msgstr ""
+
+#: src/chat/irc_client.py:406
+#, python-brace-format
+msgid "{name} subscribed with {tier}!"
+msgstr ""
+
+#: src/chat/irc_client.py:413
+#, python-brace-format
+msgid "{name} subscribed for {months} months"
+msgstr ""
+
+#: src/chat/irc_client.py:417
+#, python-brace-format
+msgid " ({streak} streak)"
+msgstr ""
+
+#: src/chat/irc_client.py:418
+#, python-brace-format
+msgid "{base} with {tier}!"
+msgstr ""
+
+#: src/chat/irc_client.py:427
+#, python-brace-format
+msgid "Anonymous gifted {tier} to {recipient}!"
+msgstr ""
+
+#: src/chat/irc_client.py:434
+#, python-brace-format
+msgid "{gifter} gifted {tier} to {recipient}!"
+msgstr ""
+
+#: src/chat/irc_client.py:469
+#, python-brace-format
+msgid "{name} is raiding with {count} viewers!"
+msgstr ""
+
+#: src/chat/irc_client.py:481
+#, python-brace-format
+msgid "📢 {name}: {body}"
+msgstr ""
+
+#: src/chat/page.py:170
+msgid "More messages below"
+msgstr ""
+
+#: src/chat/page.py:210
+msgid "Reconnect"
+msgstr ""
+
+#: src/chat/page.py:234
+msgid "Room state"
+msgstr ""
+
+#: src/chat/page.py:243
+msgid "Detach chat"
+msgstr ""
+
+#: src/chat/page.py:866
+msgid "Emote-only"
+msgstr ""
+
+#: src/chat/page.py:867
+msgid "Followers-only"
+msgstr ""
+
+#: src/chat/page.py:868
+msgid "Slow mode"
+msgstr ""
+
+#: src/chat/page.py:869
+msgid "Subscribers-only"
+msgstr ""
+
+#: src/chat/page.py:870
+msgid "Unique chat"
+msgstr ""
+
+#: src/chat/page.py:896
+#, python-brace-format
+msgid "{n} min"
+msgstr ""
+
+#: src/chat/page.py:898 src/chat/page.py:906
+msgid "On"
+msgstr ""
+
+#: src/chat/page.py:900 src/chat/page.py:903 src/chat/page.py:906
+msgid "Off"
+msgstr ""
+
+#: src/chat/page.py:903
+#, python-brace-format
+msgid "{n} s"
+msgstr ""
+
+#: src/chat/page.py:956
+msgid "Connecting to chat…"
+msgstr ""
+
+#: src/chat/page.py:972
+#, python-brace-format
+msgid "Reconnecting… (attempt {})"
+msgstr ""
+
+#: src/chat/page.py:982
+msgid "Disconnected."
 msgstr ""
 
 #: src/vod_page.ui:6

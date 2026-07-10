@@ -119,8 +119,8 @@ export STREAMLINE_TWITCH_CLIENT_ID=your_client_id
 export STREAMLINE_TWITCH_CLIENT_SECRET=your_client_secret
 
 # Option B: local file (source builds only)
-cp src/config_credentials.example.py src/config_credentials.py
-$EDITOR src/config_credentials.py
+cp src/credentials.example.py src/credentials.py
+$EDITOR src/credentials.py
 ```
 
 #### Build and install (system-wide)

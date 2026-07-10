@@ -34,6 +34,7 @@ gi.require_version("Gtk", "4.0")
 
 from gi.repository import Adw, Gio, GLib, Gtk
 
+from .api import TwitchAPI
 from .auto_refresh import AutoRefresher
 from .config import (
     DEFAULT_HEIGHT,
@@ -44,11 +45,10 @@ from .config import (
     TWITCH_CLIENT_SECRET,
 )
 from .dialogs import StreamlineDialogs
+from .player import StreamPlayer
 from .preferences import StreamlinePreferences
-from .rows import StreamerRowManager
-from .stream_player import StreamPlayer
+from .streamer_list import StreamerRowManager
 from .theme import ThemeManager
-from .twitch import TwitchAPI
 from .vod_page import VODPage
 
 # ── Application identity ───────────────────────────────────

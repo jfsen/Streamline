@@ -7,10 +7,10 @@ recommended because they work everywhere (source builds, Flatpak, dev):
     export STREAMLINE_TWITCH_CLIENT_SECRET=your_client_secret
 
 If you prefer a file (source builds only), copy this file to
-config_credentials.py and fill in your keys.  It is gitignored:
+credentials.py and fill in your keys.  It is gitignored:
 
-    $ cp src/config_credentials.example.py src/config_credentials.py
-    $ $EDITOR src/config_credentials.py
+    $ cp src/credentials.example.py src/credentials.py
+    $ $EDITOR src/credentials.py
 """
 
 # ── Twitch API ──────────────────────────────────────────────

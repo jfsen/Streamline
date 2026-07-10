@@ -36,12 +36,12 @@ import gi
 gi.require_version("Gtk", "4.0")
 from gi.repository import Gio, GLib
 
+from .api import TwitchAPI
 from .config import (
     QUALITY_PRESETS,
     TWITCH_CLIENT_ID,
     TWITCH_CLIENT_SECRET,
 )
-from .twitch import TwitchAPI
 
 # Cache directory (shared with TwitchAPI._CACHE_DIR).
 _CACHE_DIR = Path(GLib.get_user_cache_dir()) / "Streamline"
@@ -278,8 +278,8 @@ class CliHandler:
         else:
             return self._err(
                 "Twitch API credentials not configured.\n"
-                "Copy src/config_credentials.example.py to "
-                "src/config_credentials.py and fill in your keys."
+                "Copy src/credentials.example.py to "
+                "src/credentials.py and fill in your keys."
             )
 
         # Read current streamers from GSettings
@@ -365,8 +365,8 @@ class CliHandler:
         if not api:
             return self._err(
                 "Twitch API credentials not configured.\n"
-                "Copy src/config_credentials.example.py to "
-                "src/config_credentials.py and fill in your keys."
+                "Copy src/credentials.example.py to "
+                "src/credentials.py and fill in your keys."
             )
 
         try:

@@ -60,7 +60,7 @@ QUALITY_PRESETS = {
 #   STREAMLINE_TWITCH_CLIENT_SECRET
 #
 # Config file (source builds only):
-#   Copy config_credentials.example.py to config_credentials.py
+#   Copy credentials.example.py to credentials.py
 #   and fill in your keys.  This file is gitignored.
 
 TWITCH_CLIENT_ID = os.environ.get("STREAMLINE_TWITCH_CLIENT_ID", "")
@@ -68,8 +68,10 @@ TWITCH_CLIENT_SECRET = os.environ.get("STREAMLINE_TWITCH_CLIENT_SECRET", "")
 
 if not TWITCH_CLIENT_ID or not TWITCH_CLIENT_SECRET:
     try:
-        from .config_credentials import (  # type: ignore[import-untyped]
+        from .credentials import (  # type: ignore[import-untyped]
             TWITCH_CLIENT_ID as _cid,
+        )
+        from .credentials import (
             TWITCH_CLIENT_SECRET as _csec,
         )
 

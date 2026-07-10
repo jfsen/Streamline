@@ -30,24 +30,24 @@ configure_file(
 
 streamline_sources = [
     '__init__.py',
-    'main.py',
+    'api.py',
     'auto_refresh.py',
     'cli.py',
-    'window.py',
-    'preferences.py',
-    'theme.py',
-    'twitch.py',
-    'stream_player.py',
-    'vod_page.py',
-    'dialogs.py',
     'config.py',
-    'rows.py',
+    'dialogs.py',
+    'main.py',
+    'player.py',
+    'preferences.py',
+    'streamer_list.py',
+    'theme.py',
+    'vod_page.py',
+    'window.py',
 ]
 
 # Include local credential overrides when present (gitignored).
 fs = import('fs')
-if fs.is_file('config_credentials.py')
-    streamline_sources += ['config_credentials.py']
+if fs.is_file('credentials.py')
+    streamline_sources += ['credentials.py']
 endif
 
 install_data(streamline_sources, install_dir: moduledir)
