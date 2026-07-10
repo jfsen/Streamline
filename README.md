@@ -39,21 +39,32 @@ Streamline is a GTK4/libadwaita application that lets you follow your favorite T
 
 ### Flatpak (recommended)
 
-A `.flatpakref` file is attached to each [GitHub release](https://github.com/jfsen/Streamline/releases).
-Download the file and install it:
+Download the `.flatpak` from the [latest release](https://github.com/jfsen/Streamline/releases)
+and install it:
 
 ```bash
-flatpak install ./org.jfsen.Streamline.flatpakref
+flatpak install ./org.jfsen.Streamline.flatpak
 ```
 
-To build from source instead, use the Flatpak manifest included in the repository:
+The Flatpak bundles all dependencies including Streamlink — only a media
+player (mpv, VLC, or similar) is needed on the host system.
+
+#### Building the Flatpak from source
+
+If you prefer to build the Flatpak yourself, clone the repository, use the
+included manifest, and provide your own Twitch API credentials.  Get a
+**Client ID** and **Client Secret** from the
+[Twitch Developer Console](https://dev.twitch.tv/console/apps):
 
 ```bash
+git clone https://github.com/jfsen/Streamline.git
+cd Streamline
 flatpak-builder --user --install --force-clean build-dir org.jfsen.Streamline.json
+flatpak override --user \
+  --env=STREAMLINE_TWITCH_CLIENT_ID=your_client_id \
+  --env=STREAMLINE_TWITCH_CLIENT_SECRET=your_client_secret \
+  org.jfsen.Streamline
 ```
-
-The Flatpak bundles all Python dependencies including Streamlink — only a
-media player (mpv, VLC, or similar) is needed on the host system.
 
 ### Build from source
 
@@ -67,7 +78,6 @@ media player (mpv, VLC, or similar) is needed on the host system.
 - GTK 4 and libadwaita
 - PyGObject (`python-gobject` / `python3-gi`)
 - `python-requests` and `python-pillow`
-- Twitch API credentials (Client ID and Secret)
 
 ##### Build
 
@@ -95,23 +105,29 @@ sudo dnf install meson python3 python3-gobject gtk4 libadwaita \
   python3-requests python3-pillow streamlink mpv desktop-file-utils appstream-glib
 ```
 
+#### Credentials
+
+Get a **Client ID** and **Client Secret** from the
+[Twitch Developer Console](https://dev.twitch.tv/console/apps).
+
+You can provide them either as environment variables (recommended) or via a
+local config file:
+
+```bash
+# Option A: environment variables
+export STREAMLINE_TWITCH_CLIENT_ID=your_client_id
+export STREAMLINE_TWITCH_CLIENT_SECRET=your_client_secret
+
+# Option B: local file (source builds only)
+cp src/config_credentials.example.py src/config_credentials.py
+$EDITOR src/config_credentials.py
+```
+
 #### Build and install (system-wide)
 
 ```bash
 git clone https://github.com/jfsen/Streamline.git
 cd Streamline
-```
-
-To use the Twitch API , create a local credentials file from the template and fill in your Client ID and Secret from the [Twitch Developer Console](https://dev.twitch.tv/console):
-
-```bash
-cp src/config_credentials.example.py src/config_credentials.py
-$EDITOR src/config_credentials.py
-```
-
-Build and install:
-
-```bash
 meson setup builddir --prefix=/usr
 meson compile -C builddir
 sudo meson install -C builddir

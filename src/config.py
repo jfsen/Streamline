@@ -19,6 +19,8 @@
 
 """Centralised tunables for the Streamline application."""
 
+import os
+
 # ── Window ──────────────────────────────────────────────────
 # Default geometry of the main window.
 
@@ -49,20 +51,34 @@ QUALITY_PRESETS = {
 }
 
 # ── Twitch API ──────────────────────────────────────────────
-# HTTP request timeouts in seconds.
+# Credentials — set via environment variables (works everywhere:
+# source builds, Flatpak, development) or via a local config file.
+# Environment variables take precedence.
+#
+# Env vars:
+#   STREAMLINE_TWITCH_CLIENT_ID
+#   STREAMLINE_TWITCH_CLIENT_SECRET
+#
+# Config file (source builds only):
+#   Copy config_credentials.example.py to config_credentials.py
+#   and fill in your keys.  This file is gitignored.
 
-TWITCH_CLIENT_ID = ""
-TWITCH_CLIENT_SECRET = ""
+TWITCH_CLIENT_ID = os.environ.get("STREAMLINE_TWITCH_CLIENT_ID", "")
+TWITCH_CLIENT_SECRET = os.environ.get("STREAMLINE_TWITCH_CLIENT_SECRET", "")
 
-# Override with local credentials if available (not tracked by git).
-# Copy config_credentials.example.py to config_credentials.py and fill in your keys.
-try:
-    from .config_credentials import (  # type: ignore[import-untyped]
-        TWITCH_CLIENT_ID,
-        TWITCH_CLIENT_SECRET,
-    )
-except ImportError:
-    pass
+if not TWITCH_CLIENT_ID or not TWITCH_CLIENT_SECRET:
+    try:
+        from .config_credentials import (  # type: ignore[import-untyped]
+            TWITCH_CLIENT_ID as _cid,
+            TWITCH_CLIENT_SECRET as _csec,
+        )
+
+        if not TWITCH_CLIENT_ID:
+            TWITCH_CLIENT_ID = _cid
+        if not TWITCH_CLIENT_SECRET:
+            TWITCH_CLIENT_SECRET = _csec
+    except ImportError:
+        pass
 
 TWITCH_TOKEN_TIMEOUT = 10
 TWITCH_STREAMS_TIMEOUT = 30
