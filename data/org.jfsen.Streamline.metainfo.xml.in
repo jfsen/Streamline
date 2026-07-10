@@ -32,6 +32,16 @@
   </branding>
 
 	  <releases>
+	    <release version="4.1.2" date="2026-07-08">
+	      <description translate="no">
+	        <p>Streamline 4.1.2 — credentials overhaul.</p>
+	        <ul>
+	          <li
+                    >Unified credential flow: env vars as the universal method (works in Flatpak and source builds), config file as a fallback</li>
+	          <li>Clarified Flatpak installation instructions in README</li>
+	        </ul>
+	      </description>
+	    </release>
 	    <release version="4.1.1" date="2026-07-08">
 	      <description translate="no">
 	        <p>Streamline 4.1.1 — notification icon fix.</p>
