@@ -35,6 +35,7 @@ streamline_sources = [
     'cli.py',
     'window.py',
     'preferences.py',
+    'theme.py',
     'twitch.py',
     'stream_player.py',
     'vod_page.py',

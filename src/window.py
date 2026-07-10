@@ -40,7 +40,6 @@ from .config import (
     DEFAULT_WIDTH,
     MIN_HEIGHT,
     MIN_WIDTH,
-    THEME_KEYS,
     TWITCH_CLIENT_ID,
     TWITCH_CLIENT_SECRET,
 )
@@ -48,21 +47,13 @@ from .dialogs import StreamlineDialogs
 from .preferences import StreamlinePreferences
 from .rows import StreamerRowManager
 from .stream_player import StreamPlayer
+from .theme import ThemeManager
 from .twitch import TwitchAPI
 from .vod_page import VODPage
 
 # ── Application identity ───────────────────────────────────
 
 APP_ID = "org.jfsen.Streamline"
-RESOURCE_BASE = f"/{APP_ID.replace('.', '/')}"
-
-# Map custom theme keys (everything except system/light/dark) to
-# their bundled CSS resource paths.
-THEME_CSS = {
-    k: f"{RESOURCE_BASE}/css/{k}.css"
-    for k in THEME_KEYS
-    if k not in ("system", "light", "dark")
-}
 
 
 @Gtk.Template(resource_path="/org/jfsen/Streamline/window.ui")
@@ -86,14 +77,9 @@ class StreamlineWindow(Adw.ApplicationWindow):
         self._initialize_from_config()
 
         # Store CSS provider for theme overrides
-        self._theme_css_provider = None
-
-        # Get and store style manager reference
-        self.style_manager = Adw.StyleManager.get_default()
-
-        # Apply the current theme and react to theme changes from bindings
-        self._apply_theme()
-        self.settings.connect("changed::theme", lambda s, k: self._apply_theme())
+        self.theme_manager = ThemeManager(self, self.settings)
+        self.theme_manager.apply()
+        self.settings.connect("changed::theme", lambda s, k: self.theme_manager.apply())
 
         # React to live preference changes that affect row rendering
         self.settings.connect(
@@ -401,41 +387,6 @@ class StreamlineWindow(Adw.ApplicationWindow):
         """Open the Twitch stream page in default browser."""
         url = f"https://twitch.tv/{streamer}"
         Gtk.show_uri(parent=self, uri=url, timestamp=0)
-
-    def _load_theme_css(self, resource_path):
-        """Load a custom CSS resource file as a theme provider.
-
-        Args:
-            resource_path: GResource path like
-                          '/org/jfsen/Streamline/css/bronze.css'
-        """
-        provider = Gtk.CssProvider()
-        provider.load_from_resource(resource_path)
-        Gtk.StyleContext.add_provider_for_display(
-            self.get_display(), provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
-        )
-        self._theme_css_provider = provider
-
-    def _apply_theme(self):
-        """Apply the current theme, including custom CSS themes if selected."""
-        theme = self.settings.get_string("theme")
-        logger.debug("Applying theme: %s", theme)
-        # Remove any previously applied custom theme CSS
-        if self._theme_css_provider is not None:
-            Gtk.StyleContext.remove_provider_for_display(
-                self.get_display(), self._theme_css_provider
-            )
-            self._theme_css_provider = None
-
-        if theme in THEME_CSS:
-            self.style_manager.set_color_scheme(Adw.ColorScheme.FORCE_DARK)
-            self._load_theme_css(THEME_CSS[theme])
-        elif theme == "light":
-            self.style_manager.set_color_scheme(Adw.ColorScheme.FORCE_LIGHT)
-        elif theme == "dark":
-            self.style_manager.set_color_scheme(Adw.ColorScheme.FORCE_DARK)
-        else:
-            self.style_manager.set_color_scheme(Adw.ColorScheme.DEFAULT)
 
     def _show_error_dialog(self, heading, message):
         """Show error dialog with the given heading and message."""
