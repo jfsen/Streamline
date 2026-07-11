@@ -106,47 +106,28 @@ class ChatWindow(Adw.Window):
         self.connect("close-request", self._on_close_request)
 
     def _build_overlay_content(self):
-        """Wrap the chat page with a draggable header and translucent styling."""
-        # ── Header (hidden until hover) ─────────────────────
-        close_btn = Gtk.Button.new_from_icon_name("window-close-symbolic")
-        close_btn.add_css_class("flat")
-        close_btn.connect("clicked", lambda b: self.close())
+        """Wrap the chat page with a flat, auto-hiding native headerbar."""
+        # ── Headerbar (initially hidden) ────────────────────
+        header = Adw.HeaderBar()
+        header.add_css_class("flat")
+        header.set_visible(False)
+        self._header = header
 
         title_label = Gtk.Label(
             label=_("Chat: {}").format(self._streamer),
             xalign=0,
-            tooltip_text=_(
-                "Super+Right-click → Always on Top to pin above other windows"
-            ),
+            tooltip_text=_("Right-click → Always on Top to pin above other windows"),
         )
-        title_label.set_hexpand(True)
+        header.set_title_widget(title_label)
 
+        # Drag gesture on the title for moving the undecorated window.
         drag = Gtk.GestureDrag.new()
         drag.connect("drag-begin", self._on_drag_begin)
         title_label.add_controller(drag)
 
-        header = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=4)
-        header.add_css_class("overlay-header")
-        header.set_halign(Gtk.Align.FILL)
-        header.set_valign(Gtk.Align.START)
-        header.set_margin_start(8)
-        header.set_margin_end(4)
-        header.set_margin_top(4)
-        header.append(title_label)
-        header.append(close_btn)
-
-        # Wrap header in a revealer for show-on-hover animation.
-        self._header_revealer = Gtk.Revealer()
-        self._header_revealer.set_transition_type(
-            Gtk.RevealerTransitionType.SLIDE_DOWN,
-        )
-        self._header_revealer.set_transition_duration(200)
-        self._header_revealer.set_child(header)
-        self._header_revealer.set_reveal_child(False)
-
         self._header_hide_timeout = None
 
-        # ── CSS for translucent background ───────────────────
+        # ── CSS: transparent window + rounded content box ────
         self._overlay_css_provider = Gtk.CssProvider()
         self.add_css_class("overlay-chat")
         self._overlay_style_manager = Adw.StyleManager.get_default()
@@ -162,33 +143,28 @@ class ChatWindow(Adw.Window):
         )
 
         # ── Assembly ─────────────────────────────────────────
-        overlay = Gtk.Overlay()
-        overlay.set_child(self._chat_page)
-        overlay.add_overlay(self._header_revealer)
-        overlay.set_measure_overlay(self._header_revealer, True)
+        content = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+        content.append(header)
+        content.append(self._chat_page)
 
-        # Show header on mouse motion, hide after 2 s of inactivity.
+        # Show header on mouse motion in the top ~60 px, hide after 2 s.
         motion = Gtk.EventControllerMotion.new()
         motion.connect("motion", self._on_overlay_motion)
-        overlay.add_controller(motion)
+        content.add_controller(motion)
 
-        return overlay
+        return content
 
     def _on_overlay_motion(self, controller, x, y):
-        # Show header only when the mouse is in the top ~60 px.
         if y < 60:
-            self._header_revealer.set_reveal_child(True)
-            if self._header_hide_timeout is not None:
-                GLib.source_remove(self._header_hide_timeout)
-            self._header_hide_timeout = GLib.timeout_add(3000, self._hide_header)
-        else:
-            self._header_revealer.set_reveal_child(False)
+            self._header.set_visible(True)
             if self._header_hide_timeout is not None:
                 GLib.source_remove(self._header_hide_timeout)
                 self._header_hide_timeout = None
+        elif self._header_hide_timeout is None:
+            self._header_hide_timeout = GLib.timeout_add(500, self._hide_header)
 
     def _hide_header(self):
-        self._header_revealer.set_reveal_child(False)
+        self._header.set_visible(False)
         self._header_hide_timeout = None
         return GLib.SOURCE_REMOVE
 
@@ -201,22 +177,9 @@ class ChatWindow(Adw.Window):
     def _apply_overlay_css(self):
         """Rebuild the overlay CSS for the current dark/light preference."""
         dark = self._overlay_style_manager.get_dark()
-        if dark:
-            bg, hdr, fg = (
-                "rgba(0,0,0,0.50)",
-                "rgba(0,0,0,0.70)",
-                "rgba(255,255,255,0.8)",
-            )
-        else:
-            bg, hdr, fg = (
-                "rgba(255,255,255,0.55)",
-                "rgba(255,255,255,0.70)",
-                "rgba(0,0,0,0.8)",
-            )
+        bg = "rgba(0,0,0,0.50)" if dark else "rgba(255,255,255,0.55)"
         self._overlay_css_provider.load_from_data(
-            f"window.overlay-chat {{ background: {bg}; }}"
-            f".overlay-header {{ background: {hdr}; border-radius: 12px; }}"
-            f".overlay-header label {{ color: {fg}; font-size: 13px; padding-left: 4px; }}"
+            f"window.overlay-chat {{ background: {bg}; border-radius: 0; }}"
             f"scrolledwindow scrollbar {{ opacity: 0; }}",
             -1,
         )
