@@ -32,6 +32,28 @@
   </branding>
 
 	  <releases>
+	    <release version="4.2.0" date="2026-07-11">
+	      <description translate="no">
+	        <p
+                >Streamline 4.2 — overlay chat, theme refactor, and code organization.</p>
+	        <ul>
+	          <li
+                    >Floating overlay chat window: borderless, semi-transparent popup with hover-to-reveal header, ideal for positioning alongside a video player</li>
+	          <li
+                    >Bold message text in overlay mode for improved readability at a glance</li>
+	          <li>Theme system extracted into a dedicated ThemeManager class</li>
+	          <li
+                    >Chat package reorganized: MessageCardBuilder and emote rendering split into separate modules, files renamed for clarity</li>
+	          <li
+                    >Twitch credentials now prefer environment variables over config file</li>
+	          <li
+                    >Improved error handling and debug logging for cache, emote, and player operations</li>
+	          <li>Added docstrings to public API classes and methods</li>
+	          <li>Fixed (un)follow not updating stream thumbnail visibility</li>
+	          <li>App icon now shown in multi-streamer notifications</li>
+	        </ul>
+	      </description>
+	    </release>
 	    <release version="4.1.2" date="2026-07-08">
 	      <description translate="no">
 	        <p>Streamline 4.1.2 — credentials overhaul.</p>
