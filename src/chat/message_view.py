@@ -141,8 +141,9 @@ class MessageCardBuilder:
             label.set_valign(Gtk.Align.FILL)
             label.set_margin_top(2)
             label.set_margin_bottom(2)
+            font_weight = ' font_weight="bold"' if self._page._overlay else ""
             label.set_markup(
-                f'<span foreground="{theme["text_color"]}" style="italic">'
+                f'<span foreground="{theme["text_color"]}" style="italic"{font_weight}>'
                 f"{GLib.markup_escape_text(msg['text'])}"
                 f"</span>"
             )
@@ -220,8 +221,9 @@ class MessageCardBuilder:
             body_label.set_valign(Gtk.Align.FILL)
             body_label.set_margin_top(2)
             body_label.set_margin_bottom(2)
+            font_weight = ' font_weight="bold"' if self._page._overlay else ""
             body_label.set_markup(
-                f'<span foreground="{theme["text_color"]}">'
+                f'<span foreground="{theme["text_color"]}"{font_weight}>'
                 f"{GLib.markup_escape_text(msg['text'])}"
                 f"</span>"
             )
@@ -276,7 +278,10 @@ class MessageCardBuilder:
         )
 
         buffer = text_view.get_buffer()
-        tag = buffer.create_tag("body", foreground=theme["text_color"])
+        tag_kwargs = {"foreground": theme["text_color"]}
+        if self._page._overlay:
+            tag_kwargs["weight"] = Pango.Weight.BOLD
+        tag = buffer.create_tag("body", **tag_kwargs)
 
         for seg in segments:
             if seg["type"] == "text":
@@ -371,15 +376,16 @@ class MessageCardBuilder:
         if isinstance(widget, Gtk.Label):
             body_text = getattr(widget, "_body_text", "")
             is_system = getattr(widget, "_is_system", False)
+            font_weight = ' font_weight="bold"' if self._page._overlay else ""
             if is_system:
                 widget.set_markup(
-                    f'<span foreground="{theme["text_color"]}" style="italic">'
+                    f'<span foreground="{theme["text_color"]}" style="italic"{font_weight}>'
                     f"{GLib.markup_escape_text(body_text)}"
                     f"</span>"
                 )
             else:
                 widget.set_markup(
-                    f'<span foreground="{theme["text_color"]}">'
+                    f'<span foreground="{theme["text_color"]}"{font_weight}>'
                     f"{GLib.markup_escape_text(body_text)}"
                     f"</span>"
                 )
@@ -387,6 +393,10 @@ class MessageCardBuilder:
         tag = widget.get_buffer().get_tag_table().lookup("body")
         if tag is not None:
             tag.set_property("foreground", theme["text_color"])
+            tag.set_property(
+                "weight",
+                Pango.Weight.BOLD if self._page._overlay else Pango.Weight.NORMAL,
+            )
 
     def apply_banner_style(self) -> None:
         ns = CHAT_STYLE

@@ -61,6 +61,7 @@ class ChatPage(Adw.NavigationPage):
         theme="system",
         twitch=None,
         enable_detach=False,
+        overlay=False,
         hide_toolbar=False,
         max_messages=MAX_MESSAGES,
         highlight_first_msg=True,
@@ -80,6 +81,7 @@ class ChatPage(Adw.NavigationPage):
         self._disable_emote_animations = disable_emote_animations
         self._highlight_first_msg = highlight_first_msg
         self._highlight_mod = highlight_mod
+        self._overlay = overlay
         self._highlight_vip = highlight_vip
         self._highlight_partner = highlight_partner
         self._highlight_broadcaster = highlight_broadcaster

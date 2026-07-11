@@ -89,6 +89,7 @@ class ChatWindow(Adw.Window):
             enable_detach=False,
             hide_toolbar=overlay,
             max_messages=150 if overlay else MAX_MESSAGES,
+            overlay=overlay,
             highlight_first_msg=highlight_first_msg,
             highlight_mod=highlight_mod,
             highlight_vip=highlight_vip,
@@ -216,8 +217,7 @@ class ChatWindow(Adw.Window):
             f"window.overlay-chat {{ background: {bg}; }}"
             f".overlay-header {{ background: {hdr}; border-radius: 12px; }}"
             f".overlay-header label {{ color: {fg}; font-size: 13px; padding-left: 4px; }}"
-            f"scrolledwindow scrollbar {{ opacity: 0; }}"
-            f"scrolledwindow * {{ font-weight: bold; }}",
+            f"scrolledwindow scrollbar {{ opacity: 0; }}",
             -1,
         )
 
