@@ -24,6 +24,7 @@ import logging
 import threading
 from pathlib import Path
 
+import requests
 from gi.repository import Gio, GLib
 
 _ = gettext.gettext
@@ -40,6 +41,7 @@ class AutoRefresher:
     def __init__(self, window):
         self._window = window
         self._timer_id = None
+        self._retry_pending = False
 
         settings = window.settings
         settings.connect("changed::auto-refresh", self._on_setting_changed)
@@ -100,9 +102,21 @@ class AutoRefresher:
         assert w.twitch is not None
         try:
             online, offline, info = w.twitch.get_streams(w.all_streamers)
+            self._retry_pending = False
             GLib.idle_add(self._on_complete, online, offline, info)
+        except requests.RequestException as e:
+            logger.warning("Auto-refresh failed (network): %s", e)
+            if not self._retry_pending:
+                self._retry_pending = True
+                GLib.timeout_add(15000, self._retry_refresh)
         except Exception as e:
             logger.warning("Auto-refresh failed: %s", e)
+
+    def _retry_refresh(self):
+        """One-shot retry after a network failure (e.g. resume from suspend)."""
+        logger.debug("Retrying auto-refresh after network error")
+        threading.Thread(target=self._background_refresh, daemon=True).start()
+        return GLib.SOURCE_REMOVE
 
     def _on_complete(self, online, offline, info):
         """Update UI silently and notify for newly-online streamers."""
