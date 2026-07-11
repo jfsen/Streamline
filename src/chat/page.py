@@ -61,6 +61,8 @@ class ChatPage(Adw.NavigationPage):
         theme="system",
         twitch=None,
         enable_detach=False,
+        hide_toolbar=False,
+        max_messages=MAX_MESSAGES,
         highlight_first_msg=True,
         highlight_mod=True,
         highlight_vip=True,
@@ -91,6 +93,7 @@ class ChatPage(Adw.NavigationPage):
         )
         self._batch_flush_id: int | None = None
         self._msg_batch: list[dict] = []
+        self._max_messages = max_messages
         self._item_count = 0
         self._next_is_alt = False  # alternating bg toggle
         self._anim_registry: dict[str, dict] = {}
@@ -225,30 +228,33 @@ class ChatPage(Adw.NavigationPage):
         content_box.append(overlay)
 
         # ── Toolbar ─────────────────────────────────────────
-        toolbar = Adw.ToolbarView()
-        header = Adw.HeaderBar()
-        header.set_show_back_button(True)
+        if hide_toolbar:
+            self.set_child(content_box)
+        else:
+            toolbar = Adw.ToolbarView()
+            header = Adw.HeaderBar()
+            header.set_show_back_button(True)
 
-        info_button = Gtk.Button(
-            icon_name="dialog-information-symbolic",
-            tooltip_text=_("Room state"),
-        )
-        info_button.add_css_class("flat")
-        info_button.connect("clicked", self._on_info_clicked)
-        header.pack_start(info_button)
-
-        if enable_detach:
-            detach_button = Gtk.Button(
-                icon_name="window-new-symbolic",
-                tooltip_text=_("Detach chat"),
+            info_button = Gtk.Button(
+                icon_name="dialog-information-symbolic",
+                tooltip_text=_("Room state"),
             )
-            detach_button.add_css_class("flat")
-            detach_button.connect("clicked", self._on_detach)
-            header.pack_end(detach_button)
+            info_button.add_css_class("flat")
+            info_button.connect("clicked", self._on_info_clicked)
+            header.pack_start(info_button)
 
-        toolbar.add_top_bar(header)
-        toolbar.set_content(content_box)
-        self.set_child(toolbar)
+            if enable_detach:
+                detach_button = Gtk.Button(
+                    icon_name="window-new-symbolic",
+                    tooltip_text=_("Detach chat"),
+                )
+                detach_button.add_css_class("flat")
+                detach_button.connect("clicked", self._on_detach)
+                header.pack_end(detach_button)
+
+            toolbar.add_top_bar(header)
+            toolbar.set_content(content_box)
+            self.set_child(toolbar)
 
         self.connect("hidden", self._on_hidden)
         self.connect("map", self._on_map)
@@ -362,7 +368,7 @@ class ChatPage(Adw.NavigationPage):
         was_auto = self._auto_scroll
 
         # ── Cull excess before adding ──────────────────────────
-        if self._item_count > MAX_MESSAGES:
+        if self._item_count > self._max_messages:
             adj = self._scrolled.get_vadjustment()
             if not was_auto:
                 pre_value = adj.get_value()
@@ -371,7 +377,7 @@ class ChatPage(Adw.NavigationPage):
             self._cull_in_progress = True
             try:
                 culled_total_height = 0
-                while self._item_count > MAX_MESSAGES:
+                while self._item_count > self._max_messages:
                     culled = 0
                     while culled < CULL_CHUNK:
                         first = self._msg_box.get_first_child()

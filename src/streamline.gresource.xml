@@ -8,5 +8,8 @@
     <file>css/anthracite.css</file>
     <file>css/justin.css</file>
     <file>css/oxide.css</file>
+    <file
+            preprocess="xml-stripblanks"
+        >icons/big-rectangle-in-focus-symbolic.svg</file>
   </gresource>
 </gresources>

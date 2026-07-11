@@ -184,6 +184,20 @@ class StreamerRowManager:
         )
         chat_box.append(detach_btn)
 
+        overlay_btn = Gtk.Button.new_from_icon_name("big-rectangle-in-focus-symbolic")
+        overlay_btn.add_css_class("flat")
+        overlay_btn.add_css_class("detach-button")
+        overlay_btn.set_valign(Gtk.Align.CENTER)
+        overlay_btn.set_tooltip_text(_("Open as floating overlay"))
+        overlay_btn.connect(
+            "clicked",
+            lambda btn: (
+                popover.popdown(),
+                self.window.show_chat_overlay(streamer),
+            ),
+        )
+        chat_box.append(overlay_btn)
+
         chat_row.set_child(chat_box)
         chat_click = Gtk.GestureClick.new()
         chat_click.connect(
@@ -242,6 +256,7 @@ class StreamerRowManager:
                 chat_open = streamer in self.window._active_chats
                 chat_label.set_sensitive(not chat_open)
                 detach_btn.set_sensitive(not chat_open)
+                overlay_btn.set_sensitive(not chat_open)
 
         popover.connect("notify::visible", lambda p, *_: _sync_chat_row(p))
 

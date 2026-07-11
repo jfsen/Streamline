@@ -39,7 +39,7 @@ logging.getLogger("PIL").setLevel(logging.WARNING)
 gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
 
-from gi.repository import Adw, Gio, Gtk
+from gi.repository import Adw, Gdk, Gio, Gtk
 
 from .cli import CliHandler
 from .window import StreamlineWindow
@@ -61,6 +61,11 @@ class StreamlineApplication(Adw.Application):
         Adw.Application.do_startup(self)
         Adw.init()
         logger.info("Streamline %s starting", self._version)
+
+        # Register custom icons from the GResource.
+        Gtk.IconTheme.get_for_display(Gdk.Display.get_default()).add_resource_path(
+            "/org/jfsen/Streamline/icons"
+        )
 
         # Add actions with accelerators
         self.create_action("quit", lambda *_: self.quit(), ["<primary>q"])

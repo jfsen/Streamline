@@ -692,3 +692,39 @@ class StreamlineWindow(Adw.ApplicationWindow):
         )
         self._active_chats[streamer] = popup
         popup.present()
+
+    def show_chat_overlay(self, streamer):
+        """Open chat in a floating, semi-transparent overlay window."""
+        existing = self._active_chats.get(streamer)
+        if existing is not None:
+            existing.present()
+            return
+
+        logger.info("Opening chat overlay for %s", streamer)
+        from .chat.chat_window import ChatWindow
+
+        display_name = streamer
+        if self.twitch is not None:
+            user_data = self.twitch.user_cache.get(streamer, {})
+            display_name = user_data.get("name", streamer)
+
+        overlay = ChatWindow(
+            twitch=self.twitch,
+            streamer=streamer,
+            display_name=display_name,
+            alternating_bg=self.chat_alternating_bg,
+            disable_emote_animations=self.chat_disable_emote_animations,
+            theme=self.theme,
+            highlight_first_msg=self.chat_highlight_first_msg,
+            highlight_mod=self.chat_highlight_mod,
+            highlight_vip=self.chat_highlight_vip,
+            highlight_partner=self.chat_highlight_partner,
+            highlight_broadcaster=self.chat_highlight_broadcaster,
+            overlay=True,
+        )
+        overlay.connect(
+            "close-request",
+            lambda w, s=streamer: (self._active_chats.pop(s, None), False)[-1],
+        )
+        self._active_chats[streamer] = overlay
+        overlay.present()
