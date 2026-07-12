@@ -118,6 +118,7 @@ class ChatWindow(Adw.Window):
             xalign=0,
             tooltip_text=_("Right-click → Always on Top to pin above other windows"),
         )
+        title_label.add_css_class("title")
         header.set_title_widget(title_label)
 
         # Drag gesture on the title for moving the undecorated window.
