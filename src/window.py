@@ -715,6 +715,7 @@ class StreamlineWindow(Adw.ApplicationWindow):
             alternating_bg=self.chat_alternating_bg,
             disable_emote_animations=self.chat_disable_emote_animations,
             theme=self.theme,
+            transient_for=self,
             highlight_first_msg=self.chat_highlight_first_msg,
             highlight_mod=self.chat_highlight_mod,
             highlight_vip=self.chat_highlight_vip,
