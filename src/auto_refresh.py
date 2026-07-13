@@ -20,12 +20,14 @@
 """Periodic background refresh with desktop notifications."""
 
 import gettext
+import io
 import logging
 import threading
 from pathlib import Path
 
 import requests
 from gi.repository import Gio, GLib
+from PIL import Image, ImageDraw
 
 _ = gettext.gettext
 logger = logging.getLogger(__name__)
@@ -129,6 +131,26 @@ class AutoRefresher:
 
     # ── Notifications ─────────────────────────────────────────
 
+    @staticmethod
+    def _circular_avatar_bytes(path):
+        """Load a JPEG avatar, apply a circular alpha mask, and return
+        the result as PNG bytes.  Twitch avatars are always square."""
+        img = Image.open(path).convert("RGBA")
+        size = img.width
+
+        # Circular mask
+        mask = Image.new("L", (size, size), 0)
+        draw = ImageDraw.Draw(mask)
+        draw.ellipse((0, 0, size, size), fill=255)
+
+        # Composite onto transparent canvas through mask
+        result = Image.new("RGBA", (size, size), (0, 0, 0, 0))
+        result.paste(img, (0, 0), mask)
+
+        buf = io.BytesIO()
+        result.save(buf, "PNG")
+        return buf.getvalue()
+
     def _notify(self, streamers, info):
         """Send a desktop notification for newly-online streamers."""
         if len(streamers) == 1:
@@ -153,7 +175,8 @@ class AutoRefresher:
 
         # Include the streamer's avatar as the notification icon.
         # Use BytesIcon (raw bytes) so the XDG desktop portal can
-        # render it even inside Flatpak.
+        # render it even inside Flatpak.  The image is clipped to a
+        # circle in memory — the cached JPEG on disk is never touched.
         if len(streamers) == 1:
             avatar_path = (
                 Path(GLib.get_user_cache_dir())
@@ -163,7 +186,8 @@ class AutoRefresher:
             )
             if avatar_path.exists():
                 try:
-                    icon = Gio.BytesIcon.new(GLib.Bytes.new(avatar_path.read_bytes()))
+                    png_bytes = self._circular_avatar_bytes(avatar_path)
+                    icon = Gio.BytesIcon.new(GLib.Bytes.new(png_bytes))
                     notification.set_icon(icon)
                 except OSError:
                     pass  # race: file deleted between exists() and read
