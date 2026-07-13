@@ -132,14 +132,20 @@ class AutoRefresher:
     def _notify(self, streamers, info):
         """Send a desktop notification for newly-online streamers."""
         if len(streamers) == 1:
-            name = streamers[0]
-            game = info.get(name, {}).get("game", "")
-            title = _("{} is now live").format(name)
+            login = streamers[0]
+            display_name = (
+                self._window.twitch.user_cache.get(login, {}).get("name", login)
+            )
+            game = info.get(login, {}).get("game", "")
+            title = _("{} is now live").format(display_name)
             body = _("Playing {}").format(game) if game else ""
         else:
-            names = ", ".join(streamers)
+            names = []
+            for s in streamers:
+                dname = self._window.twitch.user_cache.get(s, {}).get("name", s)
+                names.append(dname)
             title = _("{} streamers are now live").format(len(streamers))
-            body = names
+            body = ", ".join(names)
 
         notification = Gio.Notification.new(title)
         if body:
