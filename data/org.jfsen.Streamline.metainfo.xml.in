@@ -32,6 +32,24 @@
   </branding>
 
 	  <releases>
+	    <release version="4.3.0" date="2026-07-15">
+	      <description translate="no">
+	        <p
+                >Streamline 4.3 — overlay polish and notification refinements.</p>
+	        <ul>
+	          <li
+                    >Overlay chat headerbar now uses a native Adw.HeaderBar with bold title text instead of a custom widget</li>
+	          <li
+                    >Overlay chat window properly respects its transient-for parent</li>
+	          <li
+                    >Auto-refresh now retries once after a network failure (e.g. resume from suspend)</li>
+	          <li
+                    >Notifications now use the streamer&apos;s display name instead of the login name</li>
+	          <li
+                    >Streamer avatars in notifications are now circular cropped to match the app&apos;s in-app style</li>
+	        </ul>
+	      </description>
+	    </release>
 	    <release version="4.2.0" date="2026-07-11">
 	      <description translate="no">
 	        <p
