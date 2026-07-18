@@ -425,19 +425,11 @@ class TwitchAPI:
                         "started_at": stream["started_at"],
                         "thumbnail_url": stream.get("thumbnail_url", ""),
                     }
-                    logger.debug(
-                        "Live: %s playing %s (%s viewers)",
-                        stream["user_name"],
-                        stream["game_name"],
-                        stream["viewer_count"],
-                    )
 
                 offline_streamers_batch = [
                     s for s in batch if s not in online_streamers
                 ]
                 offline_streamers.extend(offline_streamers_batch)
-                if offline_streamers_batch:
-                    logger.debug("Offline: %s", ", ".join(offline_streamers_batch))
 
                 # Save both caches after updating
                 self._save_user_cache()
