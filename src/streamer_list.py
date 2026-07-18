@@ -20,6 +20,7 @@
 """Streamer list management — row creation, avatar/thumbnail downloads, pill badges."""
 
 import gettext
+import logging
 import threading
 from html import unescape
 from pathlib import Path
@@ -29,6 +30,8 @@ import requests
 from gi.repository import Adw, Gdk, GLib, Gtk
 
 from .config import PILL_FADE_MS, PILL_SHOW_MS, ROW_HIGHLIGHT_MS
+
+logger = logging.getLogger(__name__)
 
 _ = gettext.gettext
 
@@ -42,12 +45,25 @@ class StreamerRowManager:
 
     _CSS_LOADED = False  # class-level flag — only load once ever
 
+    class _ThumbnailBatch:
+        """Tracks a set of concurrent thumbnail downloads so all can be
+        applied together with a crossfade once every download finishes."""
+        __slots__ = ("pending", "results")
+
+        def __init__(self):
+            self.pending = 0
+            # streamer -> (stack, path)
+            self.results = {}
+
     def __init__(self, window):
         self.window = window
         self.streamer_rows = {}
         self.online_list = window.online_list
         self.offline_list = window.offline_list
         self._previous_online = set()
+
+        # Thumbnail batching state
+        self._current_batch = None  # _ThumbnailBatch or None
 
         # Custom header with "Online" label and pill badge
         self._header_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
@@ -428,39 +444,73 @@ class StreamerRowManager:
         age = time() - thumb.stat().st_mtime
         return age > 300  # 5 minutes
 
-    def _download_stream_thumbnail(self, url, path, picture):
-        """Download a stream thumbnail to disk and update the picture widget."""
+    def _download_stream_thumbnail(self, url, path, row, batch):
+        """Download a stream thumbnail to disk.
+
+        On completion, schedules _on_thumbnail_downloaded on the main
+        thread.  The *batch* object tracks how many downloads are still
+        outstanding so all thumbnails can be crossfaded at once.
+        """
         try:
             sized_url = url.replace("{width}", "640").replace("{height}", "360")
             r = requests.get(sized_url, timeout=10)
             r.raise_for_status()
             path.write_bytes(r.content)
-            GLib.idle_add(self._apply_stream_thumbnail, picture, path)
+            GLib.idle_add(self._on_thumbnail_downloaded, row, path, batch)
         except Exception:
-            pass  # Thumbnails are best-effort; failures are silent
+            logger.warning("Failed to download thumbnail for %s", path.stem)
+            # Best-effort — still count as "done" so batch can proceed
+            GLib.idle_add(self._on_thumbnail_downloaded, row, None, batch)
 
-    def _apply_stream_thumbnail(self, picture, path):
-        """Replace a placeholder widget with the downloaded thumbnail."""
-        if path.exists():
-            texture = Gdk.Texture.new_from_filename(str(path))
-            if texture:
-                pic = Gtk.Picture.new_for_paintable(texture)
-                pic.set_hexpand(True)
-                pic.set_size_request(-1, 120)
-                pic.set_content_fit(Gtk.ContentFit.COVER)
-                pic.add_css_class("thumbnail")
-                parent = picture.get_parent()
-                if parent and isinstance(parent, Gtk.Box):
-                    prev = None
-                    child = parent.get_first_child()
-                    while child is not None:
-                        if child == picture:
-                            break
-                        prev = child
-                        child = child.get_next_sibling()
-                    parent.remove(picture)
-                    parent.insert_child_after(pic, prev)
+    def _on_thumbnail_downloaded(self, row, path, batch):
+        """Called on the main thread when one thumbnail download finishes.
+
+        When every download in the batch has reported back, all new
+        thumbnails are applied together with an animated crossfade.
+        """
+        if batch is not self._current_batch:
+            return GLib.SOURCE_REMOVE  # stale batch — ignore
+
+        if path is not None and path.exists():
+            stack = getattr(row, "_thumbnail_stack", None)
+            streamer = getattr(row, "_streamer_key", None)
+            if stack is not None and streamer is not None:
+                batch.results[streamer] = (stack, path)
+
+        batch.pending -= 1
+        if batch.pending <= 0:
+            self._apply_all_thumbnails(batch)
+            self._current_batch = None
+
         return GLib.SOURCE_REMOVE
+
+    def _apply_all_thumbnails(self, batch):
+        """Apply all downloaded thumbnails at once with a crossfade.
+
+        Each thumbnail is added to its card's ``Gtk.Stack`` as a new
+        page named ``"live"``.  Switching to that page triggers the
+        stack's ``CROSSFADE`` transition so the old placeholder (or
+        stale cached thumbnail) smoothly blends into the new image.
+        """
+        count = len(batch.results)
+        if count:
+            logger.debug("Applying %d new thumbnail(s)", count)
+        for stack, path in batch.results.values():
+            texture = Gdk.Texture.new_from_filename(str(path))
+            if texture is None:
+                continue
+            new_pic = Gtk.Picture.new_for_paintable(texture)
+            new_pic.set_hexpand(True)
+            new_pic.set_size_request(-1, 120)
+            new_pic.set_content_fit(Gtk.ContentFit.COVER)
+            new_pic.add_css_class("thumbnail")
+            # Remove any previous "live" page so the stack does not
+            # accumulate widgets across refresh cycles.
+            old_live = stack.get_child_by_name("live")
+            if old_live is not None:
+                stack.remove(old_live)
+            stack.add_named(new_pic, "live")
+            stack.set_visible_child_name("live")
 
     def _build_stream_card(self, streamer, info):
         """Build a card-style row for an online streamer with a live
@@ -472,12 +522,18 @@ class StreamerRowManager:
         # ── Thumbnail ───────────────────────────────────────
         thumb_url = info.get("thumbnail_url", "")
         thumb_path = self._stream_thumbnail_path(streamer) if thumb_url else None
-        if thumb_path and not self._thumbnail_is_stale(streamer):
-            picture = Gtk.Picture.new_for_filename(str(thumb_path))
-            picture.set_content_fit(Gtk.ContentFit.COVER)
+
+        # Build the "old" page for the stack:
+        #   1. Fresh cached thumbnail → show it (no download needed).
+        #   2. Stale cached thumbnail → show it while downloading a
+        #      new one so the crossfade blends old→new seamlessly.
+        #   3. No cached file at all  → show the placeholder icon.
+        if thumb_path and thumb_path.exists():
+            old_page = Gtk.Picture.new_for_filename(str(thumb_path))
+            old_page.set_content_fit(Gtk.ContentFit.COVER)
         else:
-            picture = Gtk.Box()
-            picture.add_css_class("thumbnail-placeholder")
+            old_page = Gtk.Box()
+            old_page.add_css_class("thumbnail-placeholder")
             icon = Gtk.Image.new_from_icon_name("camera-video-symbolic")
             icon.set_pixel_size(48)
             icon.set_opacity(0.25)
@@ -485,19 +541,37 @@ class StreamerRowManager:
             icon.set_valign(Gtk.Align.CENTER)
             icon.set_hexpand(True)
             icon.set_vexpand(True)
-            picture.append(icon)
-        picture.set_hexpand(True)
-        picture.set_size_request(-1, 120)
-        picture.add_css_class("thumbnail")
-        row.append(picture)
+            old_page.append(icon)
+        old_page.set_hexpand(True)
+        old_page.set_size_request(-1, 120)
+        old_page.add_css_class("thumbnail")
+
+        # Wrap in a Gtk.Stack so a fresh thumbnail can be crossfaded
+        # in later, once every download in the batch is complete.
+        stack = Gtk.Stack()
+        stack.set_transition_type(Gtk.StackTransitionType.CROSSFADE)
+        stack.set_transition_duration(400)
+        stack.set_hexpand(True)
+        stack.set_size_request(-1, 120)
+        stack.add_css_class("thumbnail-stack")
+        stack.add_named(old_page, "placeholder")
+        stack.set_visible_child_name("placeholder")
+        row.append(stack)
+
+        # Store references so the download callback can reach them.
+        row._thumbnail_stack = stack
+        row._streamer_key = streamer
 
         # Start background download if thumbnail is stale or missing
         if thumb_url and thumb_path and self._thumbnail_is_stale(streamer):
-            threading.Thread(
-                target=self._download_stream_thumbnail,
-                args=(thumb_url, thumb_path, picture),
-                daemon=True,
-            ).start()
+            batch = self._current_batch
+            if batch is not None:
+                batch.pending += 1
+                threading.Thread(
+                    target=self._download_stream_thumbnail,
+                    args=(thumb_url, thumb_path, row, batch),
+                    daemon=True,
+                ).start()
 
         # ── Text area ───────────────────────────────────────
         text_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=4)
@@ -744,6 +818,10 @@ class StreamerRowManager:
             self.window.online_list.remove_css_class("boxed-list")
         else:
             self.window.online_list.add_css_class("boxed-list")
+
+        # Start a new download batch so all thumbnail downloads that
+        # originate from this refresh are crossfaded in together.
+        self._current_batch = self._ThumbnailBatch()
 
         # Clear existing rows
         def clear_list(list_box):
