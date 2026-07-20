@@ -161,7 +161,7 @@ class StreamerRowManager:
             row.add_css_class("offline-row")
 
         # Add buttons
-        self._add_row_buttons(row, streamer)
+        self._add_row_buttons(row, streamer, display_name)
         return row
 
     def _build_menu_popover(self, streamer):
@@ -278,7 +278,7 @@ class StreamerRowManager:
 
         return popover
 
-    def _add_row_buttons(self, row, streamer):
+    def _add_row_buttons(self, row, streamer, display_name=None):
         """Add buttons and dropdown menu to the row."""
         row.add_css_class("action-row")
 
@@ -311,7 +311,7 @@ class StreamerRowManager:
             play_button.connect(
                 "clicked",
                 lambda btn: self.window.player.play_content(
-                    f"twitch.tv/{streamer}", is_vod=False
+                    f"twitch.tv/{streamer}", is_vod=False, display_name=display_name
                 ),
             )
 
@@ -347,7 +347,7 @@ class StreamerRowManager:
             play_button.connect(
                 "clicked",
                 lambda btn: self.window.player.play_content(
-                    f"twitch.tv/{streamer}", is_vod=False
+                    f"twitch.tv/{streamer}", is_vod=False, display_name=display_name
                 ),
             )
 
@@ -617,7 +617,7 @@ class StreamerRowManager:
             avatar_button.connect(
                 "clicked",
                 lambda btn: self.window.player.play_content(
-                    f"twitch.tv/{streamer}", is_vod=False
+                    f"twitch.tv/{streamer}", is_vod=False, display_name=display_name
                 ),
             )
 
@@ -734,7 +734,7 @@ class StreamerRowManager:
             play_button.connect(
                 "clicked",
                 lambda btn: self.window.player.play_content(
-                    f"twitch.tv/{streamer}", is_vod=False
+                    f"twitch.tv/{streamer}", is_vod=False, display_name=display_name
                 ),
             )
             bottom_row.append(play_button)

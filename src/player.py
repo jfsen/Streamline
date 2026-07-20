@@ -50,7 +50,7 @@ class StreamPlayer:
         self._executable_cache = {}
         self._current_process = None
 
-    def play_content(self, url, is_vod=False):
+    def play_content(self, url, is_vod=False, display_name=None):
         """Play a stream or VOD using streamlink's built-in player launching."""
         try:
             # Quick check for player executable (cached)
@@ -79,6 +79,12 @@ class StreamPlayer:
             else:
                 quality = QUALITY_PRESETS[self.window.stream_quality]
 
+            # Title: display name when available, otherwise fall back to the URL
+            if display_name:
+                title = display_name
+            else:
+                title = url
+
             # Set title and player arguments
             if IS_FLATPAK:
                 # Player runs on the host, so use flatpak-spawn as the
@@ -86,7 +92,7 @@ class StreamPlayer:
                 cmd.extend(
                     [
                         "--title",
-                        f"Streamline - {url}",
+                        title,
                         "--player",
                         "flatpak-spawn",
                         "--player-args",
@@ -99,7 +105,7 @@ class StreamPlayer:
                 cmd.extend(
                     [
                         "--title",
-                        f"Streamline - {url}",
+                        title,
                         "--player",
                         player_cmd,
                         url,
